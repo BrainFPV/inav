@@ -25,6 +25,7 @@ typedef struct pt1Filter_s {
     float state;
     float RC;
     float dT;
+    float alpha;
 } pt1Filter_t;
 
 /* this holds the data required to update samples thru a filter */
@@ -55,8 +56,23 @@ typedef struct firFilter_s {
     uint8_t coeffsLength;
 } firFilter_t;
 
+typedef struct alphaBetaGammaFilter_s {
+    float a, b, g, e;
+    float ak; // derivative of system velociy (ie: acceleration)
+    float vk; // derivative of system state (ie: velocity)
+    float xk; // current system state (ie: position)
+    float jk; // derivative of system acceleration (ie: jerk)
+    float rk; // residual error
+    float dT, dT2, dT3;
+    float halfLife, boost;
+    pt1Filter_t boostFilter;
+} alphaBetaGammaFilter_t;
+
 typedef float (*filterApplyFnPtr)(void *filter, float input);
 typedef float (*filterApply4FnPtr)(void *filter, float input, float f_cut, float dt);
+
+#define BIQUAD_BANDWIDTH 1.9f     /* bandwidth in octaves */
+#define BIQUAD_Q 1.0f / sqrtf(2.0f)     /* quality factor - butterworth*/
 
 float nullFilterApply(void *filter, float input);
 float nullFilterApply4(void *filter, float input, float f_cut, float dt);
@@ -64,6 +80,7 @@ float nullFilterApply4(void *filter, float input, float f_cut, float dt);
 void pt1FilterInit(pt1Filter_t *filter, float f_cut, float dT);
 void pt1FilterInitRC(pt1Filter_t *filter, float tau, float dT);
 void pt1FilterSetTimeConstant(pt1Filter_t *filter, float tau);
+void pt1FilterUpdateCutoff(pt1Filter_t *filter, float f_cut);
 float pt1FilterGetLastOutput(pt1Filter_t *filter);
 float pt1FilterApply(pt1Filter_t *filter, float input);
 float pt1FilterApply3(pt1Filter_t *filter, float input, float dT);
@@ -81,3 +98,6 @@ float biquadFilterReset(biquadFilter_t *filter, float value);
 float biquadFilterApplyDF1(biquadFilter_t *filter, float input);
 float filterGetNotchQ(float centerFrequencyHz, float cutoffFrequencyHz);
 void biquadFilterUpdate(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate, float Q, biquadFilterType_e filterType);
+
+void alphaBetaGammaFilterInit(alphaBetaGammaFilter_t *filter, float alpha, float boostGain, float halfLife, float dT);
+float alphaBetaGammaFilterApply(alphaBetaGammaFilter_t *filter, float input);

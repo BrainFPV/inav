@@ -57,7 +57,6 @@
 #   define USE_MAG
 #   define MAG_I2C_BUS             BUS_I2C1
 #   define USE_MAG_HMC5883
-#   define MAG_HMC5883_ALIGN       CW180_DEG
 #   define USE_MAG_QMC5883
 #   define USE_MAG_MAG3110
 #   define USE_MAG_IST8310
@@ -65,14 +64,17 @@
 #   define USE_MAG_LIS3MDL
 
 #   define TEMPERATURE_I2C_BUS     BUS_I2C1
+#define BNO055_I2C_BUS             BUS_I2C1
 
 #   define USE_BARO
 #   define BARO_I2C_BUS            BUS_I2C1
 #   define USE_BARO_MS5611
 #   define USE_BARO_BMP280
+#else // V1 does not have I2C exposed, common_post.h will pull in USE_*_MSP
+#   define USE_BARO
+#   define USE_MAG
 #endif
 
-#define USE_OSD
 #define USE_MAX7456
 #define MAX7456_SPI_BUS         BUS_SPI3
 #define MAX7456_CS_PIN          PB14

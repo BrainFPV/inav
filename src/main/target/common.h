@@ -17,6 +17,18 @@
 
 #pragma once
 
+#if defined(STM32F7) || defined(STM32H7)
+#define USE_ITCM_RAM
+#endif
+
+#ifdef USE_ITCM_RAM
+#define FAST_CODE                   __attribute__((section(".tcm_code")))
+#define NOINLINE                    __attribute__((noinline))
+#else
+#define FAST_CODE
+#define NOINLINE
+#endif
+
 #if defined(STM32F3)
 #define DYNAMIC_HEAP_SIZE   1024
 #else
@@ -70,17 +82,17 @@
 #define SCHEDULER_DELAY_LIMIT           100
 #endif
 
-#if (FLASH_SIZE > 256)
+#if (MCU_FLASH_SIZE > 256)
 #define USE_MR_BRAKING_MODE
 #define USE_PITOT
 #define USE_PITOT_ADC
 #define USE_PITOT_VIRTUAL
 
+#define USE_ALPHA_BETA_GAMMA_FILTER
 #define USE_DYNAMIC_FILTERS
 #define USE_GYRO_KALMAN
+#define USE_SMITH_PREDICTOR
 #define USE_EXTENDED_CMS_MENUS
-#define USE_UAV_INTERCONNECT
-#define USE_RX_UIB
 #define USE_HOTT_TEXTMODE
 
 // NAZA GPS support for F4+ only
@@ -91,7 +103,9 @@
 #define USE_RANGEFINDER_MSP
 #define USE_RANGEFINDER_BENEWAKE
 #define USE_RANGEFINDER_VL53L0X
+#define USE_RANGEFINDER_VL53L1X
 #define USE_RANGEFINDER_HCSR04_I2C
+#define USE_RANGEFINDER_US42
 
 // Allow default optic flow boards
 #define USE_OPFLOW
@@ -117,7 +131,7 @@
 
 #define USE_PWM_DRIVER_PCA9685
 
-#define USE_TELEMETRY_SIM
+#define USE_OSD
 #define USE_FRSKYOSD
 #define USE_DJI_HD_OSD
 #define USE_SMARTPORT_MASTER
@@ -131,7 +145,20 @@
 
 #define USE_I2C_IO_EXPANDER
 
+#define USE_GPS_PROTO_NMEA
+#define USE_GPS_PROTO_MTK
+
+#define USE_TELEMETRY_SIM
+#define USE_TELEMETRY_HOTT
+#define USE_TELEMETRY_MAVLINK
+#define USE_MSP_OVER_TELEMETRY
+
 #define USE_SERIALRX_SRXL2     // Spektrum SRXL2 protocol
+#define USE_SERIALRX_SUMD
+#define USE_SERIALRX_SUMH
+#define USE_SERIALRX_XBUS
+#define USE_SERIALRX_JETIEXBUS
+#define USE_SERIALRX_MAVLINK
 #define USE_TELEMETRY_SRXL
 #define USE_SPEKTRUM_CMS_TELEMETRY
 //#define USE_SPEKTRUM_VTX_CONTROL //Some functions from betaflight still not implemented
@@ -139,11 +166,19 @@
 
 #define USE_VTX_COMMON
 
-#else // FLASH_SIZE < 256
+#define USE_SERIALRX_GHST
+#define USE_TELEMETRY_GHST
+
+#define USE_SECONDARY_IMU
+#define USE_IMU_BNO055
+
+#define USE_POWER_LIMITS
+
+#else // MCU_FLASH_SIZE < 256
 #define LOG_LEVEL_MAXIMUM LOG_LEVEL_ERROR
 #endif
 
-#if (FLASH_SIZE > 128)
+#if (MCU_FLASH_SIZE > 128)
 #define NAV_FIXED_WING_LANDING
 #define USE_SAFE_HOME
 #define USE_AUTOTUNE_FIXED_WING
@@ -151,23 +186,14 @@
 #define USE_STATS
 #define USE_CMS
 #define CMS_MENU_OSD
-#define USE_GPS_PROTO_NMEA
-#define USE_GPS_PROTO_MTK
 #define NAV_GPS_GLITCH_DETECTION
 #define NAV_NON_VOLATILE_WAYPOINT_STORAGE
-#define USE_TELEMETRY_HOTT
 #define USE_TELEMETRY_IBUS
-#define USE_TELEMETRY_MAVLINK
 #define USE_TELEMETRY_SMARTPORT
 #define USE_TELEMETRY_CRSF
-#define USE_MSP_OVER_TELEMETRY
 // These are rather exotic serial protocols
 #define USE_RX_MSP
 //#define USE_MSP_RC_OVERRIDE
-#define USE_SERIALRX_SUMD
-#define USE_SERIALRX_SUMH
-#define USE_SERIALRX_XBUS
-#define USE_SERIALRX_JETIEXBUS
 #define USE_SERIALRX_CRSF
 #define USE_PWM_SERVO_DRIVER
 #define USE_SERIAL_PASSTHROUGH
@@ -190,12 +216,8 @@
 // Wind estimator
 #define USE_WIND_ESTIMATOR
 
-#else // FLASH_SIZE < 128
+#else // MCU_FLASH_SIZE < 128
 
 #define SKIP_TASK_STATISTICS
 
-#endif
-
-#ifdef STM32F7
-#define USE_ITCM_RAM
 #endif

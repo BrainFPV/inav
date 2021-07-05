@@ -28,9 +28,6 @@ FILE_COMPILE_FOR_SPEED
 #include "common/maths.h"
 #include "common/utils.h"
 
-#define BIQUAD_BANDWIDTH 1.9f     /* bandwidth in octaves */
-#define BIQUAD_Q 1.0f / sqrtf(2.0f)     /* quality factor - butterworth*/
-
 // NULL filter
 float nullFilterApply(void *filter, float input)
 {
@@ -48,17 +45,23 @@ float nullFilterApply4(void *filter, float input, float f_cut, float dt)
 
 // PT1 Low Pass filter
 
+static float pt1ComputeRC(const float f_cut)
+{
+    return 1.0f / (2.0f * M_PIf * f_cut);
+}
+
 // f_cut = cutoff frequency
 void pt1FilterInitRC(pt1Filter_t *filter, float tau, float dT)
 {
     filter->state = 0.0f;
     filter->RC = tau;
     filter->dT = dT;
+    filter->alpha = filter->dT / (filter->RC + filter->dT);
 }
 
 void pt1FilterInit(pt1Filter_t *filter, float f_cut, float dT)
 {
-    pt1FilterInitRC(filter, 1.0f / (2.0f * M_PIf * f_cut), dT);
+    pt1FilterInitRC(filter, pt1ComputeRC(f_cut), dT);
 }
 
 void pt1FilterSetTimeConstant(pt1Filter_t *filter, float tau) {
@@ -69,9 +72,15 @@ float pt1FilterGetLastOutput(pt1Filter_t *filter) {
     return filter->state;
 }
 
+void pt1FilterUpdateCutoff(pt1Filter_t *filter, float f_cut)
+{
+    filter->RC = pt1ComputeRC(f_cut);
+    filter->alpha = filter->dT / (filter->RC + filter->dT);
+}
+
 float FAST_CODE NOINLINE pt1FilterApply(pt1Filter_t *filter, float input)
 {
-    filter->state = filter->state + filter->dT / (filter->RC + filter->dT) * (input - filter->state);
+    filter->state = filter->state + filter->alpha * (input - filter->state);
     return filter->state;
 }
 
@@ -86,11 +95,12 @@ float FAST_CODE NOINLINE pt1FilterApply4(pt1Filter_t *filter, float input, float
 {
     // Pre calculate and store RC
     if (!filter->RC) {
-        filter->RC = 1.0f / ( 2.0f * M_PIf * f_cut );
+        filter->RC = pt1ComputeRC(f_cut);
     }
 
     filter->dT = dT;    // cache latest dT for possible use in pt1FilterApply
-    filter->state = filter->state + dT / (filter->RC + dT) * (input - filter->state);
+    filter->alpha = filter->dT / (filter->RC + filter->dT);
+    filter->state = filter->state + filter->alpha * (input - filter->state);
     return filter->state;
 }
 
@@ -240,3 +250,69 @@ FAST_CODE void biquadFilterUpdate(biquadFilter_t *filter, float filterFreq, uint
     filter->y1 = y1;
     filter->y2 = y2;
 }
+
+#ifdef USE_ALPHA_BETA_GAMMA_FILTER
+void alphaBetaGammaFilterInit(alphaBetaGammaFilter_t *filter, float alpha, float boostGain, float halfLife, float dT) {
+    // beta, gamma, and eta gains all derived from
+    // http://yadda.icm.edu.pl/yadda/element/bwmeta1.element.baztech-922ff6cb-e991-417f-93f0-77448f1ef4ec/c/A_Study_Jeong_1_2017.pdf
+
+    const float xi = powf(-alpha + 1.0f, 0.25); // fourth rool of -a + 1
+    filter->xk = 0.0f;
+    filter->vk = 0.0f;
+    filter->ak = 0.0f;
+    filter->jk = 0.0f;
+    filter->a = alpha;
+    filter->b = (1.0f / 6.0f) * powf(1.0f - xi, 2) * (11.0f + 14.0f * xi + 11 * xi * xi);
+    filter->g = 2 * powf(1.0f - xi, 3) * (1 + xi);
+    filter->e = (1.0f / 6.0f) * powf(1 - xi, 4);
+	filter->dT = dT;
+	filter->dT2 = dT * dT;
+    filter->dT3 = dT * dT * dT;
+    pt1FilterInit(&filter->boostFilter, 100, dT);
+
+    const float boost = boostGain * 100;
+
+    filter->boost = (boost * boost / 10000) * 0.003;
+    filter->halfLife = halfLife != 0 ? powf(0.5f, dT / halfLife): 1.0f;
+}
+
+FAST_CODE float alphaBetaGammaFilterApply(alphaBetaGammaFilter_t *filter, float input) {
+    //xk - current system state (ie: position)
+	//vk - derivative of system state (ie: velocity)
+    //ak - derivative of system velociy (ie: acceleration)
+    //jk - derivative of system acceleration (ie: jerk)
+    float rk;   // residual error
+
+    // give the filter limited history
+    filter->xk *= filter->halfLife;
+    filter->vk *= filter->halfLife;
+    filter->ak *= filter->halfLife;
+    filter->jk *= filter->halfLife;
+
+    // update our (estimated) state 'x' from the system (ie pos = pos + vel (last).dT)
+    filter->xk += filter->dT * filter->vk + (1.0f / 2.0f) * filter->dT2 * filter->ak + (1.0f / 6.0f) * filter->dT3 * filter->jk;
+    
+    // update (estimated) velocity (also estimated dterm from measurement)
+    filter->vk += filter->dT * filter->ak + 0.5f * filter->dT2 * filter->jk;
+    filter->ak += filter->dT * filter->jk;
+    
+    // what is our residual error (measured - estimated)
+    rk = input - filter->xk;
+
+    // artificially boost the error to increase the response of the filter
+    rk += pt1FilterApply(&filter->boostFilter, fabsf(rk) * rk * filter->boost);
+    if ((fabsf(rk * filter->a) > fabsf(input - filter->xk))) {
+        rk = (input - filter->xk) / filter->a;
+    }
+    filter->rk = rk; // for logging
+
+    // update our estimates given the residual error.
+    filter->xk += filter->a * rk;
+    filter->vk += filter->b / filter->dT * rk;
+    filter->ak += filter->g / (2.0f * filter->dT2) * rk;
+    filter->jk += filter->e / (6.0f * filter->dT3) * rk;
+
+	return filter->xk;
+}
+
+#endif

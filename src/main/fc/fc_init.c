@@ -150,8 +150,6 @@
 
 #include "telemetry/telemetry.h"
 
-#include "uav_interconnect/uav_interconnect.h"
-
 #ifdef USE_BRAINFPV_FPGA
 #include "fpga_drv.h"
 #endif

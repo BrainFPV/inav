@@ -184,12 +184,14 @@ static bool fullRedraw = false;
 static uint8_t armState;
 static uint8_t statsPagesCheck = 0;
 
+#if !defined(USE_BRAINFPV_OSD)
 typedef struct osdMapData_s {
     uint32_t scale;
     char referenceSymbol;
 } osdMapData_t;
 
 static osdMapData_t osdMapData;
+#endif
 
 static displayPort_t *osdDisplayPort;
 static bool osdDisplayIsReady = false;
@@ -3034,6 +3036,11 @@ void osdDrawNextElement(void)
 	for (draw_idx = draw_idx; draw_idx < num_osd_elements_active; draw_idx++) {
 		osdDrawSingleElement(osd_elements_active[draw_idx]);
 	}
+
+	// Telemetry
+    if (osdConfig()->telemetry>0){
+      osdDisplayTelemetry();
+    }
 }
 
 #else
@@ -3819,28 +3826,6 @@ void osdRefresh(timeUs_t currentTimeUs)
         armState = ARMING_FLAG(ARMED);
     }
 
-#if defined(USE_BRAINFPV_OSD)
-#define IS_HI(X)  (rxGetChannelValue(X) > 1750)
-#define IS_LO(X)  (rxGetChannelValue(X) < 1250)
-#define IS_MID(X) (rxGetChannelValue(X) > 1250 && rxGetChannelValue(X) < 1750)
-    osd_arming_or_stats = false;
-    uint32_t now = millis();
-    if (ARMING_FLAG(ARMED)) {
-        if (now - armTime < 500) {
-            osdShowArmed();
-            osd_arming_or_stats = true;
-            return;
-        }
-    }
-    else {
-        bool enter_menu = (IS_MID(THROTTLE) && IS_LO(YAW) && IS_HI(PITCH));
-        if ((disarmTime > 0) && (now - disarmTime < 10000) && !enter_menu && !cmsInMenu) {
-            osdShowStats();
-            osd_arming_or_stats = true;
-            return;
-        }
-    }
-
 #if defined(OSD_ALTERNATE_LAYOUT_COUNT) && OSD_ALTERNATE_LAYOUT_COUNT > 0
     // Check if the layout has changed. Higher numbered
     // boxes take priority.
@@ -3867,6 +3852,30 @@ void osdRefresh(timeUs_t currentTimeUs)
         currentLayout = activeLayout;
     }
 #endif
+
+#if defined(USE_BRAINFPV_OSD)
+#define IS_HI(X)  (rxGetChannelValue(X) > 1750)
+#define IS_LO(X)  (rxGetChannelValue(X) < 1250)
+#define IS_MID(X) (rxGetChannelValue(X) > 1250 && rxGetChannelValue(X) < 1750)
+    osd_arming_or_stats = false;
+    uint32_t now = millis();
+    if (ARMING_FLAG(ARMED)) {
+        if (now - armTime < 500) {
+            osdShowArmed();
+            osd_arming_or_stats = true;
+            return;
+        }
+    }
+    else {
+        bool enter_menu = (IS_MID(THROTTLE) && IS_LO(YAW) && IS_HI(PITCH));
+        if ((disarmTime > 0) && (now - disarmTime < 10000) && !enter_menu && !cmsInMenu) {
+
+            osdShowStatsPage1();
+            osd_arming_or_stats = true;
+            return;
+        }
+    }
+
 
     #define STATS_FREQ_DENOM    50
     counter++;

@@ -36,12 +36,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "brainfpv_osd.h"
-#include "ch.h"
-#include "video.h"
-#include "images.h"
-#include "osd_utils.h"
-
 #include "common/maths.h"
 #include "common/axis.h"
 #include "common/color.h"
@@ -100,6 +94,12 @@
 #include "rx/crsf.h"
 #include "fc/runtime_config.h"
 #include "fc/rc_modes.h"
+
+#include "brainfpv_osd.h"
+#include "ch.h"
+#include "video.h"
+#include "images.h"
+#include "osd_utils.h"
 
 #if defined(USE_BRAINFPV_OSD)
 

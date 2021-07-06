@@ -70,8 +70,9 @@ PG_RESET_TEMPLATE(telemetryConfig_t, telemetryConfig,
     .halfDuplex = SETTING_TELEMETRY_HALFDUPLEX_DEFAULT,
     .smartportFuelUnit = SETTING_SMARTPORT_FUEL_UNIT_DEFAULT,
     .ibusTelemetryType = SETTING_IBUS_TELEMETRY_TYPE_DEFAULT,
+#ifdef USE_TELEMETRY_LTM
     .ltmUpdateRate = SETTING_LTM_UPDATE_RATE_DEFAULT,
-
+#endif
 #ifdef USE_TELEMETRY_SIM
     .simTransmitInterval = SETTING_SIM_TRANSMIT_INTERVAL_DEFAULT,
     .simTransmitFlags = SETTING_SIM_TRANSMIT_FLAGS_DEFAULT,

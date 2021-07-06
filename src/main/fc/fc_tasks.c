@@ -366,10 +366,8 @@ void fcTasksInit(void)
     setTaskEnabled(TASK_PWMDRIVER, (servoConfig()->servo_protocol == SERVO_TYPE_SERVO_DRIVER) || (servoConfig()->servo_protocol == SERVO_TYPE_SBUS) || (servoConfig()->servo_protocol == SERVO_TYPE_SBUS_PWM));
 #endif
 #ifdef USE_CMS
-#ifdef USE_MSP_DISPLAYPORT
-    setTaskEnabled(TASK_CMS, true);
-#else
-    setTaskEnabled(TASK_CMS, (feature(FEATURE_OSD) || feature(FEATURE_DASHBOARD)) && !defined(USE_BRAINFPV_OSD));
+#if defined(USE_MSP_DISPLAYPORT) && !defined(USE_BRAINFPV_OSD)
+    setTaskEnabled(TASK_CMS, (feature(FEATURE_OSD) || feature(FEATURE_DASHBOARD)));
 #endif
 #endif
 #ifdef USE_OPFLOW

@@ -46,7 +46,6 @@
 #ifdef BRAINFPV
 #include "brainfpv/video.h"
 #include "brainfpv/osd_utils.h"
-#include "brainfpv/ir_transponder.h"
 #include "cms/cms_menu_brainfpv.h"
 #endif
 

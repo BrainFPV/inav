@@ -69,7 +69,7 @@ typedef struct systemConfig_s {
     uint8_t current_profile_index;
     uint8_t current_battery_profile_index;
     uint8_t debug_mode;
-#ifdef USE_I2C
+#if defined(USE_I2C) || defined(RADIX)
     uint8_t i2c_speed;
 #endif
 #ifdef USE_UNDERCLOCK

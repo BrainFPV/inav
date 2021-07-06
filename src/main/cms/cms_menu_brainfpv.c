@@ -40,7 +40,6 @@
 
 #include "brainfpv/video.h"
 #include "brainfpv/osd_utils.h"
-#include "brainfpv/ir_transponder.h"
 #include "brainfpv/brainfpv_osd.h"
 
 bfOsdConfig_t bfOsdConfigCms;

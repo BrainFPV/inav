@@ -22,7 +22,6 @@
 #include "drivers/timer.h"
 
 #include "brainfpv/brainfpv_osd.h"
-#include "brainfpv/ir_transponder.h"
 #include "fpga_drv.h"
 
 
@@ -64,19 +63,6 @@ void brainFPVUpdateSettings(void) {
     BRAINFPVFPGA_SetXScale(bfOsdConfigUse->x_scale);
     BRAINFPVFPGA_Set3DConfig(bfOsdConfigUse->sbs_3d_enabled, bfOsdConfigUse->sbs_3d_right_eye_offset);
 
-    if (bfOsdConfigUse->ir_system == 1) {
-        uint8_t ir_data[6];
-        ir_generate_ilap_packet(bfOsdConfigUse->ir_ilap_id, ir_data, 6);
-        BRAINFPVFPGA_SetIRData(ir_data, 6);
-        BRAINFPVFPGA_SetIRProtocol(BRAINFPVFPGA_IR_PROTOCOL_ILAP);
-    }
-
-    if (bfOsdConfigUse->ir_system == 2) {
-        uint8_t ir_data[4];
-        ir_generate_trackmate_packet(bfOsdConfigUse->ir_trackmate_id, ir_data, 6);
-        BRAINFPVFPGA_SetIRData(ir_data, 4);
-        BRAINFPVFPGA_SetIRProtocol(BRAINFPVFPGA_IR_PROTOCOL_TRACKMATE);
-    }
     brainfpv_settings_updated_from_cms = false;
 }
 

@@ -3483,7 +3483,25 @@ groups:
         field: force_sw_blink
         type: bool
 
-  - name: PG_BRAINFPV_CONFIG
+  - name: PG_BRAINFPV_SYSTEM_CONFIG
+    condition: BRAINFPV
+    type: brainFpvSystemConfig_t
+    headers: ["io/ledstrip.h", "brainfpv/brainfpv_system.h"]
+    members:
+      - name: brainfpv_status_led_color
+        field: status_led_color
+        min: COLOR_BLACK
+        max: COLOR_DEEP_PINK
+        default_value: 10
+        type: uint8_t
+      - name: brainfpv_status_led_brightness
+        field: status_led_brightness
+        min: 0
+        max: 255
+        default_value: 255
+
+  - name: PG_BRAINFPV_OSD_CONFIG
+    condition: USE_BRAINFPV_OSD
     type: bfOsdConfig_t
     headers: ["brainfpv/brainfpv_osd.h"]
     members:

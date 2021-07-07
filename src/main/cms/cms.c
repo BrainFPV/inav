@@ -47,6 +47,7 @@
 #include "brainfpv/video.h"
 #include "brainfpv/osd_utils.h"
 #include "cms/cms_menu_brainfpv.h"
+#include "brainfpv/brainfpv_system.h"
 #endif
 
 #include "common/maths.h"
@@ -857,7 +858,13 @@ long cmsMenuExit(displayPort_t *pDisplay, const void *ptr)
             }
         }
 
+#if defined(BRAINFPV)
+        if ((exitType == CMS_EXIT_SAVE) || (exitType == CMS_POPUP_SAVE)) {
+            brainFPVSystemSetReq(BRAINFPV_REQ_SAVE_SETTINGS);
+        }
+#else
         saveConfigAndNotify();
+#endif
         break;
 
     case CMS_EXIT:
@@ -876,8 +883,12 @@ long cmsMenuExit(displayPort_t *pDisplay, const void *ptr)
         displayWrite(pDisplay, 5, 3, "REBOOTING...");
 
         displayResync(pDisplay); // Was max7456RefreshAll(); why at this timing?
+#if defined(BRAINFPV)
+        brainFPVSystemSetReq(BRAINFPV_REQ_SAVE_SETTINGS_REBOOT);
+#else
 
         fcReboot(false);
+#endif
     }
 
     DISABLE_ARMING_FLAG(ARMING_DISABLED_CMS_MENU);

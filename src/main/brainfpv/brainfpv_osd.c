@@ -107,7 +107,7 @@
 
 #define SW_BLINK_CYCLE_MS 200 // 200ms on / 200ms off
 
-PG_REGISTER_WITH_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig, PG_BRAINFPV_CONFIG, 0);
+PG_REGISTER_WITH_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig, PG_BRAINFPV_OSD_CONFIG, 0);
 
 PG_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig,
   .sync_threshold = BRAINFPV_OSD_SYNC_TH_DEFAULT,

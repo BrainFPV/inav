@@ -23,6 +23,10 @@
 
 #include "cms/cms.h"
 
+#if defined(BRAINFPV)
+#include "brainfpv/brainfpv_system.h"
+#endif
+
 #include "common/axis.h"
 #include "common/color.h"
 #include "common/utils.h"
@@ -304,6 +308,10 @@ void taskUpdateOsd(timeUs_t currentTimeUs)
 
 void taskUpdateAux(timeUs_t currentTimeUs)
 {
+#ifdef BRAINFPV
+    brainFPVSystemCheck();
+#endif
+
     updatePIDCoefficients();
     dynamicLpfGyroTask();
     updateFixedWingLevelTrim(currentTimeUs);

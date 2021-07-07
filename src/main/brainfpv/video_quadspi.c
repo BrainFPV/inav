@@ -40,11 +40,12 @@
 #include "drivers/light_led.h"
 #include "drivers/time.h"
 
+#if defined(USE_BRAINFPV_OSD) && defined(INCLUDE_VIDEO_QUADSPI)
+
 static IO_t debugPin = IO_NONE;
 static IO_t hsync_io;
 static IO_t vsync_io;
 
-#if defined(INCLUDE_VIDEO_QUADSPI) | 1
 
 #if !defined(VIDEO_QUADSPI_Y_OFFSET)
 #define VIDEO_QUADSPI_Y_OFFSET 0

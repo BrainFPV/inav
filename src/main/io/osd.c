@@ -1898,6 +1898,7 @@ static bool osdDrawSingleElement(uint8_t item)
         }
 
     case OSD_CRAFT_NAME:
+#if defined(USE_BRAINFPV_OSD)
         if (brainfpv_user_avatar_set && bfOsdConfig()->show_pilot_logo) {
             brainFpvOsdUserLogo(elemPosX + 4, elemPosY);
             brainfpv_item = true;
@@ -1905,6 +1906,9 @@ static bool osdDrawSingleElement(uint8_t item)
         else {
             osdFormatCraftName(buff);
         }
+#else
+        osdFormatCraftName(buff);
+#endif
         break;
 
     case OSD_THROTTLE_POS:
@@ -3785,10 +3789,11 @@ static void osdFilterData(timeUs_t currentTimeUs) {
 
 void osdRefresh(timeUs_t currentTimeUs)
 {
+#if defined(USE_BRAINFPV_OSD)
     static uint32_t counter = 0;
-
     static uint32_t armTime = 0;
     static uint32_t disarmTime = 0;
+#endif
 
     osdFilterData(currentTimeUs);
 
@@ -3808,7 +3813,9 @@ void osdRefresh(timeUs_t currentTimeUs)
         if (ARMING_FLAG(ARMED)) {
             osdResetStats();
             osdShowArmed(); // reset statistic etc
+#if defined(USE_BRAINFPV_OSD)
             armTime = millis();
+#endif
 
             uint32_t delay = ARMED_SCREEN_DISPLAY_TIME;
             statsPagesCheck = 0;
@@ -3820,7 +3827,9 @@ void osdRefresh(timeUs_t currentTimeUs)
         } else {
             osdShowStatsPage1(); // show first page of statistic
             osdSetNextRefreshIn(STATS_SCREEN_DISPLAY_TIME);
+#if defined(USE_BRAINFPV_OSD)
             disarmTime = millis();
+#endif
         }
 
         armState = ARMING_FLAG(ARMED);

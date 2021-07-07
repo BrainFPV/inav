@@ -41,9 +41,12 @@ const int timerHardwareCount = sizeof(timerHardware) / sizeof(timerHardware[0]);
 bool brainfpv_settings_updated = true;
 bool brainfpv_settings_updated_from_cms = false;
 
+#if defined(USE_BRAINFPV_OSD)
 extern bfOsdConfig_t bfOsdConfigCms;
+#endif
 
 void brainFPVUpdateSettings(void) {
+#if defined(USE_BRAINFPV_OSD)
     const bfOsdConfig_t * bfOsdConfigUse;
 
     if (brainfpv_settings_updated_from_cms)
@@ -62,7 +65,7 @@ void brainFPVUpdateSettings(void) {
     BRAINFPVFPGA_SetXOffset(bfOsdConfigUse->x_offset);
     BRAINFPVFPGA_SetXScale(bfOsdConfigUse->x_scale);
     BRAINFPVFPGA_Set3DConfig(bfOsdConfigUse->sbs_3d_enabled, bfOsdConfigUse->sbs_3d_right_eye_offset);
-
+#endif
     brainfpv_settings_updated_from_cms = false;
 }
 

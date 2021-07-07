@@ -139,7 +139,7 @@ static const OSD_Entry menuMainEntries[] =
 {
 
     OSD_LABEL_ENTRY("-- MAIN --"),
-#ifdef BRAINFPV
+#if defined(USE_BRAINFPV_OSD)
     OSD_SUBMENU_ENTRY("BRAINFPV", &cmsx_menuBrainFPV),
 #endif
 

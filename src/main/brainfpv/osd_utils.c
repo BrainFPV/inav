@@ -138,7 +138,7 @@ FAST_CODE_NOINLINE static void draw_2bit_pixels_unaligned(uint32_t addr, uint8_t
 
 void draw_image(uint16_t x, uint16_t y, const struct Image * image)
 {
-	CHECK_COORDS(x + image->width, y);
+    CHECK_COORDS_UNSIGNED(x + image->width, y);
 	uint8_t byte_width = image->width / 4;
 
 	uint8_t pixel_offset = 2 * (x % 4);

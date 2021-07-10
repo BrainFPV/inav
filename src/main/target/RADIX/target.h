@@ -204,6 +204,7 @@ bool brainfpv_is_radixli(void);
 #undef USE_PITOT_MS4525
 #undef USE_1WIRE
 #undef USE_1WIRE_DS2482
+#undef USE_TEMPERATURE_SENSOR
 #undef USE_TEMPERATURE_LM75
 #undef USE_TEMPERATURE_DS18B20
 #undef USE_DASHBOARD

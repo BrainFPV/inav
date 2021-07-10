@@ -40,7 +40,7 @@
 
 #define USE_TARGET_CONFIG
 
-#define USE_BRAINFPV_FPGA
+//#define USE_BRAINFPV_FPGA
 #define BRAINFPVFPGA_SPI_INSTANCE SPI3
 #define BRAINFPVFPGA_SPI_DIVISOR  8
 #define BRAINFPVFPGA_CS_PIN       PE1
@@ -49,11 +49,11 @@
 
 
 #define BRAINFPV
-#define USE_MAX7456
-#define USE_OSD
+//#define USE_MAX7456
+//#define USE_OSD
 #define USE_CMS
 #define OSD_CALLS_CMS
-#define USE_BRAINFPV_OSD
+//#define USE_BRAINFPV_OSD
 #define VIDEO_BITS_PER_PIXEL 4
 #define INCLUDE_VIDEO_QUADSPI
 #define VIDEO_QSPI_CLOCK_PIN PB2
@@ -95,7 +95,7 @@
 #define PINIO2_PIN              PC15 // Video input
 #define USE_PINIOBOX
 
-#define USE_VTXFAULT_PIN
+//#define USE_VTXFAULT_PIN
 #define VTXFAULT_PIN            PD10
 
 #define USE_UART
@@ -177,9 +177,9 @@
 #undef USE_GYRO_REGISTER_DUMP
 
 #define USE_EXTI
-#define USE_GYRO
-#define USE_ACC
-#undef USE_MULTI_GYRO
+//#define USE_GYRO
+//#define USE_ACC
+//#undef USE_MULTI_GYRO
 
 #define USE_MPU_DATA_READY_SIGNAL
 #define USE_GYRO_EXTI

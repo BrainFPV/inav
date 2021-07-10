@@ -36,8 +36,8 @@
 #include <string.h>
 #include <math.h>
 
-#include "brainfpv_osd.h"
 #include "ch.h"
+#include "brainfpv_osd.h"
 #include "video.h"
 #include "images.h"
 #include "osd_utils.h"
@@ -245,7 +245,7 @@ void max7456Write(uint8_t x, uint8_t y, const char *buff, uint8_t mode)
         return;
     }
 
-    write_string(buff, MAX_X(x), MAX_Y(y), 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, bfOsdConfig()->font);
+    draw_string(buff, MAX_X(x), MAX_Y(y), 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, current_font());
 }
 
 void max7456WriteChar(uint8_t x, uint8_t y, uint16_t c, uint8_t mode)
@@ -254,7 +254,7 @@ void max7456WriteChar(uint8_t x, uint8_t y, uint16_t c, uint8_t mode)
         return;
     }
     char buff[2] = {c, 0};
-    write_string(buff, MAX_X(x), MAX_Y(y), 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, bfOsdConfig()->font);
+    draw_string(buff, MAX_X(x), MAX_Y(y), 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, current_font());
 }
 
 void max7456ClearScreen(void)
@@ -319,8 +319,8 @@ void brainFpvOsdWelcome(void)
     brainFpvOsdMainLogo(GRAPHICS_X_MIDDLE, GY);
 
     tfp_sprintf(string_buffer, "VERSION: %s", __REVISION__);
-    write_string(string_buffer, GRAPHICS_X_MIDDLE, GRAPHICS_BOTTOM - 60, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT8X10);
-    write_string("MENU: THRT MID YAW LEFT PITCH UP", GRAPHICS_X_MIDDLE, GRAPHICS_BOTTOM - 35, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT8X10);
+    draw_string(string_buffer, GRAPHICS_X_MIDDLE, GRAPHICS_BOTTOM - 60, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT8X10);
+    draw_string("MENU: THRT MID YAW LEFT PITCH UP", GRAPHICS_X_MIDDLE, GRAPHICS_BOTTOM - 35, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT8X10);
 }
 
 static int32_t getAltitude(void)
@@ -446,12 +446,12 @@ void brainFpvOsdCenterMark(void)
 {
 	uint16_t y_pos = GRAPHICS_Y_MIDDLE + bfOsdConfig()->center_mark_offset;
 
-    write_line_outlined(GRAPHICS_X_MIDDLE - CENTER_WING - CENTER_BODY, y_pos ,
-            GRAPHICS_X_MIDDLE - CENTER_BODY, y_pos, 2, 0, 0, 1);
-    write_line_outlined(GRAPHICS_X_MIDDLE + 1 + CENTER_BODY, y_pos,
-            GRAPHICS_X_MIDDLE + 1 + CENTER_BODY + CENTER_WING, y_pos, 0, 2, 0, 1);
-    write_line_outlined(GRAPHICS_X_MIDDLE, y_pos - CENTER_RUDDER - CENTER_BODY, GRAPHICS_X_MIDDLE,
-            y_pos - CENTER_BODY, 2, 0, 0, 1);
+	draw_line_outlined(GRAPHICS_X_MIDDLE - CENTER_WING - CENTER_BODY, y_pos ,
+            GRAPHICS_X_MIDDLE - CENTER_BODY, y_pos, 2, 0, OSD_COLOR_WHITE, OSD_COLOR_BLACK);
+	draw_line_outlined(GRAPHICS_X_MIDDLE + 1 + CENTER_BODY, y_pos,
+            GRAPHICS_X_MIDDLE + 1 + CENTER_BODY + CENTER_WING, y_pos, 0, 2, OSD_COLOR_WHITE, OSD_COLOR_BLACK);
+	draw_line_outlined(GRAPHICS_X_MIDDLE, y_pos - CENTER_RUDDER - CENTER_BODY, GRAPHICS_X_MIDDLE,
+            y_pos - CENTER_BODY, 2, 0, OSD_COLOR_WHITE, OSD_COLOR_BLACK);
 }
 
 
@@ -514,22 +514,22 @@ static void simple_artificial_horizon(int16_t roll, int16_t pitch, int16_t x, in
         tfp_sprintf(tmp_str, "%d", angle);
 
         if (angle < 0) {
-            write_line_outlined_dashed(pp_x2 - d_x2, pp_y2 + d_y2, pp_x2 + d_x2, pp_y2 - d_y2, 2, 2, 0, 1, 5);
-            write_line_outlined(pp_x2 - d_x2, pp_y2 + d_y2, pp_x2 - d_x2 - d_x_2, pp_y2 + d_y2 - d_y_2, 2, 2, 0, 1);
-            write_line_outlined(pp_x2 + d_x2, pp_y2 - d_y2, pp_x2 + d_x2 - d_x_2, pp_y2 - d_y2 - d_y_2, 2, 2, 0, 1);
+            draw_line_outlined_dashed(pp_x2 - d_x2, pp_y2 + d_y2, pp_x2 + d_x2, pp_y2 - d_y2, 2, 2, OSD_COLOR_BLACK, OSD_COLOR_WHITE, 5);
+            draw_line_outlined(pp_x2 - d_x2, pp_y2 + d_y2, pp_x2 - d_x2 - d_x_2, pp_y2 + d_y2 - d_y_2, 2, 2, OSD_COLOR_BLACK, OSD_COLOR_WHITE);
+            draw_line_outlined(pp_x2 + d_x2, pp_y2 - d_y2, pp_x2 + d_x2 - d_x_2, pp_y2 - d_y2 - d_y_2, 2, 2, OSD_COLOR_BLACK, OSD_COLOR_WHITE);
 
-            write_string(tmp_str, pp_x2 - d_x - 4, pp_y2 + d_y, 0, 0, TEXT_VA_MIDDLE, TEXT_HA_CENTER, FONT_OUTLINED8X8);
-            write_string(tmp_str, pp_x2 + d_x + 4, pp_y2 - d_y, 0, 0, TEXT_VA_MIDDLE, TEXT_HA_CENTER, FONT_OUTLINED8X8);
+            draw_string(tmp_str, pp_x2 - d_x - 4, pp_y2 + d_y, 0, 0, TEXT_VA_MIDDLE, TEXT_HA_CENTER, FONT_OUTLINED8X8);
+            draw_string(tmp_str, pp_x2 + d_x + 4, pp_y2 - d_y, 0, 0, TEXT_VA_MIDDLE, TEXT_HA_CENTER, FONT_OUTLINED8X8);
         } else if (angle > 0) {
-            write_line_outlined(pp_x2 - d_x2, pp_y2 + d_y2, pp_x2 + d_x2, pp_y2 - d_y2, 2, 2, 0, 1);
-            write_line_outlined(pp_x2 - d_x2, pp_y2 + d_y2, pp_x2 - d_x2 + d_x_2, pp_y2 + d_y2 + d_y_2, 2, 2, 0, 1);
-            write_line_outlined(pp_x2 + d_x2, pp_y2 - d_y2, pp_x2 + d_x2 + d_x_2, pp_y2 - d_y2 + d_y_2, 2, 2, 0, 1);
+            draw_line_outlined(pp_x2 - d_x2, pp_y2 + d_y2, pp_x2 + d_x2, pp_y2 - d_y2, 2, 2, OSD_COLOR_BLACK, OSD_COLOR_WHITE);
+            draw_line_outlined(pp_x2 - d_x2, pp_y2 + d_y2, pp_x2 - d_x2 + d_x_2, pp_y2 + d_y2 + d_y_2, 2, 2, OSD_COLOR_BLACK, OSD_COLOR_WHITE);
+            draw_line_outlined(pp_x2 + d_x2, pp_y2 - d_y2, pp_x2 + d_x2 + d_x_2, pp_y2 - d_y2 + d_y_2, 2, 2, OSD_COLOR_BLACK, OSD_COLOR_WHITE);
 
-            write_string(tmp_str, pp_x2 - d_x - 4, pp_y2 + d_y, 0, 0, TEXT_VA_MIDDLE, TEXT_HA_CENTER, FONT_OUTLINED8X8);
-            write_string(tmp_str, pp_x2 + d_x + 4, pp_y2 - d_y, 0, 0, TEXT_VA_MIDDLE, TEXT_HA_CENTER, FONT_OUTLINED8X8);
+            draw_string(tmp_str, pp_x2 - d_x - 4, pp_y2 + d_y, 0, 0, TEXT_VA_MIDDLE, TEXT_HA_CENTER, FONT_OUTLINED8X8);
+            draw_string(tmp_str, pp_x2 + d_x + 4, pp_y2 - d_y, 0, 0, TEXT_VA_MIDDLE, TEXT_HA_CENTER, FONT_OUTLINED8X8);
         } else {
-            write_line_outlined(pp_x2 - d_x, pp_y2 + d_y, pp_x2 - d_x / 3, pp_y2 + d_y / 3, 2, 2, 0, 1);
-            write_line_outlined(pp_x2 + d_x / 3, pp_y2 - d_y / 3, pp_x2 + d_x, pp_y2 - d_y, 2, 2, 0, 1);
+            draw_line_outlined(pp_x2 - d_x, pp_y2 + d_y, pp_x2 - d_x / 3, pp_y2 + d_y / 3, 2, 2, OSD_COLOR_BLACK, OSD_COLOR_WHITE);
+            draw_line_outlined(pp_x2 + d_x / 3, pp_y2 - d_y / 3, pp_x2 + d_x, pp_y2 - d_y, 2, 2, OSD_COLOR_BLACK, OSD_COLOR_WHITE);
         }
     }
 }
@@ -545,32 +545,32 @@ static void simple_artificial_horizon(int16_t roll, int16_t pitch, int16_t x, in
 void draw_stick(int16_t x, int16_t y, int16_t horizontal, int16_t vertical)
 {
 
-    write_filled_rectangle_lm(x - STICK_LENGTH, y - STICK_WIDTH / 2, 2 * STICK_LENGTH, STICK_WIDTH, 0, 1);
-    write_filled_rectangle_lm(x - STICK_WIDTH / 2, y - STICK_LENGTH, STICK_WIDTH, 2 * STICK_LENGTH, 0, 1);
+    draw_filled_rectangle(x - STICK_LENGTH, y - STICK_WIDTH / 2, 2 * STICK_LENGTH, STICK_WIDTH, OSD_COLOR_BLACK);
+    draw_filled_rectangle(x - STICK_WIDTH / 2, y - STICK_LENGTH, STICK_WIDTH, 2 * STICK_LENGTH, OSD_COLOR_BLACK);
 
-    write_hline_lm(x - STICK_LENGTH - 1, x - STICK_WIDTH / 2 -1, y - STICK_WIDTH / 2 - 1, 1, 1);
-    write_hline_lm(x - STICK_LENGTH - 1, x - STICK_WIDTH / 2 -1, y + STICK_WIDTH / 2 + 1, 1, 1);
+    draw_hline(x - STICK_LENGTH - 1, x - STICK_WIDTH / 2 -1, y - STICK_WIDTH / 2 - 1, OSD_COLOR_WHITE);
+    draw_hline(x - STICK_LENGTH - 1, x - STICK_WIDTH / 2 -1, y + STICK_WIDTH / 2 + 1, OSD_COLOR_WHITE);
 
-    write_hline_lm(x + STICK_WIDTH / 2 + 1, x + STICK_LENGTH + 1, y - STICK_WIDTH / 2 - 1, 1, 1);
-    write_hline_lm(x + STICK_WIDTH / 2 + 1, x + STICK_LENGTH + 1, y + STICK_WIDTH / 2 + 1, 1, 1);
+    draw_hline(x + STICK_WIDTH / 2 + 1, x + STICK_LENGTH + 1, y - STICK_WIDTH / 2 - 1, OSD_COLOR_WHITE);
+    draw_hline(x + STICK_WIDTH / 2 + 1, x + STICK_LENGTH + 1, y + STICK_WIDTH / 2 + 1, OSD_COLOR_WHITE);
 
-    write_hline_lm(x - STICK_WIDTH / 2 -1, x + STICK_WIDTH / 2 + 1 , y - STICK_LENGTH -1, 1, 1);
-    write_hline_lm(x - STICK_WIDTH / 2 -1, x + STICK_WIDTH / 2 + 1 , y + STICK_LENGTH + 1, 1, 1);
+    draw_hline(x - STICK_WIDTH / 2 -1, x + STICK_WIDTH / 2 + 1 , y - STICK_LENGTH -1, OSD_COLOR_WHITE);
+    draw_hline(x - STICK_WIDTH / 2 -1, x + STICK_WIDTH / 2 + 1 , y + STICK_LENGTH + 1, OSD_COLOR_WHITE);
 
-    write_vline_lm(x - STICK_WIDTH / 2 - 1, y - STICK_WIDTH / 2 - 1, y - STICK_LENGTH -1, 1, 1);
-    write_vline_lm(x + STICK_WIDTH / 2 + 1, y - STICK_WIDTH / 2 - 1, y - STICK_LENGTH -1, 1, 1);
+    draw_vline(x - STICK_WIDTH / 2 - 1, y - STICK_WIDTH / 2 - 1, y - STICK_LENGTH -1, OSD_COLOR_WHITE);
+    draw_vline(x + STICK_WIDTH / 2 + 1, y - STICK_WIDTH / 2 - 1, y - STICK_LENGTH -1, OSD_COLOR_WHITE);
 
-    write_vline_lm(x - STICK_WIDTH / 2 - 1, y + STICK_LENGTH  + 1, y + STICK_WIDTH / 2 + 1, 1, 1);
-    write_vline_lm(x + STICK_WIDTH / 2 + 1, y + STICK_LENGTH  + 1, y + STICK_WIDTH / 2 + 1, 1, 1);
+    draw_vline(x - STICK_WIDTH / 2 - 1, y + STICK_LENGTH  + 1, y + STICK_WIDTH / 2 + 1, OSD_COLOR_WHITE);
+    draw_vline(x + STICK_WIDTH / 2 + 1, y + STICK_LENGTH  + 1, y + STICK_WIDTH / 2 + 1, OSD_COLOR_WHITE);
 
-    write_vline_lm(x - STICK_LENGTH - 1, y -STICK_WIDTH / 2 -1, y + STICK_WIDTH / 2 + 1, 1, 1);
-    write_vline_lm(x + STICK_LENGTH + 1, y -STICK_WIDTH / 2 -1, y + STICK_WIDTH / 2 + 1, 1, 1);
+    draw_vline(x - STICK_LENGTH - 1, y -STICK_WIDTH / 2 -1, y + STICK_WIDTH / 2 + 1, OSD_COLOR_WHITE);
+    draw_vline(x + STICK_LENGTH + 1, y -STICK_WIDTH / 2 -1, y + STICK_WIDTH / 2 + 1, OSD_COLOR_WHITE);
 
     int16_t stick_x =  x + (STICK_MOVEMENT_EXTENT * FIX_RC_RANGE(horizontal)) / 500.f;
     int16_t stick_y =  y - (STICK_MOVEMENT_EXTENT * FIX_RC_RANGE(vertical)) / 500.f;
 
-    write_filled_rectangle_lm(stick_x - (STICK_BOX_SIZE) / 2 - 1, stick_y - (STICK_BOX_SIZE) / 2 - 1, STICK_BOX_SIZE + 2, STICK_BOX_SIZE + 2, 0, 1);
-    write_filled_rectangle_lm(stick_x - (STICK_BOX_SIZE) / 2, stick_y - (STICK_BOX_SIZE) / 2, STICK_BOX_SIZE, STICK_BOX_SIZE, 1, 1);
+    draw_filled_rectangle(stick_x - (STICK_BOX_SIZE) / 2 - 1, stick_y - (STICK_BOX_SIZE) / 2 - 1, STICK_BOX_SIZE + 2, STICK_BOX_SIZE + 2, OSD_COLOR_BLACK);
+    draw_filled_rectangle(stick_x - (STICK_BOX_SIZE) / 2, stick_y - (STICK_BOX_SIZE) / 2, STICK_BOX_SIZE, STICK_BOX_SIZE, OSD_COLOR_WHITE);
 }
 
 
@@ -669,7 +669,7 @@ void brainFpvRadarMap(void)
         y = y_pos - roundf(distance_px * cos_approx(DEGREES_TO_RADIANS(home_dir)));
 
         // draw H to indicate home
-        write_string("H", x + 1, y - 3, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT_OUTLINED8X8);
+        draw_string("H", x + 1, y - 3, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT_OUTLINED8X8);
     }
 
     //===========================================================================================
@@ -709,11 +709,11 @@ void brainFpvRadarMap(void)
 
             char buff[20];
             tfp_sprintf(buff, "%c %d", 'A' + i, delta_alt);
-            write_string(buff, x, y - 3, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT_OUTLINED8X8);
+            draw_string(buff, x, y - 3, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT_OUTLINED8X8);
         }
         else {
             direction = radar_pois[i].heading - DECIDEGREES_TO_DEGREES(attitude.values.yaw);
-            draw_polygon_simple(x, y, direction, UAV_SYM, 4, 1);
+            draw_polygon(x, y, direction, UAV_SYM, 4, OSD_COLOR_WHITE, OSD_COLOR_BLACK);
         }
     }
 
@@ -746,7 +746,7 @@ void brainFpvRadarMap(void)
 
         char buff[10];
         tfp_sprintf(buff, "%d", i);
-        write_string(buff, x, y - 3, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT_OUTLINED8X8);
+        draw_string(buff, x, y - 3, 0, 0, TEXT_VA_TOP, TEXT_HA_CENTER, FONT_OUTLINED8X8);
     }
 
 }
@@ -788,7 +788,7 @@ void brainFpvOsdHeadingGraph(uint16_t x, uint16_t y)
 
         if (pos_g % HGRAPH_MAIN_TICKS_DEG == 0) {
             // major tick
-            write_vline_lm(xp, y, y + HGRAPH_MAIN_TICK_LEN, 1, 1);
+            draw_vline(xp, y, y + HGRAPH_MAIN_TICK_LEN, OSD_COLOR_WHITE);
 
             pos_g_360 = pos_g;
             if (pos_g_360 < 0) {
@@ -815,13 +815,13 @@ void brainFpvOsdHeadingGraph(uint16_t x, uint16_t y)
                     break;
             }
             if (tmp_str[0]) {
-                write_string(tmp_str, xp + 1, y + HGRAPH_MAIN_TICK_LEN + 3, 0, 0,
+                draw_string(tmp_str, xp + 1, y + HGRAPH_MAIN_TICK_LEN + 3, 0, 0,
                         TEXT_VA_TOP, TEXT_HA_CENTER, FONT_OUTLINED8X8);
             }
         }
         else {
             // minor tick
-            write_vline_lm(xp, y, y + HGRAPH_SUB_TICK_LEN, 0, 1);
+            draw_vline(xp, y, y + HGRAPH_SUB_TICK_LEN, OSD_COLOR_BLACK);
         }
 
         pos_g += HGRAPH_SUB_TICKS_DEG;
@@ -829,9 +829,9 @@ void brainFpvOsdHeadingGraph(uint16_t x, uint16_t y)
 
     // Draw center mark
     xp = x + HGRAPH_WIDTH_PX / 2;
-    write_hline_lm(xp - 2, xp + 2, y, 1, 1);
-    write_line_lm(xp - 2, y, xp, y + 2, 1, 1);
-    write_line_lm(xp + 2, y, xp, y + 2, 1, 1);
+    draw_hline(xp - 2, xp + 2, y, OSD_COLOR_WHITE);
+    draw_line(xp - 2, y, xp, y + 2, OSD_COLOR_WHITE);
+    draw_line(xp + 2, y, xp, y + 2, OSD_COLOR_WHITE);
 }
 
 #endif /* USE_BRAINFPV_OSD */

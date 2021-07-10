@@ -811,7 +811,9 @@ void FAST_CODE taskGyro(timeUs_t currentTimeUs) {
     UNUSED(currentTimeUs);
     // getTaskDeltaTime() returns delta time frozen at the moment of entering the scheduler. currentTime is frozen at the very same point.
     // To make busy-waiting timeout work we need to account for time spent within busy-waiting loop
+#ifdef USE_OPFLOW
     const timeDelta_t currentDeltaTime = getTaskDeltaTime(TASK_SELF);
+#endif
 
     /* Update actual hardware readings */
     gyroUpdate();

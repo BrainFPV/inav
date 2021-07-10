@@ -37,7 +37,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#if defined(USE_CHIBIOS)
+#include "ch.h"
+#endif
+
 #include "platform.h"
+
+#if defined(USE_IMU_BMI160)
+#if defined(USE_CHIBIOS)
+binary_semaphore_t gyroSem;
+#endif
+
 #include "build/debug.h"
 
 #include "common/axis.h"
@@ -54,13 +64,6 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro/accgyro.h"
 #include "drivers/accgyro/accgyro_bmi160.h"
-
-#if defined(USE_IMU_BMI160)
-
-#if defined(USE_CHIBIOS)
-#include "ch.h"
-binary_semaphore_t gyroSem;
-#endif
 
 /* BMI160 Registers */
 #define BMI160_REG_CHIPID           0x00

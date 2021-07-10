@@ -19,6 +19,16 @@
 #include <stdint.h>
 #include <string.h>
 
+#if defined(USE_CHIBIOS)
+#include <math.h>
+#include "ch.h"
+
+uint32_t last_check = 0;
+extern binary_semaphore_t gyroSem;
+extern bool idleCounterClear;
+extern uint32_t idleCounter;
+#endif
+
 #include "platform.h"
 
 FILE_COMPILE_FOR_SPEED
@@ -33,16 +43,6 @@ FILE_COMPILE_FOR_SPEED
 #include "common/utils.h"
 
 #include "drivers/time.h"
-
-#if defined(USE_CHIBIOS)
-#include <math.h>
-#include "ch.h"
-
-uint32_t last_check = 0;
-extern binary_semaphore_t gyroSem;
-extern bool idleCounterClear;
-extern uint32_t idleCounter;
-#endif
 
 STATIC_FASTRAM cfTask_t *currentTask = NULL;
 

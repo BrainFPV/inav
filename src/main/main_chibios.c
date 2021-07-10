@@ -18,6 +18,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "ch.h"
+#include "hal.h"
+#include "nvic.h"
+
 #include "platform.h"
 #include "build/debug.h"
 #include "drivers/serial.h"
@@ -27,10 +31,6 @@
 #include "fc/fc_init.h"
 
 #include "scheduler/scheduler.h"
-
-#include "ch.h"
-#include "hal.h"
-#include "nvic.h"
 
 volatile bool idleCounterClear = 0;
 volatile uint32_t idleCounter = 0;

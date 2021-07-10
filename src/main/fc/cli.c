@@ -23,6 +23,10 @@
 #include <math.h>
 #include <ctype.h>
 
+#if defined(USE_CHIBIOS)
+#include "ch.h"
+#endif
+
 #include "platform.h"
 
 uint8_t cliMode = 0;
@@ -3291,7 +3295,6 @@ static void cliStatus(char *cmdline)
 #ifndef SKIP_TASK_STATISTICS
 
 #if defined(USE_CHIBIOS)
-#include "ch.h"
 
 uint32_t ChibiGetTaskStackUsage(thread_t *threadp)
 {

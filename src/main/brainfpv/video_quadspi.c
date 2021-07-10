@@ -32,6 +32,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "ch.h"
+#include "video.h"
+
 #include "platform.h"
 //#include "system.h"
 #include "drivers/io.h"
@@ -50,9 +53,6 @@ static IO_t vsync_io;
 #if !defined(VIDEO_QUADSPI_Y_OFFSET)
 #define VIDEO_QUADSPI_Y_OFFSET 0
 #endif /* !defined(VIDEO_QUADSPI_Y_OFFSET) */
-
-#include "ch.h"
-#include "video.h"
 
 // How many frames until we redraw
 #define VSYNC_REDRAW_CNT 2

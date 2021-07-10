@@ -16,7 +16,7 @@ set(CHIBIOS_H7_HAL_DIR "${CHIBIOS_DIR}/os/hal/ports/STM32/STM32H7xx")
 set(CHIBIOS_HAL_LLD_DIR "${CHIBIOS_DIR}/os/hal/ports/STM32/LLD")
 set(CHIBIOS_HAL_PORT_DIR "${CHIBIOS_DIR}/os/hal/ports/common/ARMCMx")
 set(CHIBIOS_HAL_INC_DIR "${CHIBIOS_DIR}/os/hal/include")
-set(CHIBIOS_OSAL_DIR "${CHIBIOS_DIR}/os/hal/osal/rt")
+set(CHIBIOS_OSAL_DIR "${CHIBIOS_DIR}/os/hal/osal/rt-nil")
 set(CHIBIOS_RT_DIR "${CHIBIOS_DIR}/os/rt")
 set(CHIBIOS_PORT_DIR "${CHIBIOS_DIR}/os/common/ports/ARMCMx")
 

@@ -31,7 +31,7 @@
 #include "mcuconf.h"
 
 #define _CHIBIOS_HAL_CONF_
-#define _CHIBIOS_HAL_CONF_VER_7_0_
+#define _CHIBIOS_HAL_CONF_VER_7_1_
 
 /**
  * @brief   Enables the PAL subsystem.

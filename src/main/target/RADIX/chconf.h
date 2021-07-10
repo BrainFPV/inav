@@ -29,7 +29,7 @@
 #define CHCONF_H
 
 #define _CHIBIOS_RT_CONF_
-#define _CHIBIOS_RT_CONF_VER_6_0_
+#define _CHIBIOS_RT_CONF_VER_6_1_
 
 #define CORTEX_SIMPLIFIED_PRIORITY TRUE
 /*===========================================================================*/
@@ -315,6 +315,34 @@
  * @note    The default is @p TRUE.
  */
 #define CH_CFG_USE_PIPES                    FALSE
+
+
+/**
+ * @brief   Objects Caches APIs.
+ * @details If enabled then the objects caches APIs are included
+ *          in the kernel.
+ *
+ * @note    The default is @p TRUE.
+ */
+#define CH_CFG_USE_OBJ_CACHES               FALSE
+
+/**
+ * @brief   Delegate threads APIs.
+ * @details If enabled then the delegate threads APIs are included
+ *          in the kernel.
+ *
+ * @note    The default is @p TRUE.
+ */
+#define CH_CFG_USE_DELEGATES                FALSE
+
+/**
+ * @brief   Jobs Queues APIs.
+ * @details If enabled then the jobs queues APIs are included
+ *          in the kernel.
+ *
+ * @note    The default is @p TRUE.
+ */
+#define CH_CFG_USE_JOBS                     FALSE
 
 /**
  * @brief   Dynamic Threads APIs.

@@ -21,6 +21,10 @@
 #define USE_ITCM_RAM
 #endif
 
+#if defined(NOINLINE)
+#undef NOINLINE
+#endif
+
 #ifdef USE_ITCM_RAM
 #define FAST_CODE                   __attribute__((section(".tcm_code")))
 #define NOINLINE                    __attribute__((noinline))

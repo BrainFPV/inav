@@ -54,8 +54,9 @@ static char *long_to_string_with_divisor(char *p,
   do {
     i = (int)(l % radix);
     i += '0';
-    if (i > '9')
+    if (i > '9') {
       i += 'A' - '0' - 10;
+    }
     *--q = i;
     l /= radix;
   } while ((ll /= radix) != 0);
@@ -81,14 +82,16 @@ static const long pow10[FLOAT_PRECISION] = {
 static char *ftoa(char *p, double num, unsigned long precision) {
   long l;
 
-  if ((precision == 0) || (precision > FLOAT_PRECISION))
+  if ((precision == 0) || (precision > FLOAT_PRECISION)) {
     precision = FLOAT_PRECISION;
+  }
   precision = pow10[precision - 1];
 
   l = (long)num;
   p = long_to_string_with_divisor(p, l, 10, 0);
   *p++ = '.';
   l = (long)((num - l) * precision);
+
   return long_to_string_with_divisor(p, l, 10, precision / 10);
 }
 #endif
@@ -123,7 +126,7 @@ int chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
   char *p, *s, c, filler;
   int i, precision, width;
   int n = 0;
-  bool is_long, left_align;
+  bool is_long, left_align, do_sign;
   long l;
 #if CHPRINTF_USE_FLOAT
   float f;
@@ -134,58 +137,97 @@ int chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
 
   while (true) {
     c = *fmt++;
-    if (c == 0)
+    if (c == 0) {
       return n;
+    }
+    
     if (c != '%') {
       streamPut(chp, (uint8_t)c);
       n++;
       continue;
     }
+    
     p = tmpbuf;
     s = tmpbuf;
-    left_align = FALSE;
+
+    /* Alignment mode.*/
+    left_align = false;
     if (*fmt == '-') {
       fmt++;
-      left_align = TRUE;
+      left_align = true;
     }
+
+    /* Sign mode.*/
+    do_sign = false;
+    if (*fmt == '+') {
+      fmt++;
+      do_sign = true;
+    }
+
+    /* Filler mode.*/
     filler = ' ';
     if (*fmt == '0') {
       fmt++;
       filler = '0';
     }
-    width = 0;
-    while (TRUE) {
+    
+    /* Width modifier.*/
+    if ( *fmt == '*') {
+      width = va_arg(ap, int);
+      ++fmt;
       c = *fmt++;
-      if (c >= '0' && c <= '9')
-        c -= '0';
-      else if (c == '*')
-        c = va_arg(ap, int);
-      else
-        break;
-      width = width * 10 + c;
     }
-    precision = 0;
-    if (c == '.') {
-      while (TRUE) {
+    else {
+      width = 0;
+      while (true) {
         c = *fmt++;
-        if (c >= '0' && c <= '9')
+        if (c == 0) {
+          return n;
+        }
+        if (c >= '0' && c <= '9') {
           c -= '0';
-        else if (c == '*')
-          c = va_arg(ap, int);
-        else
+          width = width * 10 + c;
+        }
+        else {
           break;
-        precision *= 10;
-        precision += c;
+        }
       }
     }
+    
+    /* Precision modifier.*/
+    precision = 0;
+    if (c == '.') {
+      c = *fmt++;
+      if (c == 0) {
+        return n;
+      }
+      if (c == '*') {
+        precision = va_arg(ap, int);
+        c = *fmt++;
+      }
+      else {
+        while (c >= '0' && c <= '9') {
+          c -= '0';
+          precision = precision * 10 + c;
+          c = *fmt++;
+          if (c == 0) {
+            return n;
+          }
+        }
+      }
+    }
+    
     /* Long modifier.*/
     if (c == 'l' || c == 'L') {
-      is_long = TRUE;
-      if (*fmt)
-        c = *fmt++;
+      is_long = true;
+      c = *fmt++;
+      if (c == 0) {
+        return n;
+      }
     }
-    else
+    else {
       is_long = (c >= 'A') && (c <= 'Z');
+    }
 
     /* Command decoding.*/
     switch (c) {
@@ -195,10 +237,12 @@ int chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
       break;
     case 's':
       filler = ' ';
-      if ((s = va_arg(ap, char *)) == 0)
+      if ((s = va_arg(ap, char *)) == 0) {
         s = "(null)";
-      if (precision == 0)
+      }
+      if (precision == 0) {
         precision = 32767;
+      }
       for (p = s; *p && (--precision >= 0); p++)
         ;
       break;
@@ -206,14 +250,20 @@ int chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
     case 'd':
     case 'I':
     case 'i':
-      if (is_long)
+      if (is_long) {
         l = va_arg(ap, long);
-      else
+      }
+      else {
         l = va_arg(ap, int);
+      }
       if (l < 0) {
         *p++ = '-';
         l = -l;
       }
+      else
+        if (do_sign) {
+          *p++ = '+';
+        }
       p = ch_ltoa(p, l, 10);
       break;
 #if CHPRINTF_USE_FLOAT
@@ -223,11 +273,18 @@ int chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
         *p++ = '-';
         f = -f;
       }
+      else {
+        if (do_sign) {
+          *p++ = '+';
+        }
+      }
       p = ftoa(p, f, precision);
       break;
 #endif
     case 'X':
     case 'x':
+    case 'P':
+    case 'p':
       c = 16;
       goto unsigned_common;
     case 'U':
@@ -238,10 +295,12 @@ int chvprintf(BaseSequentialStream *chp, const char *fmt, va_list ap) {
     case 'o':
       c = 8;
 unsigned_common:
-      if (is_long)
+      if (is_long) {
         l = va_arg(ap, unsigned long);
-      else
+      }
+      else {
         l = va_arg(ap, unsigned int);
+      }
       p = ch_ltoa(p, l, c);
       break;
     default:
@@ -249,12 +308,14 @@ unsigned_common:
       break;
     }
     i = (int)(p - s);
-    if ((width -= i) < 0)
+    if ((width -= i) < 0) {
       width = 0;
-    if (left_align == FALSE)
+    }
+    if (left_align == false) {
       width = -width;
+    }
     if (width < 0) {
-      if (*s == '-' && filler == '0') {
+      if ((*s == '-' || *s == '+') && filler == '0') {
         streamPut(chp, (uint8_t)*s++);
         n++;
         i--;

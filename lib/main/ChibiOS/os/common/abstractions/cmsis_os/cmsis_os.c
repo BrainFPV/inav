@@ -88,10 +88,10 @@ osStatus osKernelInitialize(void) {
   chSysInit();
   chThdSetPriority(HIGHPRIO);
 
-  chPoolObjectInit(&sempool, sizeof(semaphore_t), chCoreAllocAligned);
+  chPoolObjectInit(&sempool, sizeof(semaphore_t), chCoreAllocAlignedI);
   chPoolLoadArray(&sempool, semaphores, CMSIS_CFG_NUM_SEMAPHORES);
 
-  chPoolObjectInit(&timpool, sizeof(struct os_timer_cb), chCoreAllocAligned);
+  chPoolObjectInit(&timpool, sizeof(struct os_timer_cb), chCoreAllocAlignedI);
   chPoolLoadArray(&timpool, timers, CMSIS_CFG_NUM_TIMERS);
 
   return osOK;
@@ -154,11 +154,12 @@ osStatus osThreadSetPriority(osThreadId thread_id, osPriority newprio) {
 
   /* Changing priority.*/
 #if CH_CFG_USE_MUTEXES
-  if ((tp->prio == tp->realprio) || ((tprio_t)newprio > tp->prio))
-    tp->prio = (tprio_t)newprio;
+  if ((tp->hdr.pqueue.prio == tp->realprio) ||
+      ((tprio_t)newprio > tp->hdr.pqueue.prio))
+    tp->hdr.pqueue.prio = (tprio_t)newprio;
   tp->realprio = (tprio_t)newprio;
 #else
-  tp->prio = (tprio_t)newprio;
+  tp->hdr.pqueue.prio = (tprio_t)newprio;
 #endif
 
   /* The following states need priority queues reordering.*/
@@ -180,8 +181,8 @@ osStatus osThreadSetPriority(osThreadId thread_id, osPriority newprio) {
   case CH_STATE_SNDMSGQ:
 #endif
     /* Re-enqueues tp with its new priority on the queue.*/
-    queue_prio_insert(queue_dequeue(tp),
-                      (threads_queue_t *)tp->u.wtobjp);
+    ch_sch_prio_insert(ch_queue_dequeue(&tp->hdr.queue),
+                       (ch_queue_t *)tp->u.wtobjp);
     break;
 #endif
   case CH_STATE_READY:
@@ -190,7 +191,7 @@ osStatus osThreadSetPriority(osThreadId thread_id, osPriority newprio) {
     tp->state = CH_STATE_CURRENT;
 #endif
     /* Re-enqueues tp with its new priority on the ready list.*/
-    chSchReadyI(queue_dequeue(tp));
+    chSchReadyI((thread_t *)ch_queue_dequeue(&tp->hdr.queue));
     break;
   }
 

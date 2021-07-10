@@ -15,7 +15,7 @@
 */
 
 /**
- * @file    STM32F1xx/stm32_isr.h
+ * @file    STM32F1xx/stm32_isr.c
  * @brief   STM32F1xx ISR handler code.
  *
  * @addtogroup STM32F1xx_ISR
@@ -51,7 +51,7 @@
 /* Driver interrupt handlers.                                                */
 /*===========================================================================*/
 
-#if (HAL_USE_PAL && (PAL_USE_WAIT || PAL_USE_CALLBACKS))|| defined(__DOXYGEN__)
+#if (HAL_USE_PAL && (PAL_USE_WAIT || PAL_USE_CALLBACKS)) || defined(__DOXYGEN__)
 #if !defined(STM32_DISABLE_EXTI0_HANDLER)
 /**
  * @brief   EXTI[0] interrupt handler.

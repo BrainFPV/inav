@@ -94,6 +94,7 @@ static void rt_test_001_001_execute(void) {
     test_println("");
 #endif
   }
+  test_end_step(1);
 }
 
 static const testcase_t rt_test_001_001 = {
@@ -135,6 +136,7 @@ static void rt_test_001_002_execute(void) {
     test_printn(CH_KERNEL_PATCH);
     test_println("");
   }
+  test_end_step(1);
 }
 
 static const testcase_t rt_test_001_002 = {
@@ -226,44 +228,8 @@ static void rt_test_001_003_execute(void) {
     test_print("--- CH_CFG_USE_MESSAGES_PRIORITY:       ");
     test_printn(CH_CFG_USE_MESSAGES_PRIORITY);
     test_println("");
-    test_print("--- CH_CFG_USE_MAILBOXES:               ");
-    test_printn(CH_CFG_USE_MAILBOXES);
-    test_println("");
-    test_print("--- CH_CFG_USE_MEMCORE:                 ");
-    test_printn(CH_CFG_USE_MEMCORE);
-    test_println("");
-    test_print("--- CH_CFG_USE_HEAP:                    ");
-    test_printn(CH_CFG_USE_HEAP);
-    test_println("");
-    test_print("--- CH_CFG_USE_MEMPOOLS:                ");
-    test_printn(CH_CFG_USE_MEMPOOLS);
-    test_println("");
-    test_print("--- CH_CFG_USE_OBJ_FIFOS:               ");
-    test_printn(CH_CFG_USE_OBJ_FIFOS);
-    test_println("");
     test_print("--- CH_CFG_USE_DYNAMIC:                 ");
     test_printn(CH_CFG_USE_DYNAMIC);
-    test_println("");
-    test_print("--- CH_CFG_USE_FACTORY:                 ");
-    test_printn(CH_CFG_USE_FACTORY);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_MAX_NAMES_LENGTH:    ");
-    test_printn(CH_CFG_FACTORY_MAX_NAMES_LENGTH);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_OBJECTS_REGISTRY:    ");
-    test_printn(CH_CFG_FACTORY_OBJECTS_REGISTRY);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_GENERIC_BUFFERS:     ");
-    test_printn(CH_CFG_FACTORY_GENERIC_BUFFERS);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_SEMAPHORES:          ");
-    test_printn(CH_CFG_FACTORY_SEMAPHORES);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_MAILBOXES:           ");
-    test_printn(CH_CFG_FACTORY_MAILBOXES);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_OBJ_FIFOS:           ");
-    test_printn(CH_CFG_FACTORY_OBJ_FIFOS);
     test_println("");
     test_print("--- CH_DBG_STATISTICS:                  ");
     test_printn(CH_DBG_STATISTICS);
@@ -293,6 +259,7 @@ static void rt_test_001_003_execute(void) {
     test_printn(CH_DBG_THREADS_PROFILING);
     test_println("");
   }
+  test_end_step(1);
 }
 
 static const testcase_t rt_test_001_003 = {

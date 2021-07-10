@@ -40,19 +40,19 @@
 #endif
 
 /* Differences in L4+ headers.*/
-#if defined(USART_CR1_TXEIE_TXFNFIE)
+#if !defined(USART_CR1_TXEIE)
 #define USART_CR1_TXEIE                     USART_CR1_TXEIE_TXFNFIE
 #endif
 
-#if defined(USART_CR1_RXNEIE_RXFNEIE)
+#if !defined(USART_CR1_RXNEIE)
 #define USART_CR1_RXNEIE                    USART_CR1_RXNEIE_RXFNEIE
 #endif
 
-#if defined(USART_ISR_TXE_TXFNF)
+#if !defined(USART_ISR_TXE)
 #define USART_ISR_TXE                       USART_ISR_TXE_TXFNF
 #endif
 
-#if defined(USART_ISR_RXNE_RXFNE)
+#if !defined(USART_ISR_RXNE)
 #define USART_ISR_RXNE                      USART_ISR_RXNE_RXFNE
 #endif
 
@@ -230,26 +230,34 @@ static uint8_t sd_out_buflp1[STM32_SERIAL_LPUART1_OUT_BUF_SIZE];
  * @param[in] config    the architecture-dependent serial driver configuration
  */
 static void usart_init(SerialDriver *sdp, const SerialConfig *config) {
-  uint32_t fck;
+  uint32_t brr;
   USART_TypeDef *u = sdp->usart;
 
   /* Baud rate setting.*/
 #if STM32_SERIAL_USE_LPUART1
-  if ( sdp == &LPSD1 ) {
-    fck = (uint32_t)(((uint64_t)sdp->clock * 256 ) / config->speed);
+  if (sdp == &LPSD1) {
+    osalDbgAssert((sdp->clock >= config->speed * 3U) &&
+                  (sdp->clock <= config->speed * 4096U),
+                  "invalid baud rate vs input clock");
+
+    brr = (uint32_t)(((uint64_t)sdp->clock * 256) / config->speed);
+
+    osalDbgAssert((brr >= 0x300) && (brr < 0x100000), "invalid BRR value");
   }
   else
 #endif
   {
-    fck = (uint32_t)(sdp->clock / config->speed);
-  }
+    brr = (uint32_t)(sdp->clock / config->speed);
 
-  /* Correcting USARTDIV when oversampling by 8 instead of 16.
-     Fraction is still 4 bits wide, but only lower 3 bits used.
-     Mantissa is doubled, but Fraction is left the same.*/
-  if (config->cr1 & USART_CR1_OVER8)
-    fck = ((fck & ~7) * 2) | (fck & 7);
-  u->BRR = fck;
+    /* Correcting BRR value when oversampling by 8 instead of 16.
+       Fraction is still 4 bits wide, but only lower 3 bits used.
+       Mantissa is doubled, but Fraction is left the same.*/
+    if (config->cr1 & USART_CR1_OVER8)
+      brr = ((brr & ~7) * 2) | (brr & 7);
+
+    osalDbgAssert(brr < 0x10000, "invalid BRR value");
+  }
+  u->BRR = brr;
 
   /* Note that some bits are enforced.*/
   u->CR2 = config->cr2 | USART_CR2_LBDIE;
@@ -311,80 +319,6 @@ static void set_error(SerialDriver *sdp, uint32_t isr) {
   osalSysLockFromISR();
   chnAddFlagsI(sdp, sts);
   osalSysUnlockFromISR();
-}
-
-/**
- * @brief   Common IRQ handler.
- *
- * @param[in] sdp       communication channel associated to the USART
- */
-static void serve_interrupt(SerialDriver *sdp) {
-  USART_TypeDef *u = sdp->usart;
-  uint32_t cr1 = u->CR1;
-  uint32_t isr;
-
-  /* Reading and clearing status.*/
-  isr = u->ISR;
-  u->ICR = isr;
-
-  /* Error condition detection.*/
-  if (isr & (USART_ISR_ORE | USART_ISR_NE | USART_ISR_FE  | USART_ISR_PE))
-    set_error(sdp, isr);
-
-  /* Special case, LIN break detection.*/
-  if (isr & USART_ISR_LBDF) {
-    osalSysLockFromISR();
-    chnAddFlagsI(sdp, SD_BREAK_DETECTED);
-    osalSysUnlockFromISR();
-  }
-
-  /* Data available, note it is a while in order to handle two situations:
-     1) Another byte arrived after removing the previous one, this would cause
-        an extra interrupt to serve.
-     2) FIFO mode is enabled on devices that support it, we need to empty
-        the FIFO.*/
-  while (isr & USART_ISR_RXNE) {
-    osalSysLockFromISR();
-    sdIncomingDataI(sdp, (uint8_t)u->RDR & sdp->rxmask);
-    osalSysUnlockFromISR();
-
-    isr = u->ISR;
-  }
-
-  /* Transmission buffer empty, note it is a while in order to handle two
-     situations:
-     1) The data registers has been emptied immediately after writing it, this
-        would cause an extra interrupt to serve.
-     2) FIFO mode is enabled on devices that support it, we need to fill
-        the FIFO.*/
-  if (cr1 & USART_CR1_TXEIE) {
-    while (isr & USART_ISR_TXE) {
-      msg_t b;
-
-      osalSysLockFromISR();
-      b = oqGetI(&sdp->oqueue);
-      if (b < MSG_OK) {
-        chnAddFlagsI(sdp, CHN_OUTPUT_EMPTY);
-        u->CR1 = cr1 & ~USART_CR1_TXEIE;
-        osalSysUnlockFromISR();
-        break;
-      }
-      u->TDR = b;
-      osalSysUnlockFromISR();
-
-      isr = u->ISR;
-    }
-  }
-
-  /* Physical transmission end.*/
-  if ((cr1 & USART_CR1_TCIE) && (isr & USART_ISR_TC)) {
-    osalSysLockFromISR();
-    if (oqIsEmptyI(&sdp->oqueue)) {
-      chnAddFlagsI(sdp, CHN_TRANSMISSION_END);
-      u->CR1 = cr1 & ~USART_CR1_TCIE;
-    }
-    osalSysUnlockFromISR();
-  }
 }
 
 #if STM32_SERIAL_USE_USART1 || defined(__DOXYGEN__)
@@ -464,6 +398,7 @@ static void notifylp1(io_queue_t *qp) {
 /*===========================================================================*/
 
 #if STM32_SERIAL_USE_USART1 || defined(__DOXYGEN__)
+#if !defined(STM32_USART1_SUPPRESS_ISR)
 #if !defined(STM32_USART1_HANDLER)
 #error "STM32_USART1_HANDLER not defined"
 #endif
@@ -476,13 +411,15 @@ OSAL_IRQ_HANDLER(STM32_USART1_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&SD1);
+  sd_lld_serve_interrupt(&SD1);
 
   OSAL_IRQ_EPILOGUE();
 }
 #endif
+#endif
 
 #if STM32_SERIAL_USE_USART2 || defined(__DOXYGEN__)
+#if !defined(STM32_USART2_SUPPRESS_ISR)
 #if !defined(STM32_USART2_HANDLER)
 #error "STM32_USART2_HANDLER not defined"
 #endif
@@ -495,51 +432,15 @@ OSAL_IRQ_HANDLER(STM32_USART2_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&SD2);
+  sd_lld_serve_interrupt(&SD2);
 
   OSAL_IRQ_EPILOGUE();
 }
 #endif
-
-#if defined(STM32_USART3_8_HANDLER)
-#if STM32_SERIAL_USE_USART3 || STM32_SERIAL_USE_UART4  ||                   \
-    STM32_SERIAL_USE_UART5  || STM32_SERIAL_USE_USART6 ||                   \
-    STM32_SERIAL_USE_UART7  || STM32_SERIAL_USE_UART8  || defined(__DOXYGEN__)
-/**
- * @brief   USART3..8 interrupt handler.
- *
- * @isr
- */
-OSAL_IRQ_HANDLER(STM32_USART3_8_HANDLER) {
-
-  OSAL_IRQ_PROLOGUE();
-
-#if STM32_SERIAL_USE_USART3
-  serve_interrupt(&SD3);
 #endif
-#if STM32_SERIAL_USE_UART4
-  serve_interrupt(&SD4);
-#endif
-#if STM32_SERIAL_USE_UART5
-  serve_interrupt(&SD5);
-#endif
-#if STM32_SERIAL_USE_USART6
-  serve_interrupt(&SD6);
-#endif
-#if STM32_SERIAL_USE_UART7
-  serve_interrupt(&SD7);
-#endif
-#if STM32_SERIAL_USE_UART8
-  serve_interrupt(&SD8);
-#endif
-
-  OSAL_IRQ_EPILOGUE();
-}
-#endif
-
-#else /* !defined(STM32_USART3_8_HANDLER) */
 
 #if STM32_SERIAL_USE_USART3 || defined(__DOXYGEN__)
+#if !defined(STM32_USART3_SUPPRESS_ISR)
 #if !defined(STM32_USART3_HANDLER)
 #error "STM32_USART3_HANDLER not defined"
 #endif
@@ -552,13 +453,15 @@ OSAL_IRQ_HANDLER(STM32_USART3_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&SD3);
+  sd_lld_serve_interrupt(&SD3);
 
   OSAL_IRQ_EPILOGUE();
 }
 #endif
+#endif
 
 #if STM32_SERIAL_USE_UART4 || defined(__DOXYGEN__)
+#if !defined(STM32_UART4_SUPPRESS_ISR)
 #if !defined(STM32_UART4_HANDLER)
 #error "STM32_UART4_HANDLER not defined"
 #endif
@@ -571,13 +474,15 @@ OSAL_IRQ_HANDLER(STM32_UART4_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&SD4);
+  sd_lld_serve_interrupt(&SD4);
 
   OSAL_IRQ_EPILOGUE();
 }
 #endif
+#endif
 
 #if STM32_SERIAL_USE_UART5 || defined(__DOXYGEN__)
+#if !defined(STM32_UART5_SUPPRESS_ISR)
 #if !defined(STM32_UART5_HANDLER)
 #error "STM32_UART5_HANDLER not defined"
 #endif
@@ -590,13 +495,15 @@ OSAL_IRQ_HANDLER(STM32_UART5_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&SD5);
+  sd_lld_serve_interrupt(&SD5);
 
   OSAL_IRQ_EPILOGUE();
 }
 #endif
+#endif
 
 #if STM32_SERIAL_USE_USART6 || defined(__DOXYGEN__)
+#if !defined(STM32_USART6_SUPPRESS_ISR)
 #if !defined(STM32_USART6_HANDLER)
 #error "STM32_USART6_HANDLER not defined"
 #endif
@@ -609,13 +516,15 @@ OSAL_IRQ_HANDLER(STM32_USART6_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&SD6);
+  sd_lld_serve_interrupt(&SD6);
 
   OSAL_IRQ_EPILOGUE();
 }
 #endif
+#endif
 
 #if STM32_SERIAL_USE_UART7 || defined(__DOXYGEN__)
+#if !defined(STM32_UART7_SUPPRESS_ISR)
 #if !defined(STM32_UART7_HANDLER)
 #error "STM32_UART7_HANDLER not defined"
 #endif
@@ -628,13 +537,15 @@ OSAL_IRQ_HANDLER(STM32_UART7_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&SD7);
+  sd_lld_serve_interrupt(&SD7);
 
   OSAL_IRQ_EPILOGUE();
 }
 #endif
+#endif
 
 #if STM32_SERIAL_USE_UART8 || defined(__DOXYGEN__)
+#if !defined(STM32_UART8_SUPPRESS_ISR)
 #if !defined(STM32_UART8_HANDLER)
 #error "STM32_UART8_HANDLER not defined"
 #endif
@@ -647,15 +558,15 @@ OSAL_IRQ_HANDLER(STM32_UART8_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&SD8);
+  sd_lld_serve_interrupt(&SD8);
 
   OSAL_IRQ_EPILOGUE();
 }
 #endif
-
-#endif /* !defined(STM32_USART3_8_HANDLER) */
+#endif
 
 #if STM32_SERIAL_USE_LPUART1 || defined(__DOXYGEN__)
+#if !defined(STM32_LPUART1_SUPPRESS_ISR)
 #if !defined(STM32_LPUART1_HANDLER)
 #error "STM32_LPUART1_HANDLER not defined"
 #endif
@@ -668,10 +579,11 @@ OSAL_IRQ_HANDLER(STM32_LPUART1_HANDLER) {
 
   OSAL_IRQ_PROLOGUE();
 
-  serve_interrupt(&LPSD1);
+  sd_lld_serve_interrupt(&LPSD1);
 
   OSAL_IRQ_EPILOGUE();
 }
+#endif
 #endif
 
 /*===========================================================================*/
@@ -691,7 +603,7 @@ void sd_lld_init(void) {
   oqObjectInit(&SD1.oqueue, sd_out_buf1, sizeof sd_out_buf1, notify1, &SD1);
   SD1.usart = USART1;
   SD1.clock = STM32_USART1CLK;
-#if defined(STM32_USART1_NUMBER)
+#if !defined(STM32_USART1_SUPPRESS_ISR) && defined(STM32_USART1_NUMBER)
   nvicEnableVector(STM32_USART1_NUMBER, STM32_SERIAL_USART1_PRIORITY);
 #endif
 #endif
@@ -702,7 +614,7 @@ void sd_lld_init(void) {
   oqObjectInit(&SD2.oqueue, sd_out_buf2, sizeof sd_out_buf2, notify2, &SD2);
   SD2.usart = USART2;
   SD2.clock = STM32_USART2CLK;
-#if defined(STM32_USART2_NUMBER)
+#if !defined(STM32_USART2_SUPPRESS_ISR) && defined(STM32_USART2_NUMBER)
   nvicEnableVector(STM32_USART2_NUMBER, STM32_SERIAL_USART2_PRIORITY);
 #endif
 #endif
@@ -713,7 +625,7 @@ void sd_lld_init(void) {
   oqObjectInit(&SD3.oqueue, sd_out_buf3, sizeof sd_out_buf3, notify3, &SD3);
   SD3.usart = USART3;
   SD3.clock = STM32_USART3CLK;
-#if defined(STM32_USART3_NUMBER)
+#if !defined(STM32_USART3_SUPPRESS_ISR) && defined(STM32_USART3_NUMBER)
   nvicEnableVector(STM32_USART3_NUMBER, STM32_SERIAL_USART3_PRIORITY);
 #endif
 #endif
@@ -724,7 +636,7 @@ void sd_lld_init(void) {
   oqObjectInit(&SD4.oqueue, sd_out_buf4, sizeof sd_out_buf4, notify4, &SD4);
   SD4.usart = UART4;
   SD4.clock = STM32_UART4CLK;
-#if defined(STM32_UART4_NUMBER)
+#if !defined(STM32_UART4_SUPPRESS_ISR) && defined(STM32_UART4_NUMBER)
   nvicEnableVector(STM32_UART4_NUMBER, STM32_SERIAL_UART4_PRIORITY);
 #endif
 #endif
@@ -735,7 +647,7 @@ void sd_lld_init(void) {
   oqObjectInit(&SD5.oqueue, sd_out_buf5, sizeof sd_out_buf5, notify5, &SD5);
   SD5.usart = UART5;
   SD5.clock = STM32_UART5CLK;
-#if defined(STM32_UART5_NUMBER)
+#if !defined(STM32_UART5_SUPPRESS_ISR) && defined(STM32_UART5_NUMBER)
   nvicEnableVector(STM32_UART5_NUMBER, STM32_SERIAL_UART5_PRIORITY);
 #endif
 #endif
@@ -746,7 +658,7 @@ void sd_lld_init(void) {
   oqObjectInit(&SD6.oqueue, sd_out_buf6, sizeof sd_out_buf6, notify6, &SD6);
   SD6.usart = USART6;
   SD6.clock = STM32_USART6CLK;
-#if defined(STM32_USART6_NUMBER)
+#if !defined(STM32_USART6_SUPPRESS_ISR) && defined(STM32_USART6_NUMBER)
   nvicEnableVector(STM32_USART6_NUMBER, STM32_SERIAL_USART6_PRIORITY);
 #endif
 #endif
@@ -757,7 +669,7 @@ void sd_lld_init(void) {
   oqObjectInit(&SD7.oqueue, sd_out_buf7, sizeof sd_out_buf7, notify7, &SD7);
   SD7.usart = UART7;
   SD7.clock = STM32_UART7CLK;
-#if defined(STM32_UART7_NUMBER)
+#if !defined(STM32_UART7_SUPPRESS_ISR) && defined(STM32_UART7_NUMBER)
   nvicEnableVector(STM32_UART7_NUMBER, STM32_SERIAL_UART7_PRIORITY);
 #endif
 #endif
@@ -768,7 +680,7 @@ void sd_lld_init(void) {
   oqObjectInit(&SD8.oqueue, sd_out_buf8, sizeof sd_out_buf8, notify8, &SD8);
   SD8.usart = UART8;
   SD8.clock = STM32_UART8CLK;
-#if defined(STM32_UART8_NUMBER)
+#if !defined(STM32_UART8_SUPPRESS_ISR) && defined(STM32_UART8_NUMBER)
   nvicEnableVector(STM32_UART8_NUMBER, STM32_SERIAL_UART8_PRIORITY);
 #endif
 #endif
@@ -779,16 +691,8 @@ void sd_lld_init(void) {
   oqObjectInit(&LPSD1.oqueue, sd_out_buflp1, sizeof sd_out_buflp1, notifylp1, &LPSD1);
   LPSD1.usart = LPUART1;
   LPSD1.clock = STM32_LPUART1CLK;
-#if defined(STM32_LPUART1_NUMBER)
+#if !defined(STM32_LPUART1_SUPPRESS_ISR) && defined(STM32_LPUART1_NUMBER)
   nvicEnableVector(STM32_LPUART1_NUMBER, STM32_SERIAL_LPUART1_PRIORITY);
-#endif
-#endif
-
-#if STM32_SERIAL_USE_USART3 || STM32_SERIAL_USE_UART4  ||                   \
-    STM32_SERIAL_USE_UART5  || STM32_SERIAL_USE_USART6 ||                   \
-    STM32_SERIAL_USE_UART7  || STM32_SERIAL_USE_UART8
-#if defined(STM32_USART3_8_HANDLER)
-  nvicEnableVector(STM32_USART3_8_NUMBER, STM32_SERIAL_USART3_8_PRIORITY);
 #endif
 #endif
 }
@@ -927,6 +831,80 @@ void sd_lld_stop(SerialDriver *sdp) {
       return;
     }
 #endif
+  }
+}
+
+/**
+ * @brief   Common IRQ handler.
+ *
+ * @param[in] sdp       communication channel associated to the USART
+ */
+void sd_lld_serve_interrupt(SerialDriver *sdp) {
+  USART_TypeDef *u = sdp->usart;
+  uint32_t cr1 = u->CR1;
+  uint32_t isr;
+
+  /* Reading and clearing status.*/
+  isr = u->ISR;
+  u->ICR = isr;
+
+  /* Error condition detection.*/
+  if (isr & (USART_ISR_ORE | USART_ISR_NE | USART_ISR_FE  | USART_ISR_PE))
+    set_error(sdp, isr);
+
+  /* Special case, LIN break detection.*/
+  if (isr & USART_ISR_LBDF) {
+    osalSysLockFromISR();
+    chnAddFlagsI(sdp, SD_BREAK_DETECTED);
+    osalSysUnlockFromISR();
+  }
+
+  /* Data available, note it is a while in order to handle two situations:
+     1) Another byte arrived after removing the previous one, this would cause
+        an extra interrupt to serve.
+     2) FIFO mode is enabled on devices that support it, we need to empty
+        the FIFO.*/
+  while (isr & USART_ISR_RXNE) {
+    osalSysLockFromISR();
+    sdIncomingDataI(sdp, (uint8_t)u->RDR & sdp->rxmask);
+    osalSysUnlockFromISR();
+
+    isr = u->ISR;
+  }
+
+  /* Transmission buffer empty, note it is a while in order to handle two
+     situations:
+     1) The data registers has been emptied immediately after writing it, this
+        would cause an extra interrupt to serve.
+     2) FIFO mode is enabled on devices that support it, we need to fill
+        the FIFO.*/
+  if (cr1 & USART_CR1_TXEIE) {
+    while (isr & USART_ISR_TXE) {
+      msg_t b;
+
+      osalSysLockFromISR();
+      b = oqGetI(&sdp->oqueue);
+      if (b < MSG_OK) {
+        chnAddFlagsI(sdp, CHN_OUTPUT_EMPTY);
+        u->CR1 = cr1 & ~USART_CR1_TXEIE;
+        osalSysUnlockFromISR();
+        break;
+      }
+      u->TDR = b;
+      osalSysUnlockFromISR();
+
+      isr = u->ISR;
+    }
+  }
+
+  /* Physical transmission end.*/
+  if ((cr1 & USART_CR1_TCIE) && (isr & USART_ISR_TC)) {
+    osalSysLockFromISR();
+    if (oqIsEmptyI(&sdp->oqueue)) {
+      chnAddFlagsI(sdp, CHN_TRANSMISSION_END);
+      u->CR1 = cr1 & ~USART_CR1_TCIE;
+    }
+    osalSysUnlockFromISR();
   }
 }
 

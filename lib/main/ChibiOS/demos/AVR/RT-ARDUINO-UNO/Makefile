@@ -35,7 +35,7 @@ ifeq ($(USE_VERBOSE_COMPILE),)
   USE_VERBOSE_COMPILE = no
 endif
 
-# If enabled, this option makes the build process faster by not compiling
+# If enabled, this option makes the build process faster by not compiling.
 # modules not used in the current configuration.
 ifeq ($(USE_SMART_BUILD),)
   USE_SMART_BUILD = yes
@@ -82,8 +82,11 @@ endif
 # Define project name here.
 PROJECT = ch
 
-# Imported source files and paths
-CHIBIOS = ../../..
+# Imported source files and paths.
+CHIBIOS  := ../../..
+CONFDIR  := ./cfg
+BUILDDIR := ./build
+DEPDIR   := ./.dep
 
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
@@ -92,7 +95,7 @@ include $(CHIBIOS)/os/license/license.mk
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/boards/ARDUINO_UNO/board.mk
 include $(CHIBIOS)/os/hal/ports/AVR/MEGA/ATMEGAxx/platform.mk
-include $(CHIBIOS)/os/hal/osal/rt/osal.mk
+include $(CHIBIOS)/os/hal/osal/rt-nil/osal.mk
 
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
@@ -106,7 +109,7 @@ CSRC =  $(ALLCSRC) \
 CPPSRC = $(ALLCPPSRC)
 
 # Header files here.
-INCDIR =  $(ALLINC)
+INCDIR =  $(CONFDIR) $(ALLINC)
 
 #
 # Project, sources and paths.

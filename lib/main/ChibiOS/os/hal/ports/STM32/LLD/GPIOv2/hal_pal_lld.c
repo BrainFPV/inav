@@ -163,17 +163,21 @@ void _pal_lld_enablepadevent(ioportid_t port,
   osalDbgAssert(((EXTI->RTSR1 & padmask) == 0U) &&
                 ((EXTI->FTSR1 & padmask) == 0U), "channel already in use");
 
-  /* Index and mask of the SYSCFG CR register to be used.*/
-  cridx  = (uint32_t)pad >> 2U;
-  croff = ((uint32_t)pad & 3U) * 4U;
-  crmask = ~(0xFU << croff);
-
   /* Port index is obtained assuming that GPIO ports are placed at regular
      0x400 intervals in memory space. So far this is true for all devices.*/
   portidx = (((uint32_t)port - (uint32_t)GPIOA) >> 10U) & 0xFU;
 
-  /* Port selection in SYSCFG.*/
+  /* Index and mask of the CR register to be used.*/
+  cridx  = (uint32_t)pad >> 2U;
+#if STM32_EXTI_HAS_CR == FALSE
+  croff  = ((uint32_t)pad & 3U) * 4U;
+  crmask = ~(0xFU << croff);
   SYSCFG->EXTICR[cridx] = (SYSCFG->EXTICR[cridx] & crmask) | (portidx << croff);
+#else
+  croff  = ((uint32_t)pad & 3U) * 8U;
+  crmask = ~(0xFFU << croff);
+  EXTI->EXTICR[cridx] = (EXTI->EXTICR[cridx] & crmask) | (portidx << croff);
+#endif
 
   /* Programming edge registers.*/
   if (mode & PAL_EVENT_MODE_RISING_EDGE)
@@ -217,15 +221,19 @@ void _pal_lld_disablepadevent(ioportid_t port, iopadid_t pad) {
   if (((rtsr1 | ftsr1) & padmask) != 0U) {
     uint32_t cridx, croff, crport, portidx;
 
-    /* Index and mask of the SYSCFG CR register to be used.*/
-    cridx  = (uint32_t)pad >> 2U;
-    croff = ((uint32_t)pad & 3U) * 4U;
-
     /* Port index is obtained assuming that GPIO ports are placed at regular
        0x400 intervals in memory space. So far this is true for all devices.*/
     portidx = (((uint32_t)port - (uint32_t)GPIOA) >> 10U) & 0xFU;
 
+    /* Index and mask of the CR register to be used.*/
+    cridx  = (uint32_t)pad >> 2U;
+#if STM32_EXTI_HAS_CR == FALSE
+    croff  = ((uint32_t)pad & 3U) * 4U;
     crport = (SYSCFG->EXTICR[cridx] >> croff) & 0xFU;
+#else
+    croff  = ((uint32_t)pad & 3U) * 8U;
+    crport = (EXTI->EXTICR[cridx] >> croff) & 0xFFU;
+#endif
 
     osalDbgAssert(crport == portidx, "channel mapped on different port");
 
@@ -242,7 +250,12 @@ void _pal_lld_disablepadevent(ioportid_t port, iopadid_t pad) {
     EXTI->EMR1  &= ~padmask;
     EXTI->RTSR1  = rtsr1 & ~padmask;
     EXTI->FTSR1  = ftsr1 & ~padmask;
+#if STM32_EXTI_SEPARATE_RF == FALSE
     EXTI->PR1    = padmask;
+#else
+    EXTI->RPR1   = padmask;
+    EXTI->FPR1   = padmask;
+#endif
 #endif
 
 #if PAL_USE_CALLBACKS || PAL_USE_WAIT

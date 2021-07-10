@@ -94,6 +94,7 @@ static void nil_test_001_001_execute(void) {
     test_println("");
 #endif
   }
+  test_end_step(1);
 }
 
 static const testcase_t nil_test_001_001 = {
@@ -135,6 +136,7 @@ static void nil_test_001_002_execute(void) {
     test_printn(CH_KERNEL_PATCH);
     test_println("");
   }
+  test_end_step(1);
 }
 
 static const testcase_t nil_test_001_002 = {
@@ -160,8 +162,11 @@ static void nil_test_001_003_execute(void) {
   /* [1.3.1] Prints the configuration options settings.*/
   test_set_step(1);
   {
-    test_print("--- CH_CFG_NUM_THREADS:                 ");
-    test_printn(CH_CFG_NUM_THREADS);
+    test_print("--- CH_CFG_MAX_THREADS:                 ");
+    test_printn(CH_CFG_MAX_THREADS);
+    test_println("");
+    test_print("--- CH_CFG_AUTOSTART_THREADS:           ");
+    test_printn(CH_CFG_AUTOSTART_THREADS);
     test_println("");
     test_print("--- CH_CFG_ST_RESOLUTION:               ");
     test_printn(CH_CFG_ST_RESOLUTION);
@@ -172,6 +177,9 @@ static void nil_test_001_003_execute(void) {
     test_print("--- CH_CFG_ST_TIMEDELTA:                ");
     test_printn(CH_CFG_ST_TIMEDELTA);
     test_println("");
+    test_print("--- CH_CFG_USE_WAITEXIT:                ");
+    test_printn(CH_CFG_USE_WAITEXIT);
+    test_println("");
     test_print("--- CH_CFG_USE_SEMAPHORES:              ");
     test_printn(CH_CFG_USE_SEMAPHORES);
     test_println("");
@@ -181,44 +189,8 @@ static void nil_test_001_003_execute(void) {
     test_print("--- CH_CFG_USE_EVENTS:                  ");
     test_printn(CH_CFG_USE_EVENTS);
     test_println("");
-    test_print("--- CH_CFG_USE_MAILBOXES:               ");
-    test_printn(CH_CFG_USE_MAILBOXES);
-    test_println("");
-    test_print("--- CH_CFG_USE_MEMCORE:                 ");
-    test_printn(CH_CFG_USE_MEMCORE);
-    test_println("");
-    test_print("--- CH_CFG_USE_HEAP:                    ");
-    test_printn(CH_CFG_USE_HEAP);
-    test_println("");
-    test_print("--- CH_CFG_USE_MEMPOOLS:                ");
-    test_printn(CH_CFG_USE_MEMPOOLS);
-    test_println("");
-    test_print("--- CH_CFG_USE_OBJ_FIFOS:               ");
-    test_printn(CH_CFG_USE_OBJ_FIFOS);
-    test_println("");
-    test_print("--- CH_CFG_MEMCORE_SIZE:                ");
-    test_printn(CH_CFG_MEMCORE_SIZE);
-    test_println("");
-    test_print("--- CH_CFG_USE_FACTORY:                 ");
-    test_printn(CH_CFG_USE_FACTORY);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_MAX_NAMES_LENGTH:    ");
-    test_printn(CH_CFG_FACTORY_MAX_NAMES_LENGTH);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_OBJECTS_REGISTRY:    ");
-    test_printn(CH_CFG_FACTORY_OBJECTS_REGISTRY);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_GENERIC_BUFFERS:     ");
-    test_printn(CH_CFG_FACTORY_GENERIC_BUFFERS);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_SEMAPHORES:          ");
-    test_printn(CH_CFG_FACTORY_SEMAPHORES);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_MAILBOXES:           ");
-    test_printn(CH_CFG_FACTORY_MAILBOXES);
-    test_println("");
-    test_print("--- CH_CFG_FACTORY_OBJ_FIFOS:           ");
-    test_printn(CH_CFG_FACTORY_OBJ_FIFOS);
+    test_print("--- CH_CFG_USE_MESSAGES:                ");
+    test_printn(CH_CFG_USE_MESSAGES);
     test_println("");
     test_print("--- CH_DBG_STATISTICS:                  ");
     test_printn(CH_DBG_STATISTICS);
@@ -236,6 +208,7 @@ static void nil_test_001_003_execute(void) {
     test_printn(CH_DBG_ENABLE_STACK_CHECK);
     test_println("");
   }
+  test_end_step(1);
 }
 
 static const testcase_t nil_test_001_003 = {

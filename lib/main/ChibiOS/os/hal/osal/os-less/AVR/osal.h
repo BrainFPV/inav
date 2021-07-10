@@ -64,7 +64,6 @@
 #define MSG_WAIT                            (msg_t)-10
 /** @} */
 
-
 /**
  * @name    Special time constants
  * @{
@@ -587,7 +586,7 @@ static inline syssts_t osalSysGetStatusAndLockX(void) {
 
   sts = SREG;
   asm volatile ("cli" : : : "memory");
-  
+
   return sts;
 }
 
@@ -610,8 +609,8 @@ static inline void osalSysRestoreStatusX(syssts_t sts) {
 
 /**
  * @brief   Checks if the specified time is within the specified time window.
- * @note    When start==end then the function returns always true because the
- *          whole time range is specified.
+ * @note    When start==end then the function returns always false because the
+ *          time window has zero size.
  * @note    This function can be called from any context.
  *
  * @param[in] time      the time to be verified

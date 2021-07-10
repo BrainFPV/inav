@@ -429,7 +429,7 @@
 #error "Invalid DMA priority assigned to SPI6"
 #endif
 
-#if STM32_SPI_USE_SPI1 || STM32_SPI_USE_SPI2 || STM32_SPI_USE_SPI1 ||       \
+#if STM32_SPI_USE_SPI1 || STM32_SPI_USE_SPI2 || STM32_SPI_USE_SPI3 ||       \
     STM32_SPI_USE_SPI4 || STM32_SPI_USE_SPI5
 #define STM32_SPI_DMA_REQUIRED
 #if !defined(STM32_DMA_REQUIRED)
@@ -456,8 +456,8 @@
 /* Driver macros.                                                            */
 /*===========================================================================*/
 
-#if (defined(STM32_SPI_DMA_REQUIRED) && defined(STM32_SPI_BDMA_REQUIRED)) ||\
-    defined(__DOXYGEN__)
+#if (defined(STM32_SPI_DMA_REQUIRED) &&                                     \
+     defined(STM32_SPI_BDMA_REQUIRED)) || defined(__DOXYGEN__)
 #define spi_lld_driver_fields                                               \
   /* Pointer to the SPIx registers block.*/                                 \
   SPI_TypeDef               *spi;                                           \

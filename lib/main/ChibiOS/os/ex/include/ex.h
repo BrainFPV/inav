@@ -21,7 +21,7 @@
  * @file    ex.h
  * @brief   EX main include file.
  *
- * @addtogroup ex_info
+ * @addtogroup EX_INFO
  * @details EX related info.
  * @{
  */
@@ -50,7 +50,7 @@
 /**
  * @brief   EX version string.
  */
-#define CH_EX_VERSION           "1.1.2"
+#define CH_EX_VERSION           "1.2.0"
 
 /**
  * @brief   EX version major number.
@@ -60,12 +60,12 @@
 /**
  * @brief   EX version minor number.
  */
-#define CH_EX_MINOR             1
+#define CH_EX_MINOR             2
 
 /**
  * @brief   EX version patch number.
  */
-#define CH_EX_PATCH             2
+#define CH_EX_PATCH             0
 /** @} */
 
 /*===========================================================================*/
@@ -91,6 +91,16 @@
 /*===========================================================================*/
 /* Late inclusions.                                                          */
 /*===========================================================================*/
+
+#include "ex_sensors.h"
+#include "ex_accelerometer.h"
+#include "ex_barometer.h"
+#include "ex_compass.h"
+#include "ex_displays.h"
+#include "ex_gyroscope.h"
+#include "ex_hygrometer.h"
+#include "ex_rangefinder.h"
+#include "ex_thermometer.h"
 
 #endif /* EX_H */
 

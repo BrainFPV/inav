@@ -12,7 +12,7 @@
   |  +--hal/                    - Builders for HAL.
   |  +--nil/                    - Builders for NIL.
   |  +--rt/                     - Builders for RT.
-  +--ext/                       - External libraries, not part of ChibiOS/RT.
+  +--ext/                       - External libraries, not part of ChibiOS.
   +--os/                        - ChibiOS components.
   |  +--common/                 - Shared OS modules.
   |  |  +--abstractions/        - API emulator wrappers.
@@ -23,8 +23,8 @@
   |  |  +--startup/             - Startup support.
   |  +--ex/                     - EX component.
   |  |  +--dox/                 - EX documentation resources.
-  |  |  +--Bosch /              - EX complex drivers for Bosch devices.
-  |  |  +--ST/                  - EX complex drivers for ST devices.
+  |  |  +--include/             - EX header files.
+  |  |  +--devices /            - EX complex drivers.
   |  +--hal/                    - HAL component.
   |  |  +--boards/              - HAL board support files.
   |  |  +--dox/                 - HAL documentation resources.
@@ -73,61 +73,98 @@
 *** Releases and Change Log                                               ***
 *****************************************************************************
 
-*** 19.1.3 ***
-- NEW: Added a "library generator" project for RT, it allows to
-       generate a library with a pre-configured RT. It also includes
-       an "header generator" able to generate an unified "ch.h" with
-       all options resolved.
-- FIX: Fixed missing bracket in MX25 flash driver (bug #1038).
-- FIX: Fixed some M7 demos compile as M4 bug #1037).
-- FIX: Fixed missing I2C4 RCC definitions for L4/L4+ (bug #1036).
-- FIX: Fixed missing delay after STM32 wait states setup (bug #1035).
-- FIX: Fixed reduced time slices in RT (bug #1034).
-- FIX: Fixed GCC scatter files alignment problem (bug #1033).
-- FIX: Fixed long intervals fail when interval type is larger than time type
-       (bug #1031).
-- FIX: Fixed Round Robin check missing when in tick-less mode (bug #1030).
-- FIX: Fixed RCC_AHB1ENR_BKPSRAMEN not present in all STMF4xx devices
-       (bug #1029).
-- FIX: Fixed MPU fix #1027 broke stack checking on Cortex-M devices without
-       MPU (bug #1028).
+*** 20.3.3 ***
+- NEW: RT, NIL: Renamed _THREADS_QUEUE_DECL to THREADS_QUEUE_DECL for
+       consistency.
+- FIX: Fixed missing STM32F765 from registry (bug #1145).
+- FIX: Fixed wrong macro check on STM32 SPIv3 (bug #1144).
+- FIX: Fixed wrong check on STM32 TIM9 timer (bug #1143).
+- FIX: Fixed FAT time problem in RTC driver (bug #1142).
+- FIX: Fixed Heap allocation of aligned FIFO objects in chFactory (bug #1141).
+- FIX: Fixed chsnprintf() sign mode/filler mode conflict (bug #1140).
+- FIX: Fixed GCC 10 causes warning in factory module (bug #1139).
+- FIX: Fixed C strict aliasing rules violation causes test cases to fail
+       (bug #1138).
+- FIX: Fixed STM32H7xx Missing CRC RCC macros (bug #1137).
+- FIX: Fixed STM32L0x wrong ISR names for USART 4 and 5 (bug #1136).
+- FIX: Fixed OTG_FS error on STM32H7 (bug #1135).
+- FIX: Fixed compile error of STM32 CRYPv1 driver when DMAMU is present
+       (bug #1134).
+- FIX: Fixed moved define into hal_wspi_lld.c (bug #1133).
+- FIX: Fixed various bugs in MDMAv1 driver (bug #1132).
+- FIX: Fixed wrong check on LSI on all STM32 platforms (bug #1131).
+- FIX: Fixed missing EFL driver in platform_l432.mk (bug #1130).
+- FIX: Fixed wrong check in STM32 ST driver (bug #1129).
+- FIX: Fixed OSAL does not allow 64 bits resolution values (bug #1128).
+- FIX: Fixed wrong SDMMC RCC macros for STM32H7xx (bug #1127).
+- FIX: Fixed STM32 ADCv3 hanging on initialization (bug #1126).
+- FIX: Fixed I2S-related problems in STM32F4xx registry (bug #1124).
+- FIX: Fixed STM32 EXTIv1 driver unable to enable/disable fixed lines
+       (bug #1123).
+- FIX: Fixed incorrect STM32 iWDG initialization in windowed mode (bug #1122).
+- FIX: Fixed ignored HSIDIV setting on STM32G0xx (bug #1121)
 
-*** 19.1.2 ***
-- NEW: Modified AES GCM function signatures.
-- NEW: updates to MFS from trunk code.
-- NEW: updates to test library from trunk code.
-- HAL: Added H753 to all H7 mcuconf.h files.
-- FIX: Fixed MPU setup missing on thread start (bug #1027).
-- FIX: Fixed invalid I2C4 DMAs for STM32F76x (bug #1026).
-- FIX: Fixed invalid STM32_UART7_RX_DMA_CHN for STM32F469 (bug #1025).
-- FIX: Fixed invalid EXTI registry constant for STM32L4+ (bug #1024).
-- FIX: Fixed missing RTC definitions in STM32L1xx registry (bug #1023).
-- FIX: Fixed missing EXTI driver integration on some platforms (bug #1022).
+*** 20.3.2 ***
+- NEW: Support for 3 analog watchdogs in ADCv3 (STM32F3, L4, L4+, G4).
+- NEW: Support for 3 analog watchdogs in ADCv5 (STM32G0).
+- NEW: Updated FatFS to version 0.14.
+- NEW: Added a new setting to STM32 USBv1 allowing for some clock deviation
+       from 48MHz. Renamed setting USB_HOST_WAKEUP_DURATION to
+       STM32_USB_HOST_WAKEUP_DURATION for consistency.
+- FIX: Fixed STM32 QSPI errata workaround (bug #1116).
+- FIX: Fixed wrong condition in STM32 BDMAv1 driver (bug #1115).
+- FIX: Fixed HSI48 not getting enabled on STM32H7 (bug #1114).
+- FIX: Fixed LPUART1 support for STM32H7xx (bug #1113).
+- FIX: Fixed wrong sector count in EFL driver for L4+ dual bank configuration 
+       (bug #1112).
+- FIX: Fixed wrong preprocessor checks in STM32 TIMv1 ICU driver (bug #1111).
+- FIX: Fixed wrong revisions handling in STM32H743 HAL (bug #1110).
+- FIX: Fixed missing STM32_I2C_BDMA_REQUIRED definition in I2Cv3 driver
+       (bug #1109).
+- FIX: Fixed wrong definitions in SPC563M board files (bug #1108).
+- FIX: Fixed cortex-M vectors table alignment problem (bug #1107).
+- FIX: Fixed extra condition in MAC driver macWaitTransmitDescriptor() function
+       (bug #1106).
+- FIX: Fixed schedule anomaly when CH_CFG_TIME_QUANTUM is greater than zero
+       (bug #1105).
+- FIX: Fixed Virtual Timers corner case (bug #1104).
+- FIX: Fixed GCC6 problem breaks Cortex-M0 port (bug #985).
+- FIX: Fixed a wrong management of the SPI TX buffer in the ADUCM port 
+       (bug #1103).
+- FIX: Fixed STM32F4 EFL sector bug (bug #1102).
+- FIX: Fixed differences in STM32 EXTI (bug #1101).
+- FIX: Fixed STM32 DACv1 driver regressed because DMA changes (bug #1100).
+- FIX: Fixed STM32L0 missing LPUART IRQ initialization (bug #1099).
+- FIX: Fixed invalid EXTI definitions for STM32L0xx (bug #1098).
+- FIX: Fixed compilation error in file nvic.c (bug #1097).
+- FIX: Fixed STM32_DMAx_CH8_HANDLER not defined for DMAv1 (bug #1096).
+- FIX: Fixed STM32 EXTI2 and EXTI4 not triggering a callback (bug #1095).
+- FIX: Fixed STM32G4 demos compile fails if smart mode is disabled (bug #1094).
+- FIX: Fixed failure in chSemReset() function when counter is equal to MAXINT
+       (bug #1093).
+- FIX: Fixed error in EXTIv1 ISRs (bug #1077).
 
-*** 19.1.1 ***
-- LIB: Re-introduced missing chGuardedPoolGetCounterI() function to guarded
-       pools allocator.
-- NEW: Extra timer checks in STM32 ST driver.
-- FIX: Fixed various UART clock naming errors in STM32H7 HAL (bug #1021).
-- FIX: Fixed missing STM32L4+ check in GPIOv3 driver (bug #1020).
-- FIX: Fixed call to obsolete dmaStreamRelease() in STM32 I2Cv3 driver
-       (bug #1019).
-- FIX: Fixed misconfiguration in STM32L4R9I DIscovery board files (bug #1018).
-- FIX: Fixed wrong Debug launch configuration in STM32L4Rx demos (bug #1017).
-- FIX: Fixed wrong ADCSEL definitions in STM32H7 HAL (bug #1016).
-- FIX: Fixed chTimeIsInRangeX() failing under some configurations (bug #1015).
-- FIX: Fixed invalid AXI errata fix for STM32H7xx (bug #1014).
-- FIX: Fixed invalid ADCD3 initialization in STM32 ADCv3 driver (bug #1013).
-- FIX: Fixed invalid call to dmaStreamRelease() in STM32 SDIOv1 driver
-       (bug #1012).
-- FIX: Fixed wrong license restriction check in Nil (bug #1011).
-- FIX: Fixed uninitialized variables in STM32 DMA drivers (bug #1010).
-- FIX: Fixed wrong mcuconf.h in some testex demos related to STM32F407 
-       (bug #1008).
-- FIX: Fixed problem in STM32 mcuconf.h template files (bug #1007).
-- EX:  Fixed I2C Acquire bus called twice in the HTS221 initialization 
-       (bug #1006).
-- EX:  Fixed missing I2C release bus in LPS22HB initialization (bug #1005).
+*** 20.3.1 ***
+- NEW: STM32 ICU driver now allows to setup the ARR register in the
+       configuration structure, the default value should be 0xFFFFFFFFU.
+- NEW: Updated debug tools to be independent from the toolchain position:
+       they now rely on the environment variable CHIBISTUDIO.
+- NEW: Added dynamic reconfiguration API to lwIP bindings.
+- FIX: Fixed swapped definition in ST_STM32F746G_DISCOVERY board files
+       (bug #1092).
+- FIX: Fixed missing symbols in GCC scatter files (bug #1091).
+- FIX: Fixed wrong SAI1 clock selection for STM32G4xx (bug #1090).
+- FIX: Fixed STM32H7xx ADC problem in dual mode (bug #1089).
+- FIX: Fixed invalid CHSEL DMA setting in STM32 UART drivers (bug #1088).
+- FIX: Fixed sector count incorrect in STM32G07/8 EFL driver (bug #1085).
+- FIX: Fixed sector size incorrect in STM32F413 EFL driver (bug #1084).
+- FIX: Fixed wrong arguments for the cacheBufferInvalidate in the STM32 SPI 
+       demo (bug #1086).
+- FIX: Fixed race condition in HAL MAC driver (bug #1083).
+- FIX: Fixed STM32H7 compile fails for I2C4 (bug #1082).
+- FIX: Fixed early interrupts enable in ARMv7-M port (bug #1081).
+- FIX: Fixed I2CD4 interrupt vectors are swapped versus I2CD1-I2CD3 (bug #1080).
+- FIX: Fixed incorrect clock check when using PLLSAI1R in ADCv3 (bug #1079).
+- FIX: Fixed missing checks in TIM6 and TIM7 STM32 mini drivers (bug #1078).
+- FIX: Fixed problem in chMtxUnlockAllS() (bug #1076).
 
-*** 19.1.0 ***
-- First 19.1.x release, see release note 19.1.0.

@@ -31,8 +31,6 @@
 #define CH_H
 
 #include "chtypes.h"
-#include "chconf.h"
-#include "chlicense.h"
 
 /*===========================================================================*/
 /* Module constants.                                                         */
@@ -55,33 +53,34 @@
 /**
  * @brief   Kernel version string.
  */
-#define CH_KERNEL_VERSION       "3.2.2"
+#define CH_KERNEL_VERSION       "4.0.1"
 
 /**
  * @brief   Kernel version major number.
  */
-#define CH_KERNEL_MAJOR         3
+#define CH_KERNEL_MAJOR         4
 
 /**
  * @brief   Kernel version minor number.
  */
-#define CH_KERNEL_MINOR         2
+#define CH_KERNEL_MINOR         0
 
 /**
  * @brief   Kernel version patch number.
  */
-#define CH_KERNEL_PATCH         2
+#define CH_KERNEL_PATCH         1
 /** @} */
 
 /**
  * @name    Constants for configuration options
+ * @{
  */
 /**
  * @brief   Generic 'false' preprocessor boolean constant.
  * @note    It is meant to be used in configuration files as switch.
  */
 #if !defined(FALSE) || defined(__DOXYGEN__)
-#define FALSE                   0
+#define FALSE               0
 #endif
 
 /**
@@ -89,7 +88,7 @@
  * @note    It is meant to be used in configuration files as switch.
  */
 #if !defined(TRUE) || defined(__DOXYGEN__)
-#define TRUE                    1
+#define TRUE                1
 #endif
 /** @} */
 
@@ -137,306 +136,138 @@
  * @name    Thread state related macros
  * @{
  */
-#define NIL_STATE_READY         (tstate_t)0 /**< @brief Thread ready or
+#define NIL_STATE_WTSTART       (tstate_t)0 /**< @brief Thread not yet
+                                                 started or terminated.     */
+#define NIL_STATE_READY         (tstate_t)1 /**< @brief Thread ready or
                                                  executing.                 */
-#define NIL_STATE_SLEEPING      (tstate_t)1 /**< @brief Thread sleeping.    */
-#define NIL_STATE_SUSP          (tstate_t)2 /**< @brief Thread suspended.   */
-#define NIL_STATE_WTQUEUE       (tstate_t)3 /**< @brief On queue or semaph. */
-#define NIL_STATE_WTOREVT       (tstate_t)4 /**< @brief Waiting for events. */
-#define NIL_THD_IS_READY(tp)    ((tp)->state == NIL_STATE_READY)
-#define NIL_THD_IS_SLEEPING(tp) ((tp)->state == NIL_STATE_SLEEPING)
-#define NIL_THD_IS_SUSP(tp)     ((tp)->state == NIL_STATE_SUSP)
-#define NIL_THD_IS_WTQUEUE(tp)  ((tp)->state == NIL_STATE_WTQUEUE)
-#define NIL_THD_IS_WTOREVT(tp)  ((tp)->state == NIL_STATE_WTOREVT)
-/** @} */
+#define NIL_STATE_SLEEPING      (tstate_t)2 /**< @brief Thread sleeping.    */
+#define NIL_STATE_SUSPENDED     (tstate_t)3 /**< @brief Thread suspended.   */
+#define NIL_STATE_WTEXIT        (tstate_t)4 /**< @brief Waiting a thread.   */
+#define NIL_STATE_WTQUEUE       (tstate_t)5 /**< @brief On queue or semaph. */
+#define NIL_STATE_WTOREVT       (tstate_t)6 /**< @brief Waiting for events. */
+#define NIL_STATE_WTANDEVT      (tstate_t)7 /**< @brief Waiting for events. */
+#define NIL_STATE_SNDMSGQ       (tstate_t)8 /**< @brief Sending a message,
+                                                        in queue.           */
+#define NIL_STATE_WTMSG         (tstate_t)10/**< @brief Waiting for a
+                                                        message.            */
+#define NIL_STATE_FINAL         (tstate_t)11/**< @brief Thread terminated.  */
 
-/**
- * @name    Events related macros
- * @{
- */
-/**
- * @brief   All events allowed mask.
- */
-#define ALL_EVENTS              ((eventmask_t)-1)
+#define NIL_THD_IS_WTSTART(tp)      ((tp)->state == NIL_STATE_WTSTART)
+#define NIL_THD_IS_READY(tp)        ((tp)->state == NIL_STATE_READY)
+#define NIL_THD_IS_SLEEPING(tp)     ((tp)->state == NIL_STATE_SLEEPING)
+#define NIL_THD_IS_SUSPENDED(tp)    ((tp)->state == NIL_STATE_SUSPENDED)
+#define NIL_THD_IS_WTEXIT(tp)       ((tp)->state == NIL_STATE_WTEXIT)
+#define NIL_THD_IS_WTQUEUE(tp)      ((tp)->state == NIL_STATE_WTQUEUE)
+#define NIL_THD_IS_WTOREVT(tp)      ((tp)->state == NIL_STATE_WTOREVT)
+#define NIL_THD_IS_WTANDEVT(tp)     ((tp)->state == NIL_STATE_WTANDEVT)
+#define NIL_THD_IS_SNDMSGQ(tp)      ((tp)->state == NIL_STATE_SNDMSGQ)
+#define NIL_THD_IS_WTMSG(tp)        ((tp)->state == NIL_STATE_WTMSG)
+#define NIL_THD_IS_FINAL(tp)        ((tp)->state == NIL_STATE_FINAL)
 
-/**
- * @brief   Returns an event mask from an event identifier.
- */
-#define EVENT_MASK(eid)         ((eventmask_t)(1 << (eid)))
+#define CH_STATE_NAMES                                                      \
+  "WTSTART", "READY", "SLEEPING", "SUSPENDED", "WTEXIT", "WTQUEUE",         \
+  "WTOREVT", "WTANDEVT", "SNDMSGQ", "SNDMSG", "WTMSG", "FINAL"
 /** @} */
 
 /*===========================================================================*/
 /* Module pre-compile time settings.                                         */
 /*===========================================================================*/
 
-/*-*
- * @brief   Number of user threads in the application.
- * @note    This number is not inclusive of the idle thread which is
- *          implicitly handled.
- */
-#if !defined(CH_CFG_NUM_THREADS) || defined(__DOXYGEN__)
-#define CH_CFG_NUM_THREADS                  2
-#endif
-
-/*-*
- * @brief   System time counter resolution.
- * @note    Allowed values are 16 or 32 bits.
- */
-#if !defined(CH_CFG_ST_RESOLUTION) || defined(__DOXYGEN__)
-#define CH_CFG_ST_RESOLUTION                32
-#endif
-
-/*-*
- * @brief   System tick frequency.
- * @note    This value together with the @p CH_CFG_ST_RESOLUTION
- *          option defines the maximum amount of time allowed for
- *          timeouts.
- */
-#if !defined(CH_CFG_ST_FREQUENCY) || defined(__DOXYGEN__)
-#define CH_CFG_ST_FREQUENCY                 100
-#endif
-
-/*-*
- * @brief   Time delta constant for the tick-less mode.
- * @note    If this value is zero then the system uses the classic
- *          periodic tick. This value represents the minimum number
- *          of ticks that is safe to specify in a timeout directive.
- *          The value one is not valid, timeouts are rounded up to
- *          this value.
- */
-#if !defined(CH_CFG_ST_TIMEDELTA) || defined(__DOXYGEN__)
-#define CH_CFG_ST_TIMEDELTA                 0
-#endif
-
-/*-*
- * @brief   Semaphores APIs.
- * @details If enabled then the Semaphores APIs are included in the kernel.
- *
- * @note    The default is @p TRUE.
- */
-#if !defined(CH_CFG_USE_SEMAPHORES) || defined(__DOXYGEN__)
-#define CH_CFG_USE_SEMAPHORES               TRUE
-#endif
-
-/*-*
- * @brief   Mutexes APIs.
- * @details If enabled then the mutexes APIs are included in the kernel.
- *
- * @note    Feature not currently implemented.
- * @note    The default is @p FALSE.
- */
-#if !defined(CH_CFG_USE_MUTEXES) || defined(__DOXYGEN__)
-#define CH_CFG_USE_MUTEXES                  FALSE
-#endif
-
-/*-*
- * @brief   Events Flags APIs.
- * @details If enabled then the event flags APIs are included in the kernel.
- *
- * @note    The default is @p TRUE.
- */
-#if !defined(CH_CFG_USE_EVENTS) || defined(__DOXYGEN__)
-#define CH_CFG_USE_EVENTS                   TRUE
-#endif
-
-/*-*
- * @brief   Mailboxes APIs.
- * @details If enabled then the asynchronous messages (mailboxes) APIs are
- *          included in the kernel.
- *
- * @note    The default is @p TRUE.
- * @note    Requires @p CH_CFG_USE_SEMAPHORES.
- */
-#if !defined(CH_CFG_USE_MAILBOXES) || defined(__DOXYGEN__)
-#define CH_CFG_USE_MAILBOXES                TRUE
-#endif
-
-/*-*
- * @brief   Core Memory Manager APIs.
- * @details If enabled then the core memory manager APIs are included
- *          in the kernel.
- *
- * @note    The default is @p TRUE.
- */
-#if !defined(CH_CFG_USE_MEMCORE) || defined(__DOXYGEN__)
-#define CH_CFG_USE_MEMCORE                  TRUE
-#endif
-
-/*-*
- * @brief   Heap Allocator APIs.
- * @details If enabled then the memory heap allocator APIs are included
- *          in the kernel.
- *
- * @note    The default is @p TRUE.
- */
-#if !defined(CH_CFG_USE_HEAP) || defined(__DOXYGEN__)
-#define CH_CFG_USE_HEAP                     TRUE
-#endif
-
-/*-*
- * @brief   Memory Pools Allocator APIs.
- * @details If enabled then the memory pools allocator APIs are included
- *          in the kernel.
- *
- * @note    The default is @p TRUE.
- */
-#if !defined(CH_CFG_USE_MEMPOOLS) || defined(__DOXYGEN__)
-#define CH_CFG_USE_MEMPOOLS                 TRUE
-#endif
-/**
- * @brief   Objects Factory APIs.
- * @details If enabled then the objects factory APIs are included in the
- *          kernel.
- *
- * @note    The default is @p FALSE.
- */
-#if !defined(CH_CFG_USE_FACTORY) || defined(__DOXYGEN__)
-#define CH_CFG_USE_FACTORY                  TRUE
-#endif
-
-/**
- * @brief   Maximum length for object names.
- * @details If the specified length is zero then the name is stored by
- *          pointer but this could have unintended side effects.
- */
-#if !defined(CH_CFG_FACTORY_MAX_NAMES_LENGTH) || defined(__DOXYGEN__)
-#define CH_CFG_FACTORY_MAX_NAMES_LENGTH     8
-#endif
-
-/**
- * @brief   Enables the registry of generic objects.
- */
-#if !defined(CH_CFG_FACTORY_OBJECTS_REGISTRY) || defined(__DOXYGEN__)
-#define CH_CFG_FACTORY_OBJECTS_REGISTRY     TRUE
-#endif
-
-/**
- * @brief   Enables factory for generic buffers.
- */
-#if !defined(CH_CFG_FACTORY_GENERIC_BUFFERS) || defined(__DOXYGEN__)
-#define CH_CFG_FACTORY_GENERIC_BUFFERS      TRUE
-#endif
-
-/**
- * @brief   Enables factory for semaphores.
- */
-#if !defined(CH_CFG_FACTORY_SEMAPHORES) || defined(__DOXYGEN__)
-#define CH_CFG_FACTORY_SEMAPHORES           TRUE
-#endif
-
-/**
- * @brief   Enables factory for mailboxes.
- */
-#if !defined(CH_CFG_FACTORY_MAILBOXES) || defined(__DOXYGEN__)
-#define CH_CFG_FACTORY_MAILBOXES            TRUE
-#endif
-
-/**
- * @brief   Enables factory for objects FIFOs.
- */
-#if !defined(CH_CFG_FACTORY_OBJ_FIFOS) || defined(__DOXYGEN__)
-#define CH_CFG_FACTORY_OBJ_FIFOS            TRUE
-#endif
-
-/*-*
- * @brief   Debug option, kernel statistics.
- *
- * @note    Feature not currently implemented.
- * @note    The default is @p FALSE.
- */
-#if !defined(CH_DBG_STATISTICS) || defined(__DOXYGEN__)
-#define CH_DBG_STATISTICS                   FALSE
-#endif
-
-/*-*
- * @brief   Debug option, system state check.
- * @note    This is a planned feature, not yet implemented.
- *
- * @note    The default is @p FALSE.
- */
-#if !defined(CH_DBG_SYSTEM_STATE_CHECK) || defined(__DOXYGEN__)
-#define CH_DBG_SYSTEM_STATE_CHECK           FALSE
-#endif
-
-/*-*
- * @brief   Debug option, parameters checks.
- *
- * @note    The default is @p FALSE.
- */
-#if !defined(CH_DBG_ENABLE_CHECKS) || defined(__DOXYGEN__)
-#define CH_DBG_ENABLE_CHECKS                FALSE
-#endif
-
-/*-*
- * @brief   System assertions.
- *
- * @note    The default is @p FALSE.
- */
-#if !defined(CH_DBG_ENABLE_ASSERTS) || defined(__DOXYGEN__)
-#define CH_DBG_ENABLE_ASSERTS               FALSE
-#endif
-
-/*-*
- * @brief   Stack check.
- *
- * @note    The default is @p FALSE.
- */
-#if !defined(CH_DBG_ENABLE_STACK_CHECK) || defined(__DOXYGEN__)
-#define CH_DBG_ENABLE_STACK_CHECK           FALSE
-#endif
-
-/*-*
- * @brief   System initialization hook.
- */
-#if !defined(CH_CFG_SYSTEM_INIT_HOOK) || defined(__DOXYGEN__)
-#define CH_CFG_SYSTEM_INIT_HOOK() {}
-#endif
-
-/*-*
- * @brief   Threads descriptor structure extension.
- * @details User fields added to the end of the @p thread_t structure.
- */
-#if !defined(CH_CFG_THREAD_EXT_FIELDS) || defined(__DOXYGEN__)
-#define CH_CFG_THREAD_EXT_FIELDS
-#endif
-
-/*-*
- * @brief   Threads initialization hook.
- */
-#if !defined(CH_CFG_THREAD_EXT_INIT_HOOK) || defined(__DOXYGEN__)
-#define CH_CFG_THREAD_EXT_INIT_HOOK(tp) {}
-#endif
-
-/*-*
- * @brief   Idle thread enter hook.
- * @note    This hook is invoked within a critical zone, no OS functions
- *          should be invoked from here.
- * @note    This macro can be used to activate a power saving mode.
- */
-#if !defined(CH_CFG_IDLE_ENTER_HOOK) || defined(__DOXYGEN__)
-#define CH_CFG_IDLE_ENTER_HOOK() {}
-#endif
-
-/*-*
- * @brief   Idle thread leave hook.
- * @note    This hook is invoked within a critical zone, no OS functions
- *          should be invoked from here.
- * @note    This macro can be used to deactivate a power saving mode.
- */
-#if !defined(CH_CFG_IDLE_LEAVE_HOOK) || defined(__DOXYGEN__)
-#define CH_CFG_IDLE_LEAVE_HOOK() {}
-#endif
-
-/*-*
- * @brief   System halt hook.
- */
-#if !defined(CH_CFG_SYSTEM_HALT_HOOK) || defined(__DOXYGEN__)
-#define CH_CFG_SYSTEM_HALT_HOOK(reason) {}
-#endif
+#include "chconf.h"
+#include "chlicense.h"
 
 /*===========================================================================*/
 /* Derived constants and error checks.                                       */
 /*===========================================================================*/
+
+/* Checks on configuration options.*/
+#if !defined(CH_CFG_MAX_THREADS) || defined(__DOXYGEN__)
+#error "CH_CFG_MAX_THREADS not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_AUTOSTART_THREADS) || defined(__DOXYGEN__)
+#error "CH_CFG_AUTOSTART_THREADS not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_ST_RESOLUTION) || defined(__DOXYGEN__)
+#error "CH_CFG_ST_RESOLUTION not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_ST_FREQUENCY) || defined(__DOXYGEN__)
+#error "CH_CFG_ST_FREQUENCY not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_ST_TIMEDELTA) || defined(__DOXYGEN__)
+#error "CH_CFG_ST_TIMEDELTA not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_USE_WAITEXIT)
+#error "CH_CFG_USE_WAITEXIT not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_USE_MESSAGES) || defined(__DOXYGEN__)
+#error "CH_CFG_USE_MESSAGES not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_USE_SEMAPHORES) || defined(__DOXYGEN__)
+#error "CH_CFG_USE_SEMAPHORES not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_USE_EVENTS)
+#error "CH_CFG_USE_EVENTS not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_USE_MUTEXES) || defined(__DOXYGEN__)
+#error "CH_CFG_USE_MUTEXES not defined in chconf.h"
+#endif
+
+#if !defined(CH_DBG_STATISTICS) || defined(__DOXYGEN__)
+#error "CH_DBG_STATISTICS not defined in chconf.h"
+#endif
+
+#if !defined(CH_DBG_SYSTEM_STATE_CHECK) || defined(__DOXYGEN__)
+#error "CH_DBG_SYSTEM_STATE_CHECK not defined in chconf.h"
+#endif
+
+#if !defined(CH_DBG_ENABLE_CHECKS) || defined(__DOXYGEN__)
+#error "CH_DBG_ENABLE_CHECKS not defined in chconf.h"
+#endif
+
+#if !defined(CH_DBG_ENABLE_ASSERTS) || defined(__DOXYGEN__)
+#error "CH_DBG_ENABLE_ASSERTS not defined in chconf.h"
+#endif
+
+#if !defined(CH_DBG_ENABLE_STACK_CHECK) || defined(__DOXYGEN__)
+#error "CH_DBG_ENABLE_STACK_CHECK not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_SYSTEM_INIT_HOOK) || defined(__DOXYGEN__)
+#error "CH_CFG_SYSTEM_INIT_HOOK not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_THREAD_EXT_FIELDS) || defined(__DOXYGEN__)
+#error "CH_CFG_THREAD_EXT_FIELDS not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_THREAD_EXT_INIT_HOOK) || defined(__DOXYGEN__)
+#error "CH_CFG_THREAD_EXT_INIT_HOOK not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_THREAD_EXIT_HOOK) || defined(__DOXYGEN__)
+#error "CH_CFG_THREAD_EXIT_HOOK not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_IDLE_ENTER_HOOK) || defined(__DOXYGEN__)
+#error "CH_CFG_IDLE_ENTER_HOOK not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_IDLE_LEAVE_HOOK) || defined(__DOXYGEN__)
+#error "CH_CFG_IDLE_LEAVE_HOOK not defined in chconf.h"
+#endif
+
+#if !defined(CH_CFG_SYSTEM_HALT_HOOK) || defined(__DOXYGEN__)
+#error "CH_CFG_SYSTEM_HALT_HOOK not defined in chconf.h"
+#endif
 
 /* License checks.*/
 #if !defined(CH_CUSTOMER_LIC_NIL) || !defined(CH_LICENSE_FEATURES)
@@ -473,21 +304,25 @@
 #undef CH_CFG_ST_TIMEDELTA
 #define CH_CFG_ST_TIMEDELTA                 0
 
+/* Messages restricted.*/
+#undef CH_CFG_USE_MESSAGES
+#define CH_CFG_USE_MESSAGES                 FALSE
+
 #endif /* CH_LICENSE_FEATURES == CH_FEATURES_BASIC */
 
 #if !defined(_CHIBIOS_NIL_CONF_)
 #error "missing or wrong configuration file"
 #endif
 
-#if !defined(_CHIBIOS_NIL_CONF_VER_3_2_)
+#if !defined(_CHIBIOS_NIL_CONF_VER_4_0_)
 #error "obsolete or unknown configuration file"
 #endif
 
-#if CH_CFG_NUM_THREADS < 1
+#if CH_CFG_MAX_THREADS < 1
 #error "at least one thread must be defined"
 #endif
 
-#if CH_CFG_NUM_THREADS > 16
+#if CH_CFG_MAX_THREADS > 16
 #error "ChibiOS/NIL is not recommended for thread-intensive applications,"  \
        "consider ChibiOS/RT instead"
 #endif
@@ -563,19 +398,30 @@ typedef uint32_t time_conv_t;
 #endif
 
 /**
+ * @brief   Type of a structure representing the system.
+ */
+typedef struct nil_system nil_system_t;
+
+/**
+ * @brief Thread function.
+ */
+typedef void (*tfunc_t)(void *p);
+
+/**
+ * @brief   Type of a thread descriptor.
+ */
+typedef struct nil_thread_descriptor thread_descriptor_t;
+
+/**
  * @brief   Type of a structure representing a thread.
  * @note    It is required as an early definition.
  */
 typedef struct nil_thread thread_t;
 
-#include "chcore.h"
-
 /**
- * @brief   Structure representing a queue of threads.
+ * @brief   Type of a thread reference.
  */
-struct nil_threads_queue {
-  volatile cnt_t    cnt;        /**< @brief Threads Queue counter.          */
-};
+typedef thread_t * thread_reference_t;
 
 /**
  * @brief   Type of a queue of threads.
@@ -591,31 +437,27 @@ typedef struct nil_threads_queue threads_queue_t;
 typedef threads_queue_t semaphore_t;
 #endif /* CH_CFG_USE_SEMAPHORES == TRUE */
 
-/**
- * @brief Thread function.
- */
-typedef void (*tfunc_t)(void *p);
+/* Late inclusion of port core layer.*/
+#include "chcore.h"
 
 /**
- * @brief   Type of a structure representing a thread static configuration.
+ * @brief   Structure representing a queue of threads.
  */
-typedef struct nil_thread_cfg thread_config_t;
-
-/**
- * @brief   Structure representing a thread static configuration.
- */
-struct nil_thread_cfg {
-  stkalign_t        *wbase;     /**< @brief Thread working area base.       */
-  stkalign_t        *wend;      /**< @brief Thread working area end.        */
-  const char        *namep;     /**< @brief Thread name, for debugging.     */
-  tfunc_t           funcp;      /**< @brief Thread function.                */
-  void              *arg;       /**< @brief Thread function argument.       */
+struct nil_threads_queue {
+  volatile cnt_t    cnt;        /**< @brief Threads Queue counter.          */
 };
 
 /**
- * @brief   Type of a thread reference.
+ * @brief   Structure representing a thread descriptor.
  */
-typedef thread_t * thread_reference_t;
+struct nil_thread_descriptor {
+  const char        *name;      /**< @brief Thread name, for debugging.     */
+  stkalign_t        *wbase;     /**< @brief Thread working area base.       */
+  stkalign_t        *wend;      /**< @brief Thread working area end.        */
+  tprio_t           prio;       /**< @brief Thread priority slot.           */
+  tfunc_t           funcp;      /**< @brief Thread function.                */
+  void              *arg;       /**< @brief Thread function argument.       */
+};
 
 /**
  * @brief   Structure representing a thread.
@@ -623,13 +465,15 @@ typedef thread_t * thread_reference_t;
 struct nil_thread {
   struct port_context   ctx;        /**< @brief Processor context.          */
   tstate_t              state;      /**< @brief Thread state.               */
-  /* Note, the following union contains a pointer while the thread is in a
-     sleeping state (!NIL_THD_IS_READY()) else contains the wake-up message.*/
+  /* Note, the following union contains a pointer/value while the thread is
+     in a sleeping state or a wake-up message when the thread is made ready.*/
   union {
-    msg_t               msg;        /**< @brief Wake-up message.            */
+    msg_t               msg;        /**< @brief Wake-up/exit message.       */
     void                *p;         /**< @brief Generic pointer.            */
+    nil_system_t        *nsp;       /**< @brief Pointer to nil base struct. */
     thread_reference_t  *trp;       /**< @brief Pointer to thread reference.*/
     threads_queue_t     *tqp;       /**< @brief Pointer to thread queue.    */
+    thread_t            *tp;        /**< @brief Pointer to thread.          */
 #if (CH_CFG_USE_SEMAPHORES == TRUE) || defined(__DOXYGEN__)
     semaphore_t         *semp;      /**< @brief Pointer to semaphore.       */
 #endif
@@ -642,17 +486,15 @@ struct nil_thread {
 #if (CH_CFG_USE_EVENTS == TRUE) || defined(__DOXYGEN__)
   eventmask_t           epmask;     /**< @brief Pending events mask.        */
 #endif
+#if (CH_CFG_USE_MESSAGES == TRUE) || defined(__DOXYGEN__)
+  msg_t                 sntmsg;     /**< @brief Sent message.               */
+#endif
 #if (CH_DBG_ENABLE_STACK_CHECK == TRUE) || defined(__DOXYGEN__)
   stkalign_t            *wabase;    /**< @brief Thread stack boundary.      */
 #endif
   /* Optional extra fields.*/
   CH_CFG_THREAD_EXT_FIELDS
 };
-
-/**
- * @brief   Type of a structure representing the system.
- */
-typedef struct nil_system nil_system_t;
 
 /**
  * @brief   System data structure.
@@ -709,7 +551,7 @@ struct nil_system {
   /**
    * @brief   Thread structures for all the defined threads.
    */
-  thread_t              threads[CH_CFG_NUM_THREADS + 1];
+  thread_t              threads[CH_CFG_MAX_THREADS + 1];
 };
 
 /*===========================================================================*/
@@ -734,25 +576,39 @@ struct nil_system {
  * @brief   Start of user threads table.
  */
 #define THD_TABLE_BEGIN                                                     \
-  const thread_config_t nil_thd_configs[CH_CFG_NUM_THREADS + 1] = {
+  const thread_descriptor_t nil_thd_configs[] = {
 
 /**
  * @brief   Entry of user threads table
  */
-#define THD_TABLE_ENTRY(wap, name, funcp, arg)                              \
-  {wap, ((stkalign_t *)(wap)) + (sizeof (wap) / sizeof(stkalign_t)),        \
-   name, funcp, arg},
+#define THD_TABLE_THREAD(_prio, _name, _wap, _funcp, _arg)                  \
+  {                                                                         \
+    .name  = (_name),                                                       \
+    .wbase = (_wap),                                                        \
+    .wend  = THD_WORKING_AREA_END(_wap),                                    \
+    .prio  = (_prio),                                                       \
+    .funcp = (_funcp),                                                      \
+    .arg   = (_arg)                                                         \
+  },
 
 /**
  * @brief   End of user threads table.
  */
 #define THD_TABLE_END                                                       \
-  {THD_IDLE_BASE, THD_IDLE_END, "idle", NULL, NULL}                         \
+  {                                                                         \
+    .name  = "idle",                                                        \
+    .wbase = THD_IDLE_BASE,                                                 \
+    .wend  = THD_IDLE_END,                                                  \
+    .prio  = CH_CFG_MAX_THREADS,                                            \
+    .funcp = NULL,                                                          \
+    .arg  = NULL                                                            \
+  }                                                                         \
 };
 /** @} */
 
 /**
  * @name    Memory alignment support macros
+ * @{
  */
 /**
  * @brief   Alignment mask constant.
@@ -798,6 +654,7 @@ struct nil_system {
 
 /**
  * @name    Working Areas
+ * @{
  */
 /**
  * @brief   Calculates the total Working Area size.
@@ -824,7 +681,20 @@ struct nil_system {
 /** @} */
 
 /**
+ * @brief   Returns the top address of a working area.
+ * @note    The parameter is assumed to be an array of @p stkalign_t. The
+ *          macros is invalid for anything else.
+ *
+ * @param[in] wa        working area array
+ *
+ * @api
+ */
+#define THD_WORKING_AREA_END(wa)                                            \
+  ((wa) + ((sizeof wa) / sizeof (stkalign_t)))
+
+/**
  * @name    Threads abstraction macros
+ * @{
  */
 /**
  * @brief   Thread declaration macro.
@@ -836,6 +706,7 @@ struct nil_system {
 
 /**
  * @name    ISRs abstraction macros
+ * @{
  */
 /**
  * @brief   Priority level validation macro.
@@ -906,6 +777,7 @@ struct nil_system {
 
 /**
  * @name    Fast ISRs abstraction macros
+ * @{
  */
 /**
  * @brief   Standard fast IRQ handler declaration.
@@ -1031,6 +903,7 @@ struct nil_system {
 
 /**
  * @name    Threads queues
+ * @{
  */
 /**
  * @brief   Data part of a static threads queue object initializer.
@@ -1048,7 +921,7 @@ struct nil_system {
  *
  * @param[in] name      the name of the threads queue variable
  */
-#define _THREADS_QUEUE_DECL(name)                                           \
+#define THREADS_QUEUE_DECL(name)                                            \
   threads_queue_t name = _THREADS_QUEUE_DATA(name)
 /** @} */
 
@@ -1196,6 +1069,29 @@ struct nil_system {
 }
 
 /**
+ * @brief   Puts the current thread to sleep into the specified state.
+ *
+ * @param[in] newstate  the new thread state or a semaphore pointer
+ * @return              The wakeup message.
+ *
+ * @sclass
+ */
+#define chSchGoSleepS(newstate) chSchGoSleepTimeoutS(newstate, TIME_INFINITE)
+
+/**
+ * @brief   Wakes up a thread.
+ *
+ * @param[in] ntp       the thread to be made ready
+ * @param[in] msg       the wakeup message
+ *
+ * @sclass
+ */
+#define chSchWakeupS(ntp, msg) do {                                         \
+  chSchReadyI(ntp, msg);                                                    \
+  chSchRescheduleS();                                                       \
+} while (false)
+
+/**
  * @brief   Evaluates if a reschedule is required.
  *
  * @retval true         if there is a thread that must go in running state
@@ -1212,6 +1108,31 @@ struct nil_system {
  * @xclass
  */
 #define chThdGetSelfX() nil.current
+
+/**
+ * @brief   Returns the current thread priority.
+ * @note    Can be invoked in any context.
+ *
+ * @return              The current thread priority.
+ *
+ * @xclass
+ */
+#define chThdGetPriorityX(void) (tprio_t)(nil.current - &nil.threads[0])
+
+/**
+ * @brief   Wakes up a thread waiting on a thread reference object.
+ * @note    This function must reschedule, it can only be called from thread
+ *          context.
+ *
+ * @param[in] trp       a pointer to a thread reference object
+ * @param[in] msg       the message code
+ *
+ * @sclass
+ */
+#define chThdResumeS(trp, msg) do {                                         \
+  chThdResumeI(trp, msg);                                                   \
+  chSchRescheduleS();                                                       \
+} while (false)
 
 /**
  * @brief   Delays the invoking thread for the specified number of seconds.
@@ -1294,75 +1215,6 @@ struct nil_system {
  */
 #define chThdQueueIsEmptyI(tqp) ((bool)(tqp->cnt >= (cnt_t)0))
 
-#if (CH_CFG_USE_SEMAPHORES == TRUE) || defined(__DOXYGEN__)
-/**
- * @brief   Initializes a semaphore with the specified counter value.
- *
- * @param[out] sp       pointer to a @p semaphore_t structure
- * @param[in] n         initial value of the semaphore counter. Must be
- *                      non-negative.
- *
- * @init
- */
-#define chSemObjectInit(sp, n) ((sp)->cnt = (n))
-
-/**
- * @brief   Performs a wait operation on a semaphore.
- *
- * @param[in] sp        pointer to a @p semaphore_t structure
- * @return              A message specifying how the invoking thread has been
- *                      released from the semaphore.
- * @retval CH_MSG_OK   if the thread has not stopped on the semaphore or the
- *                      semaphore has been signaled.
- * @retval CH_MSG_RST  if the semaphore has been reset using @p chSemReset().
- *
- * @api
- */
-#define chSemWait(sp) chSemWaitTimeout(sp, TIME_INFINITE)
-
-/**
- * @brief   Performs a wait operation on a semaphore.
- *
- * @param[in] sp        pointer to a @p semaphore_t structure
- * @return              A message specifying how the invoking thread has been
- *                      released from the semaphore.
- * @retval CH_MSG_OK   if the thread has not stopped on the semaphore or the
- *                      semaphore has been signaled.
- * @retval CH_MSG_RST  if the semaphore has been reset using @p chSemReset().
- *
- * @sclass
- */
-#define chSemWaitS(sp) chSemWaitTimeoutS(sp, TIME_INFINITE)
-
-/**
- * @brief   Decreases the semaphore counter.
- * @details This macro can be used when the counter is known to be positive.
- *
- * @param[in] sp        pointer to a @p semaphore_t structure
- *
- * @iclass
- */
-#define chSemFastWaitI(sp) ((sp)->cnt--)
-
-/**
- * @brief   Increases the semaphore counter.
- * @details This macro can be used when the counter is known to be not
- *          negative.
- *
- * @param[in] sp        pointer to a @p semaphore_t structure
- *
- * @iclass
- */
-#define chSemFastSignalI(sp) ((sp)->cnt++)
-
-/**
- * @brief   Returns the semaphore counter current value.
- *
- * @iclass
- */
-#define chSemGetCounterI(sp) ((sp)->cnt)
-#endif /* CH_CFG_USE_SEMAPHORES == TRUE */
-
 /**
  * @brief   Current system time.
  * @details Returns the number of system ticks since the @p chSysInit()
@@ -1394,6 +1246,22 @@ struct nil_system {
   chTimeDiffX((start), chVTGetSystemTimeX())
 
 /**
+ * @brief   Checks if the current system time is within the specified time
+ *          window.
+ * @note    When start==end then the function returns always false because the
+ *          time window has zero size.
+ *
+ * @param[in] start     the start of the time window (inclusive)
+ * @param[in] end       the end of the time window (non inclusive)
+ * @retval true         current time within the specified time window.
+ * @retval false        current time not within the specified time window.
+ *
+ * @xclass
+ */
+#define chVTIsSystemTimeWithinX(start, end)                                 \
+  chTimeIsInRangeX(chVTGetSystemTimeX(), start, end)
+
+/**
  * @brief   Adds an interval to a system time returning a system time.
  *
  * @param[in] systime   base system time
@@ -1416,23 +1284,6 @@ struct nil_system {
  */
 #define chTimeDiffX(start, end)                                             \
   ((sysinterval_t)((systime_t)((systime_t)(end) - (systime_t)(start))))
-
-/**
- * @brief   Checks if the specified time is within the specified time range.
- * @note    When start==end then the function returns always true because the
- *          whole time range is specified.
- *
- * @param[in] time      the time to be verified
- * @param[in] start     the start of the time window (inclusive)
- * @param[in] end       the end of the time window (non inclusive)
- * @retval true         current time within the specified time window.
- * @retval false        current time not within the specified time window.
- *
- * @xclass
- */
-#define chTimeIsInRangeX(time, start, end)                                  \
-  ((bool)((systime_t)((systime_t)(time) - (systime_t)(start)) <             \
-          (systime_t)((systime_t)(end) - (systime_t)(start))))
 
 /**
  * @brief   Function parameters check.
@@ -1509,12 +1360,14 @@ struct nil_system {
 extern stkalign_t __main_thread_stack_base__, __main_thread_stack_end__;
 #endif
 extern nil_system_t nil;
-extern const thread_config_t nil_thd_configs[CH_CFG_NUM_THREADS + 1];
+extern const thread_descriptor_t nil_thd_configs[];
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+  thread_t *nil_find_thread(tstate_t state, void *p);
+  cnt_t nil_ready_all(void *p, cnt_t cnt, msg_t msg);
   void chSysInit(void);
   void chSysHalt(const char *reason);
   void chSysTimerHandlerI(void);
@@ -1529,6 +1382,13 @@ extern "C" {
   void chSchDoReschedule(void);
   void chSchRescheduleS(void);
   msg_t chSchGoSleepTimeoutS(tstate_t newstate, sysinterval_t timeout);
+  bool chTimeIsInRangeX(systime_t time, systime_t start, systime_t end);
+  thread_t *chThdCreateI(const thread_descriptor_t *tdp);
+  thread_t *chThdCreate(const thread_descriptor_t *tdp);
+  void chThdExit(msg_t msg);
+#if CH_CFG_USE_WAITEXIT == TRUE
+  msg_t chThdWait(thread_t *tp);
+#endif
   msg_t chThdSuspendTimeoutS(thread_reference_t *trp, sysinterval_t timeout);
   void chThdResumeI(thread_reference_t *trp, msg_t msg);
   void chThdResume(thread_reference_t *trp, msg_t msg);
@@ -1538,19 +1398,6 @@ extern "C" {
   void chThdDoDequeueNextI(threads_queue_t *tqp, msg_t msg);
   void chThdDequeueNextI(threads_queue_t *tqp, msg_t msg);
   void chThdDequeueAllI(threads_queue_t *tqp, msg_t msg);
-#if CH_CFG_USE_SEMAPHORES == TRUE
-  msg_t chSemWaitTimeout(semaphore_t *sp, sysinterval_t timeout);
-  msg_t chSemWaitTimeoutS(semaphore_t *sp, sysinterval_t timeout);
-  void chSemSignal(semaphore_t *sp);
-  void chSemSignalI(semaphore_t *sp);
-  void chSemReset(semaphore_t *sp, cnt_t n);
-  void chSemResetI(semaphore_t *sp, cnt_t n);
-#endif /* CH_CFG_USE_SEMAPHORES == TRUE */
-#if CH_CFG_USE_EVENTS == TRUE
-  void chEvtSignal(thread_t *tp, eventmask_t mask);
-  void chEvtSignalI(thread_t *tp, eventmask_t mask);
-  eventmask_t chEvtWaitAnyTimeout(eventmask_t mask, sysinterval_t timeout);
-#endif
 #if CH_DBG_SYSTEM_STATE_CHECK == TRUE
   void _dbg_check_disable(void);
   void _dbg_check_suspend(void);
@@ -1568,7 +1415,10 @@ extern "C" {
 }
 #endif
 
-/* OSLIB.*/
+/* Optional modules.*/
+#include "chsem.h"
+#include "chevt.h"
+#include "chmsg.h"
 #include "chlib.h"
 
 #endif /* CH_H */

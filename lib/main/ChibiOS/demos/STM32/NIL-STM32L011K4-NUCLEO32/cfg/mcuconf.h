@@ -73,6 +73,12 @@
 #define STM32_IRQ_EXTI17_20_PRIORITY        3
 #define STM32_IRQ_EXTI21_22_PRIORITY        3
 
+#define STM32_IRQ_USART2_PRIORITY           3
+#define STM32_IRQ_LPUART1_PRIORITY          3
+
+#define STM32_IRQ_TIM2_PRIORITY             1
+#define STM32_IRQ_TIM21_PRIORITY            1
+
 /*
  * ADC driver system settings.
  * Note, IRQ is shared with EXT channels 21 and 22.
@@ -88,9 +94,7 @@
  * GPT driver system settings.
  */
 #define STM32_GPT_USE_TIM2                  FALSE
-#define STM32_GPT_TIM2_IRQ_PRIORITY         2
 #define STM32_GPT_USE_TIM21                 FALSE
-#define STM32_GPT_TIM21_IRQ_PRIORITY        2
 
 /*
  * I2C driver system settings.
@@ -113,27 +117,19 @@
  * ICU driver system settings.
  */
 #define STM32_ICU_USE_TIM2                  FALSE
-#define STM32_ICU_TIM2_IRQ_PRIORITY         3
 #define STM32_ICU_USE_TIM21                 FALSE
-#define STM32_ICU_TIM21_IRQ_PRIORITY        3
 
 /*
  * PWM driver system settings.
  */
-#define STM32_PWM_USE_ADVANCED              FALSE
 #define STM32_PWM_USE_TIM2                  FALSE
-#define STM32_PWM_TIM2_IRQ_PRIORITY         3
 #define STM32_PWM_USE_TIM21                 FALSE
-#define STM32_PWM_TIM21_IRQ_PRIORITY        3
 
 /*
  * SERIAL driver system settings.
  */
 #define STM32_SERIAL_USE_USART2             TRUE
 #define STM32_SERIAL_USE_LPUART1            FALSE
-#define STM32_SERIAL_USART1_PRIORITY        3
-#define STM32_SERIAL_USART2_PRIORITY        3
-#define STM32_SERIAL_LPUART1_PRIORITY       3
 
 /*
  * SPI driver system settings.
@@ -160,7 +156,6 @@
  * UART driver system settings.
  */
 #define STM32_UART_USE_USART2               FALSE
-#define STM32_UART_USART2_IRQ_PRIORITY      3
 #define STM32_UART_USART2_DMA_PRIORITY      0
 #define STM32_UART_USART2_RX_DMA_STREAM     STM32_DMA_STREAM_ID(1, 6)
 #define STM32_UART_USART2_TX_DMA_STREAM     STM32_DMA_STREAM_ID(1, 7)

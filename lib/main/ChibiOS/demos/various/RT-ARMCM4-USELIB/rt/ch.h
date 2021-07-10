@@ -25,11 +25,11 @@
 
 #define CH_H 
 #define _CHIBIOS_RT_ 
-#define CH_KERNEL_STABLE 1
-#define CH_KERNEL_VERSION "6.0.2"
+#define CH_KERNEL_STABLE 0
+#define CH_KERNEL_VERSION "6.0.0"
 #define CH_KERNEL_MAJOR 6
 #define CH_KERNEL_MINOR 0
-#define CH_KERNEL_PATCH 2
+#define CH_KERNEL_PATCH 0
 #define FALSE 0
 #define TRUE 1
 #define CHCONF_H 
@@ -263,7 +263,8 @@ static inline sysinterval_t chTimeDiffX(systime_t start, systime_t end) {
 static inline bool chTimeIsInRangeX(systime_t time,
                                     systime_t start,
                                     systime_t end) {
-  return (bool)((time - start) < (end - start));
+  return (bool)((systime_t)((systime_t)time - (systime_t)start) <
+                (systime_t)((systime_t)end - (systime_t)start));
 }
 #define CHALIGN_H 
 #define MEM_ALIGN_MASK(a) ((size_t)(a) - 1U)
@@ -1162,11 +1163,11 @@ static inline void chMsgReleaseS(thread_t *tp, msg_t msg) {
 }
 #define CHLIB_H 
 #define _CHIBIOS_OSLIB_ 
-#define CH_OSLIB_STABLE 1
-#define CH_OSLIB_VERSION "1.1.2"
+#define CH_OSLIB_STABLE 0
+#define CH_OSLIB_VERSION "1.1.0"
 #define CH_OSLIB_MAJOR 1
 #define CH_OSLIB_MINOR 1
-#define CH_OSLIB_PATCH 2
+#define CH_OSLIB_PATCH 0
 #define CHBSEM_H 
 typedef struct ch_binary_semaphore {
   semaphore_t sem;
@@ -1262,27 +1263,23 @@ static inline void chMBResumeX(mailbox_t *mbp) {
 typedef void *(*memgetfunc_t)(size_t size, unsigned align);
 typedef void *(*memgetfunc2_t)(size_t size, unsigned align, size_t offset);
 typedef struct {
-  uint8_t *nextmem;
-  uint8_t *endmem;
+  uint8_t *basemem;
+  uint8_t *topmem;
 } memcore_t;
+#define chCoreAllocAlignedWithOffsetI chCoreAllocFromTopI
+#define chCoreAllocAlignedWithOffset chCoreAllocFromTop
 extern memcore_t ch_memcore;
   void _core_init(void);
-  void *chCoreAllocAlignedWithOffsetI(size_t size,
-                                      unsigned align,
-                                      size_t offset);
-  void *chCoreAllocAlignedWithOffset(size_t size,
-                                     unsigned align,
-                                     size_t offset);
+  void *chCoreAllocFromBaseI(size_t size, unsigned align, size_t offset);
+  void *chCoreAllocFromTopI(size_t size, unsigned align, size_t offset);
+  void *chCoreAllocFromBase(size_t size, unsigned align, size_t offset);
+  void *chCoreAllocFromTop(size_t size, unsigned align, size_t offset);
   size_t chCoreGetStatusX(void);
 static inline void *chCoreAllocAlignedI(size_t size, unsigned align) {
   return chCoreAllocAlignedWithOffsetI(size, align, 0U);
 }
 static inline void *chCoreAllocAligned(size_t size, unsigned align) {
-  void *p;
-  chSysLock();
-  p = chCoreAllocAlignedWithOffsetI(size, align, 0U);
-  chSysUnlock();
-  return p;
+  return chCoreAllocAlignedWithOffset(size, align, 0U);
 }
 static inline void *chCoreAllocI(size_t size) {
   return chCoreAllocAlignedWithOffsetI(size, PORT_NATURAL_ALIGN, 0U);

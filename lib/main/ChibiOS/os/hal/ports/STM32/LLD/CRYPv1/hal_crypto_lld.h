@@ -50,7 +50,7 @@
 
 /**
  * @brief   HASH1 driver enable switch.
- * @details If set to @p TRUE the support for CRYP1 is included.
+ * @details If set to @p TRUE the support for HASH1 is included.
  * @note    The default is @p FALSE.
  */
 #if !defined(STM32_CRY_USE_HASH1) || defined(__DOXYGEN__)
@@ -74,6 +74,13 @@
 /**
  * @brief   HASH1 DMA priority (0..3|lowest..highest).
  */
+#if !defined(STM32_CRY_CRYP1_OUT_DMA_PRIORITY) || defined(__DOXYGEN__)
+#define STM32_CRY_CRYP1_OUT_DMA_PRIORITY    0
+#endif
+
+/**
+ * @brief   HASH1 DMA priority (0..3|lowest..highest).
+ */
 #if !defined(STM32_CRY_HASH1_DMA_PRIORITY) || defined(__DOXYGEN__)
 #define STM32_CRY_HASH1_DMA_PRIORITY        0
 #endif
@@ -88,12 +95,30 @@
 #endif
 
 /**
+ * @brief   Minimum text size (in bytes) for DMA use.
+ * @note    If set to zero then DMA is never used.
+ * @note    If set to one then DMA is always used.
+ */
+#if !defined(STM32_CRY_CRYP_SIZE_THRESHOLD) || defined(__DOXYGEN__)
+#define STM32_CRY_CRYP_SIZE_THRESHOLD       1024
+#endif
+
+/**
  * @brief   Hash DMA error hook.
  * @note    The default action for DMA errors is a system halt because DMA
  *          error can only happen because programming errors.
  */
 #if !defined(STM32_CRY_HASH_DMA_ERROR_HOOK) || defined(__DOXYGEN__)
 #define STM32_CRY_HASH_DMA_ERROR_HOOK(cryp) osalSysHalt("DMA failure")
+#endif
+
+/**
+ * @brief   CRYP DMA error hook.
+ * @note    The default action for DMA errors is a system halt because DMA
+ *          error can only happen because programming errors.
+ */
+#if !defined(STM32_CRY_CRYP_DMA_ERROR_HOOK) || defined(__DOXYGEN__)
+#define STM32_CRY_CRYP_DMA_ERROR_HOOK(cryp) osalSysHalt("DMA failure")
 #endif
 /** @} */
 
@@ -151,11 +176,33 @@
 
 /* Devices without DMAMUX require an additional check.*/
 #if !STM32_DMA_SUPPORTS_DMAMUX
+#if STM32_CRY_USE_CRYP1 &&                                                  \
+    !STM32_DMA_IS_VALID_ID(STM32_CRY_CRYP1_IN_DMA_STREAM,                   \
+                           STM32_CRYP1_IN_DMA_MSK)
+#error "invalid DMA stream associated to CRYP1_IN"
+#endif
+
+#if STM32_CRY_USE_CRYP1 &&                                                  \
+    !STM32_DMA_IS_VALID_ID(STM32_CRY_CRYP1_OUT_DMA_STREAM,                  \
+                           STM32_CRYP1_OUT_DMA_MSK)
+#error "invalid DMA stream associated to CRYP1_OUT"
+#endif
+
 #if STM32_CRY_USE_HASH1 &&                                                  \
     !STM32_DMA_IS_VALID_ID(STM32_CRY_HASH1_DMA_STREAM, STM32_HASH1_DMA_MSK)
 #error "invalid DMA stream associated to HASH1"
 #endif
 #endif /* !STM32_DMA_SUPPORTS_DMAMUX */
+
+/* DMA priority check.*/
+#if !STM32_DMA_IS_VALID_PRIORITY(STM32_CRY_CRYP1_IN_DMA_PRIORITY)
+#error "Invalid DMA priority assigned to CRYP1_IN"
+#endif
+
+/* DMA priority check.*/
+#if !STM32_DMA_IS_VALID_PRIORITY(STM32_CRY_CRYP1_OUT_DMA_PRIORITY)
+#error "Invalid DMA priority assigned to CRYP1_OUT"
+#endif
 
 /* DMA priority check.*/
 #if !STM32_DMA_IS_VALID_PRIORITY(STM32_CRY_HASH1_DMA_PRIORITY)
@@ -178,7 +225,7 @@
 #define CRY_LLD_SUPPORTS_AES                TRUE
 #define CRY_LLD_SUPPORTS_AES_ECB            TRUE
 #define CRY_LLD_SUPPORTS_AES_CBC            TRUE
-#define CRY_LLD_SUPPORTS_AES_CFB            TRUE
+#define CRY_LLD_SUPPORTS_AES_CFB            FALSE
 #define CRY_LLD_SUPPORTS_AES_CTR            TRUE
 #define CRY_LLD_SUPPORTS_AES_GCM            TRUE
 #define CRY_LLD_SUPPORTS_DES                TRUE
@@ -225,6 +272,17 @@ typedef uint32_t crykey_t;
 typedef struct CRYDriver CRYDriver;
 
 /**
+ * @brief   Type of key stored in CRYP.
+ */
+typedef enum {
+  cryp_key_none = 0,
+  cryp_key_des = 1,
+  cryp_key_tdes = 2,
+  cryp_key_aes_encrypt = 3,
+  cryp_key_aes_decrypt = 4
+} cryp_ktype_t;
+
+/**
  * @brief   Driver configuration structure.
  * @note    It could be empty on some architectures.
  */
@@ -248,9 +306,35 @@ struct CRYDriver {
   CRY_DRIVER_EXT_FIELDS
 #endif
   /* End of the mandatory fields.*/
-#if STM32_CRY_USE_CRYP1 || defined (__DOXYGEN__)
-#endif
-#if STM32_CRY_USE_HASH1 || defined (__DOXYGEN__)
+#if (STM32_CRY_USE_CRYP1 == TRUE) || defined (__DOXYGEN__)
+  /**
+   * @brief   Type of the key currently stored in CRYP.
+   */
+  cryp_ktype_t              cryp_ktype;
+  /**
+   * @brief   Key size setup value for CR register.
+   */
+  uint32_t                  cryp_ksize;
+  /**
+   * @brief   Transient key data.
+   */
+  uint32_t                  cryp_k[8];
+#if (STM32_CRY_CRYP_SIZE_THRESHOLD != 0) || defined (__DOXYGEN__)
+  /**
+   * @brief   Thread reference for CRYP operations.
+   */
+  thread_reference_t        cryp_tr;
+  /**
+   * @brief   CRYP IN DMA stream.
+   */
+  const stm32_dma_stream_t  *cryp_dma_in;
+  /**
+   * @brief   CRYP OUT DMA stream.
+   */
+  const stm32_dma_stream_t  *cryp_dma_out;
+#endif /* STM32_CRY_CRYP_SIZE_THRESHOLD != 0 */
+#endif /* STM32_CRY_USE_CRYP1 == TRUE */
+#if (STM32_CRY_USE_HASH1 == TRUE) || defined (__DOXYGEN__)
 #if (STM32_CRY_HASH_SIZE_THRESHOLD != 0) || defined (__DOXYGEN__)
   /**
    * @brief   Thread reference for hash operations.
@@ -259,9 +343,9 @@ struct CRYDriver {
   /**
    * @brief   Hash DMA stream.
    */
-  const stm32_dma_stream_t  *dma_hash;
-#endif
-#endif
+  const stm32_dma_stream_t  *hash_dma;
+#endif /* STM32_CRY_HASH_SIZE_THRESHOLD != 0 */
+#endif /* STM32_CRY_USE_HASH1 == TRUE */
 };
 
 #if (CRY_LLD_SUPPORTS_SHA1 == TRUE) || defined(__DOXYGEN__)

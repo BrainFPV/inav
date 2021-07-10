@@ -58,7 +58,6 @@
 #define MSG_RESET                           (msg_t)-2
 /** @} */
 
-
 /**
  * @name    Special time constants
  * @{
@@ -624,8 +623,8 @@ static inline sysinterval_t osalTimeDiffX(systime_t start, systime_t end) {
 
 /**
  * @brief   Checks if the specified time is within the specified time window.
- * @note    When start==end then the function returns always true because the
- *          whole time range is specified.
+ * @note    When start==end then the function returns always false because the
+ *          time window has zero size.
  * @note    This function can be called from any context.
  *
  * @param[in] time      the time to be verified
@@ -640,7 +639,8 @@ static inline bool osalTimeIsInRangeX(systime_t time,
                                       systime_t start,
                                       systime_t end) {
 
-  return (bool)((time - start) < (end - start));
+  return (bool)((systime_t)((systime_t)time - (systime_t)start) <
+                (systime_t)((systime_t)end - (systime_t)start));
 }
 
 /**

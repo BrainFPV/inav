@@ -265,7 +265,7 @@ ${doc1.board.board_functions.sdc_lld_is_card_inserted[0]}
 [#else]
 
   (void)sdcp;
-  /* TODO: Fill the implementation.*/
+  /* CHTODO: Fill the implementation.*/
   return true;
 [/#if]
 }
@@ -279,7 +279,7 @@ ${doc1.board.board_functions.sdc_lld_is_write_protected[0]}
 [#else]
 
   (void)sdcp;
-  /* TODO: Fill the implementation.*/
+  /* CHTODO: Fill the implementation.*/
   return false;
 [/#if]
 }
@@ -295,7 +295,7 @@ ${doc1.board.board_functions.mmc_lld_is_card_inserted[0]}
 [#else]
 
   (void)mmcp;
-  /* TODO: Fill the implementation.*/
+  /* CHTODO: Fill the implementation.*/
   return true;
 [/#if]
 }
@@ -309,7 +309,7 @@ ${doc1.board.board_functions.mmc_lld_is_write_protected[0]}
 [#else]
 
   (void)mmcp;
-  /* TODO: Fill the implementation.*/
+  /* CHTODO: Fill the implementation.*/
   return false;
 [/#if]
 }
@@ -317,7 +317,7 @@ ${doc1.board.board_functions.mmc_lld_is_write_protected[0]}
 
 /**
  * @brief   Board-specific initialization code.
- * @todo    Add your board-specific code, if any.
+ * @note    You can add your board-specific code here.
  */
 void boardInit(void) {
 

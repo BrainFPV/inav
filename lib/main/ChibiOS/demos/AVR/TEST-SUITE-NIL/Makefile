@@ -84,6 +84,9 @@ PROJECT = ch
 
 # Imported source files and paths
 CHIBIOS = ../../..
+CHIBIOS  := ../../..
+CONFDIR  := ./cfg
+BUILDDIR := ./build
 
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
@@ -92,7 +95,7 @@ include $(CHIBIOS)/os/license/license.mk
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/boards/ARDUINO_MEGA/board.mk
 include $(CHIBIOS)/os/hal/ports/AVR/MEGA/ATMEGAxx/platform.mk
-include $(CHIBIOS)/os/hal/osal/nil/osal.mk
+include $(CHIBIOS)/os/hal/osal/rt-nil/osal.mk
 
 # RTOS files (optional).
 include $(CHIBIOS)/os/nil/nil.mk
@@ -110,7 +113,7 @@ CSRC =  $(ALLCSRC) \
 # List C++ sources file here.
 CPPSRC = $(ALLCPPSRC)
 
-INCDIR = $(ALLINC) $(TESTINC)
+INCDIR = $(CONFDIR) $(ALLINC) $(TESTINC)
 
 #
 # Project, sources and paths.

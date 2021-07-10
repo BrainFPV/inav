@@ -45,7 +45,8 @@
 /** @} */
 
 /* Handling differences in ST headers.*/
-#if !defined(STM32H7XX) && !defined(STM32L4XX) && !defined(STM32L4XXP)
+#if !defined(STM32H7XX) && !defined(STM32L4XX) && !defined(STM32L4XXP) &&   \
+    !defined(STM32G0XX) && !defined(STM32G4XX)
 #define EMR1    EMR
 #define IMR1    IMR
 #define PR1     PR
@@ -63,6 +64,29 @@
 
 #if !defined(STM32_EXTI_NUM_LINES)
 #error "STM32_EXTI_NUM_LINES not defined in registry"
+#endif
+
+/* Checking for presence of bank 2 registers. If the definition is not
+   present in registry then it is inferred by the number of channels (which
+   is not an always-good method, see G0.*/
+#if !defined(STM32_EXTI_HAS_GROUP2)
+#if STM32_EXTI_NUM_LINES <= 32
+#define STM32_EXTI_HAS_GROUP2       FALSE
+#else
+#define STM32_EXTI_HAS_GROUP2       TRUE
+#endif
+#endif /* !defined(STM32_EXTI_HAS_GROUP2) */
+
+/* Determines if EXTI has dedicated CR register or if it is done in
+   SYSCFG (old style).*/
+#if !defined(STM32_EXTI_HAS_CR)
+#define STM32_EXTI_HAS_CR           FALSE
+#endif
+
+/* Determines if EXTI has dedicated separate registers for raising and
+   falling edges.*/
+#if !defined(STM32_EXTI_SEPARATE_RF)
+#define STM32_EXTI_SEPARATE_RF      FALSE
 #endif
 
 #if (STM32_EXTI_NUM_LINES < 0) || (STM32_EXTI_NUM_LINES > 63)
@@ -116,26 +140,100 @@ typedef uint32_t extimode_t;
  *
  * @param[in] mask      mask of group 1 lines to be initialized
  *
- * @api
+ * @special
  */
+#if (STM32_EXTI_SEPARATE_RF == FALSE) || defined(__DOXYGEN__)
 #define extiClearGroup1(mask) do {                                          \
   osalDbgAssert(((mask) & STM32_EXTI_IMR1_MASK) == 0U, "fixed lines");      \
   EXTI->PR1 = (uint32_t)(mask);                                             \
 } while (false)
+#else
+#define extiClearGroup1(mask) do {                                          \
+  osalDbgAssert(((mask) & STM32_EXTI_IMR1_MASK) == 0U, "fixed lines");      \
+  EXTI->RPR1 = (uint32_t)(mask);                                            \
+  EXTI->FPR1 = (uint32_t)(mask);                                            \
+} while (false)
+#endif
 
-#if (STM32_EXTI_NUM_LINES > 32) || defined(__DOXYGEN__)
+#if (STM32_EXTI_HAS_GROUP2 == TRUE) || defined(__DOXYGEN__)
 /**
  * @brief   STM32 EXTI group 2 IRQ status clearing.
  *
  * @param[in] mask      mask of group 2 lines to be initialized
  *
- * @api
+ * @special
  */
+#if (STM32_EXTI_SEPARATE_RF == FALSE) || defined(__DOXYGEN__)
 #define extiClearGroup2(mask) do {                                          \
   osalDbgAssert(((mask) & STM32_EXTI_IMR2_MASK) == 0U, "fixed lines");      \
   EXTI->PR2 = (uint32_t)(mask);                                             \
 } while (false)
-#endif /* STM32_EXTI_NUM_LINES > 32 */
+#else
+#define extiClearGroup2(mask) do {                                          \
+  osalDbgAssert(((mask) & STM32_EXTI_IMR2_MASK) == 0U, "fixed lines");      \
+  EXTI->RPR2 = (uint32_t)(mask);                                            \
+  EXTI->FPR2 = (uint32_t)(mask);                                            \
+} while (false)
+#endif
+#endif /* STM32_EXTI_HAS_GROUP2 == TRUE */
+
+/**
+ * @brief   Serves an EXTI interrupt in group 1.
+ *
+ * @param[in] mask      mask of lines to be cleared
+ * @param[out] out      mask of lines needing processing
+ *
+ * @special
+ */
+#if (STM32_EXTI_SEPARATE_RF == FALSE) || defined(__DOXYGEN__)
+#define extiGetAndClearGroup1(mask, out) do {                               \
+  uint32_t pr1;                                                             \
+                                                                            \
+  pr1 = EXTI->PR1 & (mask);                                                 \
+  (out) = pr1;                                                              \
+  EXTI->PR1 = pr1;                                                          \
+} while (false)
+#else
+#define extiGetAndClearGroup1(mask, out) do {                               \
+  uint32_t rpr1, fpr1;                                                      \
+                                                                            \
+  rpr1 = EXTI->RPR1 & (mask);                                               \
+  fpr1 = EXTI->FPR1 & (mask);                                               \
+  (out) = rpr1 | fpr1;                                                      \
+  EXTI->RPR1 = rpr1;                                                        \
+  EXTI->FPR1 = fpr1;                                                        \
+} while (false)
+#endif
+
+#if (STM32_EXTI_HAS_GROUP2 == TRUE) || defined(__DOXYGEN__)
+/**
+ * @brief   Serves an EXTI interrupt in group 2.
+ *
+ * @param[in] mask      mask of lines to be cleared
+ * @param[out] out      mask of lines needing processing
+ *
+ * @special
+ */
+#if (STM32_EXTI_SEPARATE_RF == FALSE) || defined(__DOXYGEN__)
+#define extiGetAndClearGroup2(mask, out) do {                               \
+  uint32_t pr2;                                                             \
+                                                                            \
+  pr2 = EXTI->PR2 & (mask);                                                 \
+  (out) = pr2;                                                              \
+  EXTI->PR2 = pr2;                                                          \
+} while (false)
+#else
+#define extiGetAndClearGroup2(mask, out) do {                               \
+  uint32_t rpr2, fpr2;                                                      \
+                                                                            \
+  rpr2 = EXTI->RPR2 & (mask);                                               \
+  fpr2 = EXTI->FPR2 & (mask);                                               \
+  (out) = rpr2 | fpr2;                                                      \
+  EXTI->RPR2 = rpr2;                                                        \
+  EXTI->FPR2 = fpr2;                                                        \
+} while (false)
+#endif
+#endif /* STM32_EXTI_HAS_GROUP2 == TRUE */
 
 /*===========================================================================*/
 /* External declarations.                                                    */
@@ -145,9 +243,9 @@ typedef uint32_t extimode_t;
 extern "C" {
 #endif
   void extiEnableGroup1(uint32_t mask, extimode_t mode);
-#if (STM32_EXTI_NUM_LINES > 32) || defined(__DOXYGEN__)
+#if (STM32_EXTI_HAS_GROUP2 == TRUE) || defined(__DOXYGEN__)
   void extiEnableGroup2(uint32_t mask, extimode_t mode);
-#endif /* STM32_EXTI_NUM_LINES > 32 */
+#endif /* STM32_EXTI_HAS_GROUP2 == TRUE */
   void extiEnableLine(extiline_t line, extimode_t mode);
   void extiClearLine(extiline_t line);
   #ifdef __cplusplus

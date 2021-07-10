@@ -61,7 +61,6 @@ static union {
  * @brief   SDIO default configuration.
  */
 static const SDCConfig sdc_default_cfg = {
-  NULL,
   SDC_MODE_4BIT
 };
 
@@ -110,7 +109,7 @@ static bool sdc_lld_prepare_read_bytes(SDCDriver *sdcp,
 
   /* Transaction starts just after DTEN bit setting.*/
   sdcp->sdio->DCTRL = SDIO_DCTRL_DTDIR |
-                      SDIO_DCTRL_DTMODE |   /* multibyte data transfer */
+                      SDIO_DCTRL_DTMODE |   /* Multibyte data transfer.*/
                       SDIO_DCTRL_DMAEN |
                       SDIO_DCTRL_DTEN;
 
@@ -228,10 +227,6 @@ static bool sdc_lld_wait_transaction_end(SDCDriver *sdcp, uint32_t n,
   sdcp->sdio->ICR = STM32_SDIO_ICR_ALL_FLAGS;
   sdcp->sdio->DCTRL = 0;
   osalSysUnlock();
-
-  /* Wait until interrupt flags to be cleared.*/
-  /*while (((DMA2->LISR) >> (sdcp->dma->ishift)) & STM32_DMA_ISR_TCIF)
-    dmaStreamClearInterrupt(sdcp->dma);*/
 #else
   /* Waits for transfer completion at DMA level, then the stream is
      disabled and cleared.*/
@@ -647,7 +642,7 @@ bool sdc_lld_read_special(SDCDriver *sdcp, uint8_t *buf, size_t bytes,
                           uint8_t cmd, uint32_t arg) {
   uint32_t resp[1];
 
-  if(sdc_lld_prepare_read_bytes(sdcp, buf, bytes))
+  if (sdc_lld_prepare_read_bytes(sdcp, buf, bytes))
     goto error;
 
   if (sdc_lld_send_cmd_short_crc(sdcp, cmd, arg, resp)
@@ -871,7 +866,7 @@ bool sdc_lld_write(SDCDriver *sdcp, uint32_t startblk,
  */
 bool sdc_lld_sync(SDCDriver *sdcp) {
 
-  /* TODO: Implement.*/
+  /* CHTODO: Implement.*/
   (void)sdcp;
   return HAL_SUCCESS;
 }

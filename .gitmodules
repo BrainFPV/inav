@@ -1,0 +1,3 @@
+[submodule "brainfpv_fw_packer"]
+	path = brainfpv_fw_packer
+	url = https://github.com/BrainFPV/brainfpv_fw_packer.git

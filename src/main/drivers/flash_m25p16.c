@@ -69,6 +69,13 @@ static flashGeometry_t geometry = {.pageSize = M25P16_PAGESIZE};
 static busDevice_t * busDev = NULL;
 static bool isLargeFlash = false;
 
+// Option to skip some sectors
+#ifdef M25P16_FIRST_SECTOR
+#define TRANSLATE_ADDR(fdevice, addr) (addr + M25P16_FIRST_SECTOR * geometry.sectorSize)
+#else
+#define TRANSLATE_ADDR(fdevice, addr) (addr)
+#endif
+
 /*
  * Whether we've performed an action that could have made the device busy for writes.
  *
@@ -195,6 +202,13 @@ static bool m25p16_readIdentification(void)
             return false;
     }
 
+#if defined(M25P16_FIRST_SECTOR)
+    geometry.sectors -= M25P16_FIRST_SECTOR;
+#endif
+#if defined(M25P16_SECTORS_SPARE_END)
+    geometry.sectors -= M25P16_SECTORS_SPARE_END;
+#endif
+
     geometry.sectorSize = geometry.pagesPerSector * geometry.pageSize;
     geometry.totalSize = geometry.sectorSize * geometry.sectors;
 
@@ -234,6 +248,8 @@ bool m25p16_init(int flashNumToUse)
 
 void m25p16_setCommandAddress(uint8_t *buf, uint32_t address, bool useLongAddress)
 {
+    address = TRANSLATE_ADDR(fdevice, address);
+
     if (useLongAddress) {
         *buf++ = (address >> 24) & 0xff;
     }

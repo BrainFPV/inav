@@ -222,6 +222,13 @@ void init(void)
     detectBrushedESC();
 #endif
 
+#ifdef CONFIG_IN_EXTERNAL_FLASH
+    // Reset config to defaults. Note: Default flash config must be functional for config in external flash to work.
+    pgResetAll(0);
+
+    flashDeviceInitialized = flashInit();
+#endif
+
     initEEPROM();
     ensureEEPROMContainsValidData();
     readEEPROM();
@@ -364,6 +371,12 @@ void init(void)
 
     // Initialize buses
     busInit();
+
+#ifdef CONFIG_IN_EXTERNAL_FLASH
+    // busInit re-configures the SPI pins. Init flash again so it is ready to write settings
+    flashDeviceInitialized = flashInit();
+#endif
+
 
 #ifdef USE_BRAINFPV_FPGA
     spiInitDevice(SPIDEV_3, false);

@@ -63,7 +63,7 @@
 
 #if defined(USE_CHIBIOS)
 #include "ch.h"
-binary_semaphore_t gyroSem;
+extern binary_semaphore_t gyroSem;
 #endif
 
 
@@ -145,10 +145,6 @@ static void BMI160_Init(const busDevice_t *busDev)
     if (BMI160InitDone || !BMI160Detected) {
         return;
     }
-
-#if defined(USE_CHIBIOS)
-    chBSemObjectInit(&gyroSem, FALSE);
-#endif
 
     /* Configure the BMI160 Sensor */
     if (BMI160_Config(busDev) != 0) {

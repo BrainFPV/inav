@@ -22,8 +22,20 @@
  * @{
  */
 
-#include "hal.h"
-#include "platform.h"
+//#include "hal.h"
+#include "osal.h"
+#include "cmparams.h"
+#include "nvic.h"
+#include "stm32_registry.h"
+#include "stm32_tim.h"
+#include "stm32_rcc.h"
+#include "stm32_isr.h"
+#include "hal_st_lld.h"
+#if OSAL_ST_MODE != OSAL_ST_MODE_NONE
+#include "hal_st.h"
+#endif
+
+#include "drivers/timer.h"
 
 #if (OSAL_ST_MODE != OSAL_ST_MODE_NONE) || defined(__DOXYGEN__)
 
@@ -245,8 +257,8 @@
 #error "TIM13 is not a 32bits timer"
 #endif
 
-#define ST_HANDLER                          TIM13_IRQHandler
-#define ST_NUMBER                           STM32_TIM13_NUMBER
+#define ST_HANDLER                          TIM8_UP_TIM13_IRQHandler
+#define ST_NUMBER                           STM32_TIM8_UP_TIM13_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM13(true)
 #if defined(STM32F1XX)
@@ -371,6 +383,8 @@
 
 //#if !defined(STM32_SYSTICK_SUPPRESS_ISR)
 
+#undef STM32_SYSTICK_SUPPRESS_ISR
+
 /**
  * @brief   Interrupt handler.
  *
@@ -407,7 +421,7 @@ void st_lld_init(void) {
   ST_ENABLE_STOP();
 
   /* Initializing the counter in free running mode.*/
-  STM32_ST_TIM->PSC    = (ST_CLOCK_SRC / OSAL_ST_FREQUENCY) - 1;
+  STM32_ST_TIM->PSC    = (timerClock((TIM_TypeDef *)STM32_ST_TIM) / OSAL_ST_FREQUENCY) - 1;
   STM32_ST_TIM->ARR    = ST_ARR_INIT;
   STM32_ST_TIM->CCMR1  = 0;
   STM32_ST_TIM->CCR[0] = 0;
@@ -428,6 +442,8 @@ void st_lld_init(void) {
 #if !defined(STM32_SYSTICK_SUPPRESS_ISR)
   /* IRQ enabled.*/
   nvicEnableVector(ST_NUMBER, STM32_ST_IRQ_PRIORITY);
+#else
+#error "STM32_SYSTICK_SUPPRESS_ISR is set"
 #endif
 #endif /* OSAL_ST_MODE == OSAL_ST_MODE_FREERUNNING */
 

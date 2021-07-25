@@ -41,14 +41,23 @@
 #include "brainfpv/video.h"
 #include "brainfpv/osd_utils.h"
 #include "brainfpv/brainfpv_osd.h"
+#include "brainfpv/brainfpv_system.h"
 
+brainFpvSystemConfig_t brainFpvSystemConfigCms;
+
+#if defined(USE_BRAINFPV_OSD)
 bfOsdConfig_t bfOsdConfigCms;
+#endif
 
 static long menuBrainFPVOnEnter(const OSD_Entry *from)
 {
     UNUSED(from);
 
+    memcpy(&brainFpvSystemConfigCms, brainFpvSystemConfig(), sizeof(brainFpvSystemConfig_t));
+
+#if defined(USE_BRAINFPV_OSD)
     memcpy(&bfOsdConfigCms, bfOsdConfig(), sizeof(bfOsdConfig_t));
+#endif
     return 0;
 }
 
@@ -56,10 +65,15 @@ static long menuBrainFPVOnExit(const OSD_Entry *from)
 {
     UNUSED(from);
 
+    memcpy(brainFpvSystemConfigMutable(), &brainFpvSystemConfigCms, sizeof(brainFpvSystemConfig_t));
+
+#if defined(USE_BRAINFPV_OSD)
     memcpy(bfOsdConfigMutable(), &bfOsdConfigCms, sizeof(bfOsdConfig_t));
+#endif
     return 0;
 }
 
+#if defined(USE_BRAINFPV_OSD)
 const char *STICKS_DISPLAY_NAMES[] = {"OFF", "MODE2", "MODE1"};
 const char *FONT_NAMES[] = {"DEFAULT", "LARGE", "CLARITY"};
 
@@ -77,6 +91,13 @@ OSD_Entry cmsx_menuBrainFPVOsdEntries[] =
     OSD_INT8_ENTRY("OSD Y OFF", (&(const OSD_INT8_t){ &bfOsdConfigCms.center_mark_offset, -100, 100, 1 })),
     OSD_BOOL_ENTRY("3D MODE",  &bfOsdConfigCms.sbs_3d_enabled),
     OSD_UINT8_ENTRY("3D R SHIFT", (&(const OSD_UINT8_t){ &bfOsdConfigCms.sbs_3d_right_eye_offset, 10, 40, 1 })),
+    OSD_UINT8_ENTRY("AHI STEPS", (&(const OSD_UINT8_t){ &bfOsdConfigCms.ahi_steps, 0, 9, 1 })),
+    OSD_BOOL_ENTRY("ALTITUDE SCALE",  &bfOsdConfigCms.altitude_scale),
+    OSD_BOOL_ENTRY("SPEED SCALE",  &bfOsdConfigCms.speed_scale),
+    OSD_UINT16_ENTRY("RADAR MAX DIST M", (&(const OSD_UINT16_t){ &bfOsdConfigCms.radar_max_dist_m, 10, 32767, 10 })),
+    OSD_TAB_ENTRY("SHOW STICKS", (&(const OSD_TAB_t){&bfOsdConfigCms.sticks_display, 2, &STICKS_DISPLAY_NAMES[0]})),
+    OSD_BOOL_ENTRY("SHOW LOGO ON ARM",  &bfOsdConfigCms.show_logo_on_arm),
+    OSD_BOOL_ENTRY("SHOW PILOT LOGO",  &bfOsdConfigCms.show_pilot_logo),
 
     OSD_BACK_ENTRY,
     OSD_END_ENTRY,
@@ -87,19 +108,17 @@ CMS_Menu cmsx_menuBrainFPVOsd = {
     .onExit = NULL,
     .entries = cmsx_menuBrainFPVOsdEntries,
 };
+#endif /* defined(USE_BRAINFPV_OSD) */
 
 OSD_Entry cmsx_menuBrainFPVEntires[] =
 {
     OSD_LABEL_ENTRY("-- BRAINFPV --"),
 
+#if defined(USE_BRAINFPV_OSD)
     OSD_SUBMENU_ENTRY("BRAIN OSD", &cmsx_menuBrainFPVOsd),
-    OSD_UINT8_ENTRY("AHI STEPS", (&(const OSD_UINT8_t){ &bfOsdConfigCms.ahi_steps, 0, 9, 1 })),
-    OSD_BOOL_ENTRY("ALTITUDE SCALE",  &bfOsdConfigCms.altitude_scale),
-    OSD_BOOL_ENTRY("SPEED SCALE",  &bfOsdConfigCms.speed_scale),
-    OSD_UINT16_ENTRY("RADAR MAX DIST M", (&(const OSD_UINT16_t){ &bfOsdConfigCms.radar_max_dist_m, 10, 32767, 10 })),
-    OSD_TAB_ENTRY("SHOW STICKS", (&(const OSD_TAB_t){&bfOsdConfigCms.sticks_display, 2, &STICKS_DISPLAY_NAMES[0]})),
-    OSD_BOOL_ENTRY("SHOW LOGO ON ARM",  &bfOsdConfigCms.show_logo_on_arm),
-    OSD_BOOL_ENTRY("SHOW PILOT LOGO",  &bfOsdConfigCms.show_pilot_logo),
+#endif
+
+    // XXX: add RGB LED
 
     OSD_BACK_ENTRY,
     OSD_END_ENTRY,

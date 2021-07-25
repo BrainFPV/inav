@@ -1195,7 +1195,7 @@ STATIC_UNIT_TESTED uint16_t cmsHandleKey(displayPort_t *pDisplay, uint8_t key)
             // Shouldn't happen
             break;
     }
-#ifdef BRAINFPV
+#if defined(USE_BRAINFPV_OSD)
     if (currentCtx.menu == &cmsx_menuBrainFPVOsd) {
         if ((key == CMS_KEY_RIGHT) || (key == CMS_KEY_LEFT)) {
             brainfpv_settings_updated = true;

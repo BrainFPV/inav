@@ -258,7 +258,7 @@ void taskDashboardUpdate(timeUs_t currentTimeUs)
 #endif
 
 #ifdef USE_TELEMETRY
-void taskTelemetry(timeUs_t currentTimeUs)
+FAST_CODE void taskTelemetry(timeUs_t currentTimeUs)
 {
     telemetryCheckState();
 
@@ -317,14 +317,19 @@ void taskUpdateAux(timeUs_t currentTimeUs)
     updateFixedWingLevelTrim(currentTimeUs);
 }
 
-void fcTasksInit(void)
+SLOW_CODE void fcTasksInit(void)
 {
     schedulerInit();
 
     rescheduleTask(TASK_PID, getLooptime());
     setTaskEnabled(TASK_PID, true);
 
+#if defined(USE_CHIBIOS)
+    // Use 95% of loop time requested, so task is always ready to run when interrupt fires
+    rescheduleTask(TASK_GYRO, 0.95f * getGyroLooptime());
+#else
     rescheduleTask(TASK_GYRO, getGyroLooptime());
+#endif
     setTaskEnabled(TASK_GYRO, true);
 
     setTaskEnabled(TASK_AUX, true);

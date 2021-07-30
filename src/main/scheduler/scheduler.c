@@ -27,6 +27,11 @@ uint32_t last_check = 0;
 extern binary_semaphore_t gyroSem;
 extern bool idleCounterClear;
 extern uint32_t idleCounter;
+#include "platform.h"
+
+#if defined(USE_MULT_CPU_IDLE_COUNTS)
+extern uint32_t cpu_idle_counts_no_load;
+#endif /* defined(USE_MULT_CPU_IDLE_COUNTS) */
 #endif
 
 #include "platform.h"
@@ -136,7 +141,11 @@ void taskSystem(timeUs_t currentTimeUs)
     uint32_t now = millis();
     if ((idleCounterClear == 0) && (now - last_check > 1e3)) {
         float dT = (now - last_check) / 1e3;
+#if defined(USE_MULT_CPU_IDLE_COUNTS)
+        float idle = ((float)idleCounter / dT) / (float)cpu_idle_counts_no_load;
+#else
         float idle = ((float)idleCounter / dT) / (float)IDLE_COUNTS_PER_SEC_AT_NO_LOAD;
+#endif
         if (idle > 1)
             averageSystemLoadPercent = 0;
         else
@@ -302,6 +311,7 @@ void FAST_CODE NOINLINE scheduler(void)
         }
     }
 
+
     totalWaitingTasksSamples++;
     totalWaitingTasks += waitingTasks;
 
@@ -326,7 +336,7 @@ void FAST_CODE NOINLINE scheduler(void)
 #if defined(SCHEDULER_DEBUG)
         DEBUG_SET(DEBUG_SCHEDULER, 2, micros() - currentTimeUs - taskExecutionTime); // time spent in scheduler
 #endif
-    } 
+    }
     
     if (!selectedTask || forcedRealTimeTask) {
         // Execute system real-time callbacks and account for them to SYSTEM account
@@ -343,14 +353,17 @@ void FAST_CODE NOINLINE scheduler(void)
 #if defined(SCHEDULER_DEBUG)
         DEBUG_SET(DEBUG_SCHEDULER, 2, micros() - currentTimeUs);
 #endif
+
 #if defined(USE_CHIBIOS)
-        extern bool brainfpv_settings_updated;
-        if (brainfpv_settings_updated) {
-            brainFPVUpdateSettings();
-            brainfpv_settings_updated = false;
+        if (!forcedRealTimeTask) {
+            extern bool brainfpv_settings_updated;
+            if (brainfpv_settings_updated) {
+                brainFPVUpdateSettings();
+                brainfpv_settings_updated = false;
+            }
+            // wait for gyro if no tasks are ready
+            chBSemWaitTimeout(&gyroSem, TIME_MS2I(2));
         }
-        // wait for gyro if no tasks are ready
-        chBSemWaitTimeout(&gyroSem, TIME_MS2I(2));
 #endif
     }
 }

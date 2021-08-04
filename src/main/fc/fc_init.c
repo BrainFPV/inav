@@ -193,7 +193,7 @@ void flashLedsAndBeep(void)
     LED1_OFF;
 }
 
-void init(void)
+SLOW_CODE void init(void)
 {
 #if defined(USE_FLASHFS) && defined(USE_FLASH_M25P16)
     bool flashDeviceInitialized = false;
@@ -379,7 +379,6 @@ void init(void)
 
 
 #ifdef USE_BRAINFPV_FPGA
-    spiInitDevice(SPIDEV_3, false);
     BRAINFPVFPGA_Init(true);
 #endif
 

@@ -511,7 +511,7 @@ bool checkCrsfTelemetryState(void)
 /*
  * Called periodically by the scheduler
  */
-void handleCrsfTelemetry(timeUs_t currentTimeUs)
+FAST_CODE void handleCrsfTelemetry(timeUs_t currentTimeUs)
 {
     static uint32_t crsfLastCycleTime;
 

@@ -32,11 +32,56 @@
 #include "drivers/system.h"
 #include "drivers/time.h"
 #include "drivers/light_led.h"
+#include "drivers/io.h"
 #include "io/beeper.h"
 #include "fc/config.h"
 #include "fc/fc_core.h"
 
 #if defined(BRAINFPV)
+
+#if defined(USE_BRAINFPV_BOOTLOADER)
+typedef struct __attribute__((packed)) {
+    uint32_t target_magic;
+    uint32_t isr_vector_base;
+} BrainFPVBlHeader_t;
+
+const BrainFPVBlHeader_t __attribute__((section (".bl_header_section"))) __attribute__((used)) BRAINFPV_BL_HEADER = {
+    .target_magic = BOOTLOADER_TARGET_MAGIC,
+    .isr_vector_base = VECT_TAB_BASE,
+};
+#endif /* defined(USE_BRAINFPV_BOOTLOADER) */
+
+#if defined(USE_CUSTOM_RESET)
+void CustomSystemReset(void)
+{
+    IO_t reset_pin = IOGetByTag(IO_TAG(CUSTOM_RESET_PIN));
+    IOInit(reset_pin, OWNER_PULLDOWN, 0);
+    IOConfigGPIO(reset_pin, IOCFG_OUT_OD);
+
+    __DSB();                                                          /* Ensure all outstanding memory accesses included
+                                                                         buffered write are completed before reset */
+
+    IOLo(reset_pin);
+    for(;;)                                                           /* wait until reset */
+    {
+      __NOP();
+    }
+}
+#endif /* defined(USE_CUSTOM_RESET) */
+
+#if defined(USE_DEBUG_PIN)
+IO_t debug_pin;
+
+void debug_pin_hi(void)
+{
+    IOHi(debug_pin);
+}
+
+void debug_pin_lo(void)
+{
+    IOLo(debug_pin);
+}
+#endif
 
 static BrainFPVSystemReq_t brainfpv_req = BRAINFPV_REQ_NONE;
 
@@ -83,6 +128,11 @@ void brainFPVSystemInit(void)
 #if defined(USE_VTXFAULT_PIN)
     vtxFaultInit();
 #endif /* defined(USE_VTXFAULT_PIN) */
+
+#if defined(USE_DEBUG_PIN)
+    debug_pin = IOGetByTag(IO_TAG(DEBUG_PIN));
+    IOConfigGPIO(debug_pin, IOCFG_OUT_PP);
+#endif
 }
 
 // Set the request

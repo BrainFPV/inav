@@ -207,6 +207,31 @@ typedef struct pllConfig_s {
  */
 
 // 400MHz for Rev.Y (and Rev.X)
+#if defined(BRAINFPV)
+// 400MHz for Rev.Y (and Rev.X)
+pllConfig_t pll1ConfigRevY = {
+    .clockMhz = 400,
+    .m = 8,
+    .n = 400,
+    .p = 2,
+    .q = 10, // 80MHz SPI clock
+    .r = 5,
+    .vos = PWR_REGULATOR_VOLTAGE_SCALE1
+};
+
+// 480MHz for Rev.V
+pllConfig_t pll1ConfigRevV = {
+    .clockMhz = 480,
+    .m = 8,
+    .n = 480,
+    .p = 2,
+    .q = 12, // 80MHz SPI clock
+    .r = 5,
+    .vos = PWR_REGULATOR_VOLTAGE_SCALE0
+};
+
+uint32_t cpu_idle_counts_no_load;
+#else
 pllConfig_t pll1ConfigRevY = {
     .clockMhz = 400,
     .m = 4,
@@ -227,6 +252,7 @@ pllConfig_t pll1ConfigRevV = {
     .r = 5,
     .vos = PWR_REGULATOR_VOLTAGE_SCALE0
 };
+#endif
 
 // HSE clock configuration, originally taken from
 // STM32Cube_FW_H7_V1.3.0/Projects/STM32H743ZI-Nucleo/Examples/RCC/RCC_ClockConfig/Src/main.c
@@ -255,6 +281,15 @@ static void SystemClockHSE_Config(void)
 #else
     pllConfig_t *pll1Config = (HAL_GetREVID() == REV_ID_V) ? &pll1ConfigRevV : &pll1ConfigRevY;
 #endif
+
+#if defined(BRAINFPV)
+    if (pll1Config->clockMhz == 480) {
+        cpu_idle_counts_no_load = IDLE_COUNTS_PER_SEC_AT_NO_LOAD_480;
+    }
+    else {
+        cpu_idle_counts_no_load = IDLE_COUNTS_PER_SEC_AT_NO_LOAD_400;
+    }
+#endif /* defined(BRAINFPV) */
 
     // Configure voltage scale.
     // It has been pre-configured at PWR_REGULATOR_VOLTAGE_SCALE1,
@@ -398,14 +433,28 @@ void SystemClock_Config(void)
 
     HAL_EnableCompensationCell();
 
-    HandleStuckSysTick();
-
-    HAL_Delay(10);
+    // SysTick gets enabled later, so this makes no sense here.
+    //HandleStuckSysTick();
+    //HAL_Delay(10);
 
     // Configure peripheral clocks
 
     RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
 
+#if defined(USE_USB48MHZ_PLL)
+    RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
+    RCC_PeriphClkInit.PLL3.PLL3M = 4;
+    RCC_PeriphClkInit.PLL3.PLL3N = 48;
+    RCC_PeriphClkInit.PLL3.PLL3P = 2;
+    RCC_PeriphClkInit.PLL3.PLL3Q = 4;
+    RCC_PeriphClkInit.PLL3.PLL3R = 2;
+    RCC_PeriphClkInit.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_2;
+    RCC_PeriphClkInit.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
+    RCC_PeriphClkInit.PLL3.PLL3FRACN = 0;
+    RCC_PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
+
+    HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit);
+#else
     // Configure HSI48 as peripheral clock for USB
 
     RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
@@ -427,6 +476,7 @@ void SystemClock_Config(void)
 
     __HAL_RCC_CRS_CLK_ENABLE();
     HAL_RCCEx_CRSConfig(&crsInit);
+#endif
 
 #ifdef USE_CRS_INTERRUPTS
     // Turn on USE_CRS_INTERRUPTS to see CRS in action
@@ -646,6 +696,8 @@ void SystemInit (void)
     /* Configure the Vector Table location add offset address ------------------*/
 #if defined(VECT_TAB_SRAM)
     SCB->VTOR = D1_AXISRAM_BASE  | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal ITCMSRAM */
+#elif defined(VECT_TAB_BASE)
+    SCB->VTOR = VECT_TAB_BASE;
 #elif defined(USE_EXST)
     // Don't touch the vector table, the bootloader will have already set it.
 #else
@@ -663,9 +715,11 @@ void SystemInit (void)
 
     memProtConfigure(mpuRegions, mpuRegionCount);
 
+#if (CMAKE_BUILD_TYPE != Debug)
     // Enable CPU L1-Cache
     SCB_EnableICache();
     SCB_EnableDCache();
+#endif
 }
 
 /**

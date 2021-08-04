@@ -28,7 +28,7 @@
 #define HAL_ST_LLD_H
 
 #include "target.h"
-#include "mcuconf.h"
+//#include "mcuconf.h"
 
 #include "stm32_tim.h"
 #include "stm32_registry.h"

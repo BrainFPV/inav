@@ -835,7 +835,7 @@ static float calculateThrottleTiltCompensationFactor(uint8_t throttleTiltCompens
     }
 }
 
-void taskMainPidLoop(timeUs_t currentTimeUs)
+FAST_CODE void taskMainPidLoop(timeUs_t currentTimeUs)
 {
     cycleTime = getTaskDeltaTime(TASK_SELF);
     dT = (float)cycleTime * 0.000001f;
@@ -958,7 +958,7 @@ bool taskUpdateRxCheck(timeUs_t currentTimeUs, timeDelta_t currentDeltaTime)
     return rxUpdateCheck(currentTimeUs, currentDeltaTime);
 }
 
-void taskUpdateRxMain(timeUs_t currentTimeUs)
+FAST_CODE void taskUpdateRxMain(timeUs_t currentTimeUs)
 {
     processRx(currentTimeUs);
     isRXDataNew = true;

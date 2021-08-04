@@ -33,6 +33,13 @@
 #define NOINLINE
 #endif
 
+
+#if defined(STM32H7) && defined(BRAINFPV)
+#define SLOW_CODE                  __attribute__((section(".slow_code")))
+#else
+#define SLOW_CODE
+#endif
+
 #if defined(STM32F3)
 #define DYNAMIC_HEAP_SIZE   1024
 #else

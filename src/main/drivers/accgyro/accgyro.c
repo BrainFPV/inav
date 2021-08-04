@@ -41,6 +41,14 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro/accgyro.h"
 
+#if defined(USE_CHIBIOS)
+#include "ch.h"
+
+extern binary_semaphore_t gyroSem;
+#undef NVIC_PRIO_GYRO_INT_EXTI
+#define NVIC_PRIO_GYRO_INT_EXTI STM32_ST_IRQ_PRIORITY
+#endif
+
 const gyroFilterAndRateConfig_t * chooseGyroConfig(uint8_t desiredLpf, uint16_t desiredRateHz, const gyroFilterAndRateConfig_t * configs, int count)
 {
     int i;
@@ -74,6 +82,7 @@ const gyroFilterAndRateConfig_t * chooseGyroConfig(uint8_t desiredLpf, uint16_t 
  * Gyro interrupt service routine
  */
 #if defined(USE_MPU_DATA_READY_SIGNAL) && defined(USE_EXTI)
+
 static void gyroIntExtiHandler(extiCallbackRec_t *cb)
 {
     gyroDev_t *gyro = container_of(cb, gyroDev_t, exti);
@@ -81,6 +90,21 @@ static void gyroIntExtiHandler(extiCallbackRec_t *cb)
     if (gyro->updateFn) {
         gyro->updateFn(gyro);
     }
+
+#if defined(USE_CHIBIOS)
+    if (!gyroSem.sem.queue.next || !gyroSem.sem.queue.prev) {
+        // semaphore not initialized
+        return;
+    }
+
+    CH_IRQ_PROLOGUE();
+
+    chSysLockFromISR();
+    chBSemSignalI(&gyroSem);
+    chSysUnlockFromISR();
+
+    CH_IRQ_EPILOGUE();
+#endif
 }
 #endif
 

@@ -43,4 +43,5 @@ typedef enum {
 void brainFPVSystemInit(void);
 void brainFPVSystemSetReq(BrainFPVSystemReq_t req);
 void brainFPVSystemCheck(void);
+uint16_t brainFPVSystemGetCPULoad(void);
 

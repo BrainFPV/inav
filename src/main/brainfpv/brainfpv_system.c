@@ -37,6 +37,8 @@
 #include "fc/config.h"
 #include "fc/fc_core.h"
 
+#include "ch.h"
+
 #if defined(BRAINFPV)
 
 #if defined(USE_BRAINFPV_BOOTLOADER)
@@ -122,6 +124,28 @@ static void vtxFaultCheck(void)
     }
 }
 #endif /* defined(USE_VTXFAULT_PIN) */
+
+// CPU utilization measurement
+uint16_t brainFPVSystemGetCPULoad(void)
+{
+    static uint32_t t_last_measurement = 0;
+    static uint64_t idle_cycles_last = 0;
+    uint16_t load = 0;
+    uint32_t t_now = millis();
+    uint64_t tmp;
+
+    thread_t * idle_tp = chRegFindThreadByName("idle");
+
+    // idle cycles / s
+    tmp = 1000 * (idle_tp->stats.cumulative - idle_cycles_last) / (t_now - t_last_measurement);
+    // load %
+    load = 100 - (100 * tmp) / SystemCoreClock;
+
+    t_last_measurement = t_now;
+    idle_cycles_last = idle_tp->stats.cumulative;
+
+    return load;
+}
 
 void brainFPVSystemInit(void)
 {

@@ -22,6 +22,7 @@
 #if defined(USE_CHIBIOS)
 #include <math.h>
 #include "ch.h"
+#include "brainfpv/brainfpv_system.h"
 
 uint32_t last_check = 0;
 extern binary_semaphore_t gyroSem;
@@ -136,26 +137,6 @@ STATIC_INLINE_UNIT_TESTED cfTask_t *queueNext(void)
 
 void taskSystem(timeUs_t currentTimeUs)
 {
-#if defined(USE_CHIBIOS)
-    UNUSED(currentTimeUs);
-    uint32_t now = millis();
-    if ((idleCounterClear == 0) && (now - last_check > 1e3)) {
-        float dT = (now - last_check) / 1e3;
-#if defined(USE_MULT_CPU_IDLE_COUNTS)
-        float idle = ((float)idleCounter / dT) / (float)cpu_idle_counts_no_load;
-#else
-        float idle = ((float)idleCounter / dT) / (float)IDLE_COUNTS_PER_SEC_AT_NO_LOAD;
-#endif
-        if (idle > 1)
-            averageSystemLoadPercent = 0;
-        else
-            averageSystemLoadPercent = 100 - roundf(100.0f * idle);
-        totalWaitingTasksSamples = 0;
-        totalWaitingTasks = 0;
-        last_check = now;
-        idleCounterClear = 1;
-    }
-#else
     UNUSED(currentTimeUs);
 
     // Calculate system load
@@ -164,6 +145,8 @@ void taskSystem(timeUs_t currentTimeUs)
         totalWaitingTasksSamples = 0;
         totalWaitingTasks = 0;
     }
+#if defined(BRAINFPV)
+    averageSystemLoadPercent = brainFPVSystemGetCPULoad();
 #endif /* USE_CHIBIOS */
 }
 

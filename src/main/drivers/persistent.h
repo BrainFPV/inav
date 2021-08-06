@@ -29,6 +29,10 @@
 
 typedef enum {
     PERSISTENT_OBJECT_MAGIC = 0,
+#if defined(USE_BRAINFPV_BOOTLOADER)
+    DUMMY1,
+    DUMMY2,
+#endif
     PERSISTENT_OBJECT_RESET_REASON,
     PERSISTENT_OBJECT_COUNT,
 } persistentObjectId_e;

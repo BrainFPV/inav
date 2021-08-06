@@ -58,8 +58,9 @@
 
 #include "io/beeper.h"
 
-
+#if !defined(ADCVREF)
 #define ADCVREF 3300                            // in mV (3300 = 3.3V)
+#endif
 
 #define VBATT_CELL_FULL_MAX_DIFF 10             // Max difference with cell max voltage for the battery to be considered full (10mV steps)
 #define VBATT_PRESENT_THRESHOLD 100             // Minimum voltage to consider battery present

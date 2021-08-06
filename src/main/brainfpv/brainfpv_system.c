@@ -102,7 +102,7 @@ static void vtxFaultInit(void)
 {
     vtx_fault_pin = IOGetByTag(IO_TAG(VTXFAULT_PIN));
 
-    IOInit(vtx_fault_pin,  OWNER_OSD, 0);
+    IOInit(vtx_fault_pin,  OWNER_OSD, 0, 0);
     IOConfigGPIO(vtx_fault_pin, IO_CONFIG(GPIO_MODE_INPUT, 0, GPIO_PULLUP));
 }
 

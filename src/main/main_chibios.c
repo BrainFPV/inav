@@ -50,43 +50,14 @@ void appIdleHook(void)
     }
 }
 
-
-#ifdef SOFTSERIAL_LOOPBACK
-serialPort_t *loopbackPort;
-#endif
-
-
-static void loopbackInit(void)
-{
-#ifdef SOFTSERIAL_LOOPBACK
-    loopbackPort = softSerialLoopbackPort();
-    serialPrint(loopbackPort, "LOOPBACK\r\n");
-#endif
-}
-
-static void processLoopback(void)
-{
-#ifdef SOFTSERIAL_LOOPBACK
-    if (loopbackPort) {
-        uint8_t bytesWaiting;
-        while ((bytesWaiting = serialRxBytesWaiting(loopbackPort))) {
-            uint8_t b = serialRead(loopbackPort);
-            serialWrite(loopbackPort, b);
-        };
-    }
-#endif
-}
-
-static THD_WORKING_AREA(waInavThread, 6 * 1024);
+static THD_WORKING_AREA(waInavThread, 4 * 1024);
 static THD_FUNCTION(InavThread, arg)
 {
     (void)arg;
     chRegSetThreadName("INAV");
-    loopbackInit();
 
     while (true) {
         scheduler();
-        processLoopback();
     }
 }
 
@@ -103,7 +74,7 @@ static THD_FUNCTION(OSDThread, arg)
 }
 #endif
 
-#define USE_DUMMY_TASK
+//#define USE_DUMMY_TASK
 #if defined(USE_DUMMY_TASK)
 static THD_WORKING_AREA(waDummyThread, 512);
 static THD_FUNCTION(DummyThread, arg)
@@ -147,7 +118,7 @@ int main(void)
 #endif /* USE_BRAINFPV_OSD */
 
 #if defined(USE_DUMMY_TASK)
-  chThdCreateStatic(waDummyThread, sizeof(waDummyThread), NORMALPRIO, DummyThread, NULL);
+    chThdCreateStatic(waDummyThread, sizeof(waDummyThread), NORMALPRIO, DummyThread, NULL);
 #endif
 
     // sleep forever

@@ -25,6 +25,11 @@
 
 #define USBD_PRODUCT_STRING     "BrainFPV RADIX"
 
+// For ChibiOS
+// Priority needs to be lower than any of the INAV interrupts that don't use CH_IRQ_EPILOGUE
+#define STM32_ST_IRQ_PRIORITY               7
+#define STM32_ST_USE_TIMER                  4
+
 #define TARGET_CONFIG
 
 #define LED0                    PA4
@@ -38,6 +43,7 @@
 #define ESCSERIAL_TIMER_TX_HARDWARE 0 // PWM 1
 
 #define USE_BRAINFPV_FPGA
+#define USE_BRAINFPV_FPGA_BUZZER
 #define BRAINFPVFPGA_SPI_INSTANCE SPI3
 #define BRAINFPVFPGA_SPI_DIVISOR  16
 #define BRAINFPVFPGA_CS_PIN       PC15
@@ -48,7 +54,7 @@
 
 #define IDLE_COUNTS_PER_SEC_AT_NO_LOAD (16564455)
 
-#define BRAINFPV
+//#define BRAINFPV
 #define USE_CMS
 #define USE_MAX7456
 #define USE_OSD
@@ -73,9 +79,8 @@
 #define USE_BRAINFPV_SPECTROGRAPH
 
 #define USE_EXTI
-#define BMI160_SPI_BUS          BUS_SPI3
-#define BMI160_CS_PIN           PB4
-#define GYRO_EXTI_PIN           PC13
+#define USE_MPU_DATA_READY_SIGNAL
+
 
 #define USE_IMU_BMI160
 #define IMU_BMI160_ALIGN        CW0_DEG
@@ -83,7 +88,7 @@
 #define BMI160_SPI_BUS       BUS_SPI3
 #define BUS_SPEED_BMI160     BUS_SPEED_STANDARD
 #define BMI160_CS_PIN        PB4
-#define GYRO_EXTI_PIN        PC13
+#define GYRO_INT_EXTI        PC13
 
 #define USE_BARO
 #define USE_BARO_BMP280
@@ -136,14 +141,12 @@
 #define SPI3_MISO_PIN           PC11
 #define SPI3_MOSI_PIN           PC12
 
-#define BOARD_HAS_VOLTAGE_DIVIDER
 #define USE_ADC
+#define ADCVREF 3245
 #define USE_ADC_AVERAGING
 #undef ADC_AVERAGE_N_SAMPLES
 #define ADC_AVERAGE_N_SAMPLES 50
 
-// XXX should use this
-//#define ADC_VOLTAGE_REFERENCE_MV 3245
 #define ADC_CHANNEL_1_PIN               PC1
 #define ADC_CHANNEL_2_PIN               PC0
 #define ADC_CHANNEL_3_PIN               PC3
@@ -151,6 +154,8 @@
 #define VBAT_ADC_CHANNEL                ADC_CHN_1
 #define CURRENT_METER_ADC_CHANNEL       ADC_CHN_2
 #define RSSI_ADC_CHANNEL                ADC_CHN_3
+
+#define BOARD_HAS_VOLTAGE_DIVIDER
 #define VBAT_SCALE_DEFAULT            1200
 #define CURRENT_METER_SCALE           200
 

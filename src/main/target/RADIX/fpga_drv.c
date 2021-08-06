@@ -146,6 +146,7 @@ int32_t BRAINFPVFPGA_Init(bool load_config)
     IOHi(re1FPGACsPin);
 
     //spiSetDivisor(BRAINFPVFPGA_SPI_INSTANCE, BRAINFPVFPGA_SPI_DIVISOR);
+    spiInitDevice(spiDeviceByInstance(BRAINFPVFPGA_SPI_INSTANCE), false);
     spiSetSpeed(BRAINFPVFPGA_SPI_INSTANCE, SPI_CLOCK_STANDARD);
 
     if (load_config) {

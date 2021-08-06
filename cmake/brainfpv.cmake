@@ -135,6 +135,7 @@ set(BRAINFPV_H7_SRC
 set(STM32F446_BRAINFPV_COMPILE_DEFINITIONS
     STM32F446xx
     MCU_FLASH_SIZE=512
+    BRAINFPV
     USE_CHIBIOS
     CORTEX_USE_FPU=TRUE
     CORTEX_SIMPLIFIED_PRIORITY=TRUE
@@ -148,6 +149,8 @@ set(STM32H750_BRAINFPV_COMPILE_DEFINITIONS
     #STM32H743xx
     #STM32H743xi
     MCU_FLASH_SIZE=1024
+    BRAINFPV
+    USE_BRAINFPV_BOOTLOADER
     USE_CHIBIOS
     CORTEX_USE_FPU=TRUE
     CORTEX_SIMPLIFIED_PRIORITY=TRUE
@@ -158,11 +161,11 @@ function(target_brainfpv_stm32f446 name)
         NAME ${name}
         HSE_MHZ 16
         DISABLE_MSC
-        STARTUP startup_chibios_stm32f446xx.s
+        STARTUP startup_stm32f446xx.s
         SOURCES ${BRAINFPV_F4_SRC}
         INCLUDE_DIRECTORIES ${BRAINFPV_F4_INCLUDE_DIRS}
         COMPILE_DEFINITIONS ${STM32F446_BRAINFPV_COMPILE_DEFINITIONS}
-        LINKER_SCRIPT stm32_flash_f446_chibios
+        LINKER_SCRIPT stm32_flash_f446_brainfpv
         SVD STM32F446
         ${ARGN}
     )
@@ -211,8 +214,7 @@ function(target_brainfpv_stm32h750 name)
         VCP_SOURCES ${STM32H7_USB_SRC} ${STM32H7_VCP_SRC}
         VCP_INCLUDE_DIRECTORIES ${STM32H7_USB_INCLUDE_DIRS} ${STM32H7_VCP_DIR}
 
-        #OPTIMIZATION -O2
-        OPTIMIZATION -Og
+        OPTIMIZATION -O2
 
         OPENOCD_TARGET stm32h7x
 
@@ -221,6 +223,7 @@ function(target_brainfpv_stm32h750 name)
         LINKER_SCRIPT stm32_flash_h750_brainfpv
         ${ARGN}
     )
+    set_target_properties(${name}.elf PROPERTIES INTERPROCEDURAL_OPTIMIZATION ON)
     pack_brainfpv_fw(${name})
 endfunction()
 

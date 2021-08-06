@@ -48,7 +48,7 @@ int32_t BRAINFPVFPGA_SetSyncThreshold(uint8_t threshold);
 void BRAINFPVFPGA_SetXOffset(int8_t x_offset);
 void BRAINFPVFPGA_SetXScale(uint8_t x_scale);
 void BRAINFPVFPGA_Set3DConfig(bool enabled, uint8_t x_shift_right);
-int32_t BRAINFPVFPGA_SetLEDs(const uint8_t * led_data, uint16_t n_leds);
+int32_t BRAINFPVFPGA_SetLEDs(uint8_t * led_data, uint16_t n_leds);
 int32_t BRAINFPVFPGA_SetLEDColor(uint16_t n_leds, uint8_t red, uint8_t green, uint8_t blue);
 void BRAINFPVFPGA_SetStatusLEDColor(colorId_e color, uint8_t brightness);
 

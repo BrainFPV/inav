@@ -60,7 +60,7 @@
  *          The value one is not valid, timeouts are rounded up to
  *          this value.
  */
-#define CH_CFG_ST_TIMEDELTA                 20
+#define CH_CFG_ST_TIMEDELTA                 10
 
 /** @} */
 
@@ -425,7 +425,7 @@
  *
  * @note    The default is @p FALSE.
  */
-#define CH_DBG_STATISTICS                   FALSE
+#define CH_DBG_STATISTICS                   TRUE
 
 /**
  * @brief   Debug option, system state check.

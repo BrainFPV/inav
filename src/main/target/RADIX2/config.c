@@ -25,26 +25,13 @@
 
 #ifdef USE_TARGET_CONFIG
 
-//#include "config_helper.h"
-
-//#include "io/serial.h"
-//#include "osd/osd.h"
-//#include "pg/pg.h"
-
-//#include "pg/pinio.h"
-//#include "pg/piniobox.h"
-
+#include "fc/fc_msp_box.h"
+#include "io/piniobox.h"
 
 void targetConfiguration(void)
 {
-    //osdConfigMutable()->core_temp_alarm = 85;
+    pinioBoxConfigMutable()->permanentId[0] = BOX_PERMANENT_ID_USER1;
+    pinioBoxConfigMutable()->permanentId[1] = BOX_PERMANENT_ID_USER2;
 
-    // USER1: VTX PIT switch
-    //pinioConfigMutable()->config[0] = PINIO_CONFIG_MODE_OUT_PP | PINIO_CONFIG_OUT_INVERTED;
-    //pinioBoxConfigMutable()->permanentId[0] = 40;
-
-    // USER2: Camera switch
-    //pinioConfigMutable()->config[1] = PINIO_CONFIG_MODE_OUT_PP;
-    //pinioBoxConfigMutable()->permanentId[1] = 41;
 }
 #endif

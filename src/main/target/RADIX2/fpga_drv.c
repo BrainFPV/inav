@@ -97,7 +97,6 @@ static IO_t re1FPGAResetPin = IO_NONE;
 
 static int32_t BRAINFPVFPGA_WriteReg(uint8_t reg, uint8_t data, uint8_t mask);
 static int32_t BRAINFPVFPGA_WriteRegDirect(enum re1fpga_register reg, uint8_t data);
-int32_t BRAINFPVFPGA_SetLEDs(const uint8_t * led_data, uint16_t n_leds);
 int32_t BRAINFPVFPGA_SetIRData(const uint8_t * ir_data, uint8_t n_bytes);
 
 #if defined(BRAINFPV_FPGA_INCLUDE_BITSTREAM)
@@ -113,19 +112,20 @@ int32_t BRAINFPVFPGA_Init(bool load_config)
 	UNUSED(load_config);
 
     re1FPGACsPin = IOGetByTag(IO_TAG(BRAINFPVFPGA_CS_PIN));
-    IOInit(re1FPGACsPin, OWNER_OSD, 0);
+    IOInit(re1FPGACsPin, OWNER_OSD, 0, 0);
     IOConfigGPIO(re1FPGACsPin, SPI_IO_CS_CFG);
     IOHi(re1FPGACsPin);
 
-    spiSetDivisor(BRAINFPVFPGA_SPI_INSTANCE, BRAINFPVFPGA_SPI_DIVISOR);
+    spiInitDevice(spiDeviceByInstance(BRAINFPVFPGA_SPI_INSTANCE), false);
+    spiSetSpeed(BRAINFPVFPGA_SPI_INSTANCE, SPI_CLOCK_STANDARD);
 
     /* Configure 16MHz clock output to FPGA */
-    IOInit(IOGetByTag(IO_TAG(BRAINFPVFPGA_CLOCK_PIN)), OWNER_OSD, 0);
+    IOInit(IOGetByTag(IO_TAG(BRAINFPVFPGA_CLOCK_PIN)), OWNER_OSD, 0, 0);
     HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
 
     /* Configure reset pin */
     re1FPGAResetPin = IOGetByTag(IO_TAG(BRAINFPVFPGA_RESET_PIN));
-    IOInit(re1FPGAResetPin, OWNER_OSD, 0);
+    IOInit(re1FPGAResetPin, OWNER_OSD, 0, 0);
     IOConfigGPIO(re1FPGAResetPin, IOCFG_OUT_PP);
 
     // Give the PLL some time to stabilize
@@ -162,7 +162,7 @@ int32_t BRAINFPVFPGA_Init(bool load_config)
  * @brief Claim the SPI bus for the communications and select this chip
  * @return 0 if successful, -1 for invalid device, -2 if unable to claim bus
  */
-static int32_t BRAINFPVFPGA_ClaimBus()
+static int32_t BRAINFPVFPGA_ClaimBus(void)
 {
     IOLo(re1FPGACsPin);
 
@@ -173,7 +173,7 @@ static int32_t BRAINFPVFPGA_ClaimBus()
  * @brief Release the SPI bus for the communications and end the transaction
  * @return 0 if successful
  */
-static int32_t BRAINFPVFPGA_ReleaseBus()
+static int32_t BRAINFPVFPGA_ReleaseBus(void)
 {
     // wait for SPI to be done
     while (spiIsBusBusy(BRAINFPVFPGA_SPI_INSTANCE)) {};
@@ -286,7 +286,7 @@ uint8_t BRAINFPVFPGA_GetHWRevision()
 /**
  * @brief Set programmable LED (WS2812B) colors
  */
-int32_t BRAINFPVFPGA_SetLEDs(const uint8_t * led_data, uint16_t n_leds)
+int32_t BRAINFPVFPGA_SetLEDs(uint8_t * led_data, uint16_t n_leds)
 {
     if (!fpga_initialized) {
         return 0;

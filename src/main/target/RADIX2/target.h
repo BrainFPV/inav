@@ -27,28 +27,36 @@
 #define TARGET_BOARD_IDENTIFIER "RDX2"
 #define USBD_PRODUCT_STRING "BrainFPV RADIX 2"
 
-#define USE_BRAINFPV_BOOTLOADER
+#define EEPROM_SIZE (4 * 4096)
 
-#define USE_CUSTOM_RESET
+// defined in cmake file
+//#define USE_BRAINFPV_BOOTLOADER
+#define BOOTLOADER_TARGET_MAGIC 0x65DF92FE
+
+// For ChibiOS
+// Priority needs to be lower than any of the INAV interrupts that don't use CH_IRQ_EPILOGUE
+#define STM32_ST_IRQ_PRIORITY               7
+#define STM32_ST_USE_TIMER                  13
+
+//#define USE_CUSTOM_RESET
 #define CUSTOM_RESET_PIN PC13
 
 #define VECT_TAB_BASE 0x24000000
 
 #define USE_MULT_CPU_IDLE_COUNTS
-#define IDLE_COUNTS_PER_SEC_AT_NO_LOAD_400 (101720658)
-#define IDLE_COUNTS_PER_SEC_AT_NO_LOAD_480 (114997185)
+#define IDLE_COUNTS_PER_SEC_AT_NO_LOAD_400 (18506775)
+#define IDLE_COUNTS_PER_SEC_AT_NO_LOAD_480 (22208130)
 
 #define USE_TARGET_CONFIG
 
-//#define USE_BRAINFPV_FPGA
+#define USE_BRAINFPV_FPGA
 #define BRAINFPVFPGA_SPI_INSTANCE SPI3
 #define BRAINFPVFPGA_SPI_DIVISOR  8
 #define BRAINFPVFPGA_CS_PIN       PE1
 #define BRAINFPVFPGA_RESET_PIN    PC4
 #define BRAINFPVFPGA_CLOCK_PIN    PA8
 
-
-#define BRAINFPV
+//#define BRAINFPV
 //#define USE_MAX7456
 //#define USE_OSD
 #define USE_CMS
@@ -77,25 +85,26 @@
 #define BRAINFPV_OSD_SYNC_TH_MIN 0
 #define BRAINFPV_OSD_SYNC_TH_MAX 255
 
-#define USE_BRAINFPV_SPECTROGRAPH
-
 #define USE_BRAINFPV_RGB_STATUS_LED
 
-#define LED0_PIN                PE6
+#define LED0 PE6
 #define LED0_INVERTED
-#define LED1_PIN                PE7
+#define LED1 PE7
 #define LED1_INVERTED
 
 #define USE_BEEPER
 #define BEEPER_PIN              PD14
 #define BEEPER_INVERTED
 
-#define USE_PINIO
-#define PINIO1_PIN              PD15 // VTX
-#define PINIO2_PIN              PC15 // Video input
-#define USE_PINIOBOX
+#define USE_LED_STRIP
 
-//#define USE_VTXFAULT_PIN
+#define USE_PINIO
+#define USE_PINIOBOX
+#define PINIO1_PIN              PD15 // VTX
+#define PINIO1_FLAGS            PINIO_FLAGS_INVERTED
+#define PINIO2_PIN              PC15 // Video input
+
+#define USE_VTXFAULT_PIN
 #define VTXFAULT_PIN            PD10
 
 #define USE_UART
@@ -111,6 +120,9 @@
 #define USE_UART3
 #define UART3_RX_PIN            PB11
 #define UART3_TX_PIN            PD8
+
+//#define USE_DEBUG_PIN
+//#define DEBUG_PIN               PD8
 
 #define USE_UART4
 #define UART4_RX_PIN            PD0
@@ -151,84 +163,67 @@
 
 #define USE_I2C
 #define USE_I2C_DEVICE_1
-#undef I2C1_OVERCLOCK
 #define I2C1_SCL                PB8
 #define I2C1_SDA                PB7
-#define I2C_DEVICE              (I2CDEV_1)
 
 #define USE_MAG
+#define MAG_I2C_BUS             BUS_I2C1
 #define USE_MAG_HMC5883
 #define USE_MAG_QMC5883
+#define USE_MAG_IST8310
+#define USE_MAG_IST8308
+#define USE_MAG_MAG3110
 #define USE_MAG_LIS3MDL
-#define USE_MAG_AK8963
-#define USE_MAG_AK8975
-#define MAG_I2C_INSTANCE      I2C_DEVICE
+
+#define USE_BARO
+#define BARO_I2C_BUS BUS_I2C1
+#define USE_BARO_BMP388
 
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
-#define M25P16_FIRST_SECTOR     32
-#define M25P16_SECTORS_SPARE_END 3
-#define FLASH_CS_PIN           PE14
-#define FLASH_SPI_INSTANCE     SPI1
-#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
-#define CONFIG_IN_EXTERNAL_FLASH
-//#define CONFIG_IN_RAM
+#define M25P16_FIRST_SECTOR       32
+#define M25P16_SECTORS_SPARE_END   3
+#define M25P16_CS_PIN             PE14
+#define M25P16_SPI_BUS            BUS_SPI1
 
+//#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
+#define CONFIG_IN_EXTERNAL_FLASH
 #undef USE_GYRO_REGISTER_DUMP
 
 #define USE_EXTI
-//#define USE_GYRO
-//#define USE_ACC
-//#undef USE_MULTI_GYRO
-
 #define USE_MPU_DATA_READY_SIGNAL
-#define USE_GYRO_EXTI
-#define USE_SPI_GYRO
-#define USE_GYRO_SPI_BMI270
-#define USE_ACCGYRO_BMI270
 
-// SPI2 is running at 80MHz
-#define BMI270_SPI_DIVISOR   8
+#define USE_IMU_BMI270
 
-#define GYRO_1_EXTI_PIN           PE4
-#define GYRO_1_CS_PIN             PE15
-#define GYRO_1_SPI_INSTANCE       SPI2
-#define GYRO_1_ALIGN              CW0_DEG
-#define GYRO_1_ALIGN              CW0_DEG
-
-#define USE_BARO
-#define USE_BARO_BMP388
-
+#define IMU_BMI270_ALIGN     CW0_DEG
+#define BMI270_SPI_BUS       BUS_SPI2
+#define BMI270_CS_PIN        PE15
+#define GYRO_INT_EXTI        PE4
 
 #define USE_ADC
-#define USE_ADC_INTERNAL // ADC3
+#define ADC_INSTANCE ADC1
+#define ADCVREF 3285
 
-#define ADC1_INSTANCE ADC1
-#define ADC2_INSTANCE ADC2 // not used
-#define ADC3_INSTANCE ADC3 // ADC3 only for core temp and vrefint
-#define RSSI_ADC_PIN            PC0
-#define VBAT_ADC_PIN            PA6
-#define CURRENT_METER_ADC_PIN   PB0
+#define ADC_CHANNEL_1_PIN   PA6
+#define ADC_CHANNEL_2_PIN   PB0
+#define ADC_CHANNEL_3_PIN   PC0
+
+#define VBAT_ADC_CHANNEL           ADC_CHN_1
+#define CURRENT_METER_ADC_CHANNEL  ADC_CHN_2
+#define RSSI_ADC_CHANNEL           ADC_CHN_3
 
 #define BOARD_HAS_VOLTAGE_DIVIDER
-#define ADC_VOLTAGE_REFERENCE_MV 3285
-#define VBAT_SCALE_DEFAULT            176
-#define CURRENT_METER_SCALE_DEFAULT   200
-#define DEFAULT_VOLTAGE_METER_SOURCE VOLTAGE_METER_ADC
-#define DEFAULT_CURRENT_METER_SOURCE CURRENT_METER_ADC
+#define VBAT_SCALE_DEFAULT    1760
+#define CURRENT_METER_SCALE   200
 
-#ifdef USE_DMA_SPEC
-#define ADC1_DMA_OPT 8
-#define ADC3_DMA_OPT 9
-#else
-#define ADC1_DMA_STREAM DMA2_Stream0
-#define ADC3_DMA_STREAM DMA2_Stream1
-#endif
+#define DEFAULT_FEATURES        (FEATURE_OSD | FEATURE_TX_PROF_SEL | FEATURE_BLACKBOX)
 
-#define DEFAULT_FEATURES        (FEATURE_OSD)
+#define DEFAULT_RX_TYPE         RX_TYPE_SERIAL
 #define SERIALRX_UART           SERIAL_PORT_USART3
-#define DEFAULT_RX_FEATURE      FEATURE_RX_SERIAL
 #define SERIALRX_PROVIDER       SERIALRX_CRSF
+
+#define MAX_PWM_OUTPUT_PORTS    8
+#define USE_SERIAL_4WAY_BLHELI_INTERFACE
 
 #define TARGET_IO_PORTA 0xffff
 #define TARGET_IO_PORTB 0xffff
@@ -238,13 +233,11 @@
 #define TARGET_IO_PORTF 0xffff
 #define TARGET_IO_PORTG 0xffff
 
-#define USABLE_TIMER_CHANNEL_COUNT 10
+#define USE_DSHOT
+#define USE_ESC_SENSOR
+#define USE_SERIALSHOT
 
-#define USED_TIMERS  ( TIM_N(1) | TIM_N(2) | TIM_N(3) | TIM_N(4) | TIM_N(8) | TIM_N(12) | TIM_N(14) )
-
-#undef USE_DSHOT_BITBANG
-#undef USE_BRUSHED_ESC_AUTODETECT
-
+extern bool brainfpv_settings_updated;
 extern bool brainfpv_settings_updated_from_cms;
 
 void CustomSystemReset(void);

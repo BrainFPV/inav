@@ -57,7 +57,6 @@ FILE_COMPILE_FOR_SPEED
 #include "drivers/accgyro/accgyro_bmi270.h"
 #include "drivers/accgyro/accgyro_icm20689.h"
 #include "drivers/accgyro/accgyro_fake.h"
-#include "drivers/accgyro/accgyro_spi_bmi160.h"
 
 #include "drivers/io.h"
 

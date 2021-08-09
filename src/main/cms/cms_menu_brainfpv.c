@@ -82,8 +82,10 @@ OSD_Entry cmsx_menuBrainFPVOsdEntries[] =
     OSD_LABEL_ENTRY("-- BRAIN OSD ------"),
 
     OSD_TAB_ENTRY("FONT", (&(const OSD_TAB_t){&bfOsdConfigCms.font, 2, &FONT_NAMES[0]})),
+#if defined(BRAINFPV_OSD_WHITE_LEVEL_MIN)
     OSD_UINT8_ENTRY("OSD WHITE", (&(const OSD_UINT8_t){ &bfOsdConfigCms.white_level, 100, 120, 1 })),
     OSD_UINT8_ENTRY("OSD BLACK", (&(const OSD_UINT8_t){ &bfOsdConfigCms.black_level, 15, 40, 1 })),
+#endif
     OSD_BOOL_ENTRY("INVERT",  &bfOsdConfigCms.invert),
     OSD_UINT8_ENTRY("OSD SYNC TH", (&(const OSD_UINT8_t){ &bfOsdConfigCms.sync_threshold, BRAINFPV_OSD_SYNC_TH_MIN, BRAINFPV_OSD_SYNC_TH_MAX, 1 })),
     OSD_INT8_ENTRY("OSD X OFF", (&(const OSD_INT8_t){ &bfOsdConfigCms.x_offset, -8, 7, 1 })),

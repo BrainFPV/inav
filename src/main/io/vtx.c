@@ -158,7 +158,7 @@ static bool vtxProcessPitMode(vtxDevice_t *vtxDevice, const vtxSettingsConfig_t 
     return false;
 }
 
-void vtxUpdate(timeUs_t currentTimeUs)
+SLOW_CODE void vtxUpdate(timeUs_t currentTimeUs)
 {
     static uint8_t currentSchedule = 0;
 

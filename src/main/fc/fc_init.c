@@ -154,6 +154,9 @@
 #include "fpga_drv.h"
 #endif
 
+#if defined(USE_BRAINFPV_OSD)
+#include "brainfpv/video.h"
+#endif
 
 #ifdef USE_HARDWARE_REVISION_DETECTION
 #include "hardware_revision.h"
@@ -573,7 +576,7 @@ SLOW_CODE void init(void)
     displayPort_t *osdDisplayPort = NULL;
 #endif
 
-#if defined(USE_OSD) && !defined(USE_BRAINFPV_OSD)
+#ifdef USE_OSD
     if (feature(FEATURE_OSD)) {
 #if defined(USE_FRSKYOSD)
         if (!osdDisplayPort) {
@@ -584,6 +587,9 @@ SLOW_CODE void init(void)
         // If there is a max7456 chip for the OSD and we have no
         // external OSD initialized, use it.
         if (!osdDisplayPort) {
+#if defined(USE_BRAINFPV_OSD)
+            Video_Init();
+#endif
             osdDisplayPort = max7456DisplayPortInit(osdConfig()->video_system);
         }
 #elif defined(USE_OSD_OVER_MSP_DISPLAYPORT) // OSD over MSP; not supported (yet)
@@ -596,11 +602,9 @@ SLOW_CODE void init(void)
     }
 #endif
 
-#if defined(USE_MSP_DISPLAYPORT) && defined(USE_CMS) && !defined(USE_BRAINFPV_OSD)
-    // If OSD is not active, then register MSP_DISPLAYPORT as a CMS device.
-    if (!osdDisplayPort) {
-        cmsDisplayPortRegister(displayPortMspInit());
-    }
+#if defined(USE_CMS) && defined(USE_SPEKTRUM_CMS_TELEMETRY) && defined(USE_TELEMETRY_SRXL)
+    // Register the srxl Textgen telemetry sensor as a displayport device
+    cmsDisplayPortRegister(displayPortSrxlInit());
 #endif
 
 #ifdef USE_UAV_INTERCONNECT

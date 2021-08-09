@@ -50,7 +50,7 @@ void appIdleHook(void)
     }
 }
 
-static THD_WORKING_AREA(waInavThread, 4 * 1024);
+static THD_WORKING_AREA(waInavThread, 6 * 1024);
 static THD_FUNCTION(InavThread, arg)
 {
     (void)arg;
@@ -64,7 +64,7 @@ static THD_FUNCTION(InavThread, arg)
 #if defined(USE_BRAINFPV_OSD)
 #include "brainfpv/brainfpv_osd.h"
 
-static THD_WORKING_AREA(waOSDThread, 4 * 1024);
+static THD_WORKING_AREA(waOSDThread, 6 * 1024);
 static THD_FUNCTION(OSDThread, arg)
 {
     (void)arg;
@@ -114,7 +114,9 @@ int main(void)
     chThdCreateStatic(waInavThread, sizeof(waInavThread), HIGHPRIO, InavThread, NULL);
 
 #if defined(USE_BRAINFPV_OSD)
-    chThdCreateStatic(waOSDThread, sizeof(waOSDThread), NORMALPRIO, OSDThread, NULL);
+    if (VideoIsInitialized()) {
+        chThdCreateStatic(waOSDThread, sizeof(waOSDThread), NORMALPRIO, OSDThread, NULL);
+    }
 #endif /* USE_BRAINFPV_OSD */
 
 #if defined(USE_DUMMY_TASK)

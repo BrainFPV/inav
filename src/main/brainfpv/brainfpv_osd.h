@@ -43,4 +43,8 @@ void brainFfpvOsdHomeArrow(int16_t home_dir, uint16_t x, uint16_t y);
 void brainFpvRadarMap(void);
 void brainFpvOsdHeadingGraph(uint16_t x, uint16_t y);
 
+#if defined(BRAINFPV_OSD_USE_STM32CMP)
+void brainFpvOsdSetSyncThreshold(uint8_t threshold);
+#endif
+
 #endif /* BRAINFPV_OSD */

@@ -38,6 +38,7 @@
 #include "platform.h"
 //#include "system.h"
 #include "drivers/io.h"
+#include "drivers/io_impl.h"
 #include "drivers/exti.h"
 #include "drivers/nvic.h"
 #include "drivers/light_led.h"
@@ -45,14 +46,30 @@
 
 #if defined(USE_BRAINFPV_OSD) && defined(INCLUDE_VIDEO_QUADSPI)
 
-static IO_t debugPin = IO_NONE;
+#if defined(STM32F446xx)
+#include <stm32f4xx_qspi.h>
+#else
+#if defined(STM32H750xx)
+#include "stm32h7xx_hal_qspi.h"
+#include "stm32h7xx_hal_mdma.h"
+
+QSPI_HandleTypeDef hqspi;
+MDMA_HandleTypeDef hmdma;
+#else
+#error "MCU not supported"
+#endif
+#endif
+
 static IO_t hsync_io;
 static IO_t vsync_io;
-
 
 #if !defined(VIDEO_QUADSPI_Y_OFFSET)
 #define VIDEO_QUADSPI_Y_OFFSET 0
 #endif /* !defined(VIDEO_QUADSPI_Y_OFFSET) */
+
+#if defined(VIDEO_QSPI_IO2_PIN) && defined(VIDEO_QSPI_IO3_PIN)
+#define VIDEO_QSPI_USE_4_LINES
+#endif
 
 // How many frames until we redraw
 #define VSYNC_REDRAW_CNT 2
@@ -107,16 +124,17 @@ static const struct video_type_cfg video_type_cfg_pal = {
 //#define buffer0 (buffers.buffer0)
 //#define buffer1 (buffers.buffer1)
 
-uint8_t buffer0[BUFFER_HEIGHT * BUFFER_WIDTH];
+uint8_t buffer0[BUFFER_HEIGHT * BUFFER_WIDTH] __attribute__ ((section(".video_ram"), aligned(4)));
 
 // Pointers to each of these buffers.
 uint8_t *draw_buffer;
-uint8_t *disp_buffer;
+uint8_t *draw_buffer;
 
 
 const struct video_type_boundary *video_type_boundary_act = &video_type_boundary_pal;
 
 // Private variables
+static bool video_initialized = false;
 static uint8_t spurious_vsync_cnt = 0;
 static int16_t active_line = 0;
 static uint32_t buffer_offset;
@@ -145,15 +163,13 @@ void video_qspi_enable(void)
 /**
  * @brief Vsync interrupt service routine
  */
-void Vsync_ISR(extiCallbackRec_t *cb)
+FAST_CODE void Vsync_ISR(extiCallbackRec_t *cb)
 {
     (void)cb;
     static uint32_t t_last = 0;
     static uint16_t Vsync_update = 0;
 
     uint32_t t_now;
-
-    CH_IRQ_PROLOGUE();
 
     t_now = microsISR();
 
@@ -164,7 +180,6 @@ void Vsync_ISR(extiCallbackRec_t *cb)
             EXTIEnable(vsync_io, false);
             EXTIEnable(hsync_io, false);
         }
-        CH_IRQ_EPILOGUE();
         return;
     }
     else {
@@ -175,7 +190,7 @@ void Vsync_ISR(extiCallbackRec_t *cb)
 
     // discard spurious vsync pulses (due to improper grounding), so we don't overload the CPU
     if (active_line > 0 && active_line < video_type_cfg_ntsc.graphics_hight_real - 10) {
-        CH_IRQ_EPILOGUE();
+        return;
     }
 
     // Update the number of video lines
@@ -214,21 +229,23 @@ void Vsync_ISR(extiCallbackRec_t *cb)
     // Get ready for the first line. We will start outputting data at line zero.
     active_line = 0 - (video_type_cfg_act->graphics_line_start + y_offset);
     buffer_offset = 0;
-    CH_IRQ_EPILOGUE();
 }
 
-void Hsync_ISR(extiCallbackRec_t *cb)
+FAST_CODE void Hsync_ISR(extiCallbackRec_t *cb)
 {
     (void)cb;
     active_line++;
-    //LED1_TOGGLE;
+
+#if defined(STM32F446xx)
     EXTI->PR = 0x04;
+#endif
 
     if ((active_line >= 0) && (active_line < video_type_cfg_act->graphics_hight_real)) {
         // Check if QUADSPI is busy
         if (QUADSPI->SR & 0x20)
             return;
 
+#if defined(STM32F446xx)
         // Disable DMA
         DMA2_Stream7->CR &= ~(uint32_t)DMA_SxCR_EN;
 
@@ -236,7 +253,7 @@ void Hsync_ISR(extiCallbackRec_t *cb)
         DMA2->HIFCR  |= DMA_FLAG_TCIF7 | DMA_FLAG_HTIF7 | DMA_FLAG_FEIF7 | DMA_FLAG_TEIF7 | DMA_FLAG_DMEIF7;
 
         // Load new line
-        DMA2_Stream7->M0AR = (uint32_t)&disp_buffer[buffer_offset];
+        DMA2_Stream7->M0AR = (uint32_t)&draw_buffer[buffer_offset];
 
         // Set length
         DMA2_Stream7->NDTR = (uint16_t)video_type_cfg_act->dma_buffer_length;
@@ -249,16 +266,39 @@ void Hsync_ISR(extiCallbackRec_t *cb)
 
         // Enable DMA
         uint32_t cr = DMA2_Stream7->CR;
-        IOHi(debugPin);
         DMA2_Stream7->CR = cr | (uint32_t)DMA_SxCR_EN;
-        IOLo(debugPin);
+#endif /* defined(STM32F446xx) */
+
+#if defined(STM32H750xx)
+        // Disable
+        __HAL_MDMA_DISABLE(&hmdma);
+
+        // Clear interrupt flags
+        __HAL_MDMA_CLEAR_FLAG(&hmdma, MDMA_FLAG_TE | MDMA_FLAG_CTC | MDMA_FLAG_BFTC | MDMA_FLAG_BT | MDMA_FLAG_BRT);
+
+        // Load new line
+        hmdma.Instance->CSAR = (uint32_t)&draw_buffer[buffer_offset];
+
+        // Set length
+        hmdma.Instance->CBNDTR = (uint32_t)video_type_cfg_act->dma_buffer_length;
+        QUADSPI->DLR = (uint32_t)video_type_cfg_act->dma_buffer_length - 1;
+
+        if (trigger_redraw && (active_line == video_type_cfg_act->graphics_hight_real - 1)) {
+            // Last line: Enable DMA TC interrupt
+            __HAL_MDMA_ENABLE_IT(&hmdma, MDMA_IT_CTC);
+        }
+
+        // Enable DMA
+        __HAL_MDMA_ENABLE(&hmdma);
+#endif /* defined(STM32H750xx) */
 
         buffer_offset += BUFFER_WIDTH;
     }
 }
 
 // ISR runs after last OSD line has been output
-void DMA2_Stream7_IRQHandler(void)
+#if defined(STM32F446xx)
+FAST_CODE void DMA2_Stream7_IRQHandler(void)
 {
     CH_IRQ_PROLOGUE();
 
@@ -275,6 +315,48 @@ void DMA2_Stream7_IRQHandler(void)
 
     CH_IRQ_EPILOGUE();
 }
+#endif /* defined(STM32F446xx) */
+
+#if defined(STM32H750xx)
+FAST_CODE void MDMA_IRQHandler(void)
+{
+    CH_IRQ_PROLOGUE();
+
+    if (__HAL_MDMA_GET_FLAG(&hmdma, MDMA_FLAG_CTC)) {
+        // Clear flag and disable interrupt
+        __HAL_MDMA_CLEAR_FLAG(&hmdma, MDMA_FLAG_CTC);
+        __HAL_MDMA_DISABLE_IT(&hmdma, MDMA_IT_CTC);
+
+        // Trigger OSD redraw
+        chSysLockFromISR();
+        chBSemSignalI(&onScreenDisplaySemaphore);
+        chSysUnlockFromISR();
+    }
+
+    CH_IRQ_EPILOGUE();
+}
+#endif
+
+// Configure exti for falling edge
+void EXTIConfigFalling(IO_t io, extiCallbackRec_t *cb, int irqPriority)
+{
+#if defined(STM32F446xx)
+    EXTIConfig(io, cb, irqPriority, EXTI_Trigger_Falling);
+#endif /* defined(STM32F446xx) */
+
+#if defined(STM32H750xx)
+
+    EXTIConfig(io, cb, irqPriority, IO_CONFIG(GPIO_MODE_INPUT, 0, GPIO_NOPULL));
+
+    GPIO_InitTypeDef init = {
+        .Pin = IO_Pin(io),
+        .Mode = GPIO_MODE_IT_FALLING,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+        .Pull = GPIO_NOPULL,
+    };
+    HAL_GPIO_Init(IO_GPIO(io), &init);
+#endif /* defined(STM32H750xx) */
+}
 
 /**
  * Init
@@ -282,9 +364,6 @@ void DMA2_Stream7_IRQHandler(void)
 void Video_Init(void)
 {
     chBSemObjectInit(&onScreenDisplaySemaphore, FALSE);
-
-    /* Enable QUADSPI clock */
-    RCC_AHB3PeriphClockCmd(RCC_AHB3Periph_QSPI, ENABLE);
 
     /* Map pins to QUADSPI */
     IOInit(IOGetByTag(IO_TAG(VIDEO_QSPI_CLOCK_PIN)),  OWNER_OSD, RESOURCE_SPI_SCK, 0);
@@ -294,6 +373,17 @@ void Video_Init(void)
     IOConfigGPIOAF(IOGetByTag(IO_TAG(VIDEO_QSPI_CLOCK_PIN)), IOCFG_AF_PP, GPIO_AF9_QUADSPI);
     IOConfigGPIOAF(IOGetByTag(IO_TAG(VIDEO_QSPI_IO0_PIN)), IOCFG_AF_PP, GPIO_AF9_QUADSPI);
     IOConfigGPIOAF(IOGetByTag(IO_TAG(VIDEO_QSPI_IO1_PIN)), IOCFG_AF_PP, GPIO_AF9_QUADSPI);
+
+#if defined(VIDEO_QSPI_USE_4_LINES)
+    IOInit(IOGetByTag(IO_TAG(VIDEO_QSPI_IO2_PIN)), OWNER_OSD, RESOURCE_SPI_MOSI, 0);
+    IOInit(IOGetByTag(IO_TAG(VIDEO_QSPI_IO3_PIN)), OWNER_OSD, RESOURCE_SPI_MOSI, 0);
+    IOConfigGPIOAF(IOGetByTag(IO_TAG(VIDEO_QSPI_IO2_PIN)), IOCFG_AF_PP, GPIO_AF9_QUADSPI);
+    IOConfigGPIOAF(IOGetByTag(IO_TAG(VIDEO_QSPI_IO3_PIN)), IOCFG_AF_PP, GPIO_AF9_QUADSPI);
+#endif
+
+#if defined(STM32F446xx)
+    /* Enable QUADSPI clock */
+    RCC_AHB3PeriphClockCmd(RCC_AHB3Periph_QSPI, ENABLE);
 
     /* Configure QUADSPI */
     QSPI_InitTypeDef qspi_init = {
@@ -314,7 +404,11 @@ void Video_Init(void)
     qspi_com_config.QSPI_ComConfig_DDRMode     = QSPI_ComConfig_DDRMode_Disable;
     qspi_com_config.QSPI_ComConfig_DHHC        = QSPI_ComConfig_DHHC_Disable;
     qspi_com_config.QSPI_ComConfig_SIOOMode    = QSPI_ComConfig_SIOOMode_Disable;
+#if defined(VIDEO_QSPI_USE_4_LINES)
+    qspi_com_config.QSPI_ComConfig_DMode       = QSPI_ComConfig_DMode_4Line;
+#else
     qspi_com_config.QSPI_ComConfig_DMode       = QSPI_ComConfig_DMode_2Line;
+#endif
     qspi_com_config.QSPI_ComConfig_DummyCycles = 0;
     qspi_com_config.QSPI_ComConfig_ABMode      = QSPI_ComConfig_ABMode_NoAlternateByte;
     qspi_com_config.QSPI_ComConfig_ADMode      = QSPI_ComConfig_ADMode_NoAddress;
@@ -339,11 +433,9 @@ void Video_Init(void)
         .DMA_FIFOThreshold      = DMA_FIFOThreshold_Full,
         .DMA_MemoryBurst        = DMA_MemoryBurst_INC4,
         .DMA_PeripheralBurst    = DMA_PeripheralBurst_Single};
+
     DMA_Init(DMA2_Stream7, &dma_cfg);
 
-    /* Configure and clear buffers */
-    draw_buffer = buffer0;
-    disp_buffer = buffer0;
 
     /* Enable TC interrupt */
     QSPI_ITConfig(QSPI_IT_TC, ENABLE);
@@ -354,31 +446,116 @@ void Video_Init(void)
 
     // Enable the QUADSPI
     QSPI_Cmd(ENABLE);
+#endif /* defined(STM32F446xx) */
+
+#if defined(STM32H750xx)
+    __HAL_RCC_QSPI_CLK_ENABLE();
+    __HAL_RCC_QSPI_FORCE_RESET();
+    __HAL_RCC_QSPI_RELEASE_RESET();
+
+    hqspi.Instance = QUADSPI;
+
+    hqspi.Init.ClockPrescaler = 15; // 240MHz / 16 = 15MHz
+    hqspi.Init.FifoThreshold = 16;
+    hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
+    hqspi.Init.FlashSize = 0x1F;
+    hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
+    hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
+    hqspi.Init.FlashID = QSPI_FLASH_ID_1;
+    hqspi.Init.DualFlash = QSPI_DUALFLASH_DISABLE;
+
+    if (HAL_QSPI_Init(&hqspi) != HAL_OK) {
+        return;
+    }
+
+    // MDMA
+    __HAL_RCC_MDMA_CLK_ENABLE();
+
+    hmdma.Instance = MDMA_Channel0;
+    hmdma.Init.Request = MDMA_REQUEST_QUADSPI_FIFO_TH;
+    hmdma.Init.TransferTriggerMode = MDMA_BUFFER_TRANSFER;
+    hmdma.Init.Priority = MDMA_PRIORITY_VERY_HIGH;
+    hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
+    hmdma.Init.SourceInc = MDMA_SRC_INC_WORD;
+    hmdma.Init.DestinationInc = MDMA_DEST_INC_DISABLE;
+    hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_WORD;
+    hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_WORD;
+    hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
+    hmdma.Init.BufferTransferLength = 16;
+    hmdma.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
+    hmdma.Init.DestBurst = MDMA_SOURCE_BURST_SINGLE;
+    hmdma.Init.SourceBlockAddressOffset = 0;
+    hmdma.Init.DestBlockAddressOffset = 0;
+
+    if (HAL_MDMA_Init(&hmdma) != HAL_OK) {
+        return;
+    }
+
+    __HAL_LINKDMA(&hqspi, hmdma, hmdma);
+
+    QSPI_CommandTypeDef cmd;
+    cmd.InstructionMode   = QSPI_INSTRUCTION_NONE;
+    cmd.AddressMode       = QSPI_ADDRESS_NONE;
+    cmd.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+#if defined(VIDEO_QSPI_USE_4_LINES)
+    cmd.DataMode          = QSPI_DATA_4_LINES;
+#else
+    cmd.DataMode          = QSPI_DATA_2_LINES;
+#endif
+    cmd.DummyCycles       = 0;
+    cmd.DdrMode           = QSPI_DDR_MODE_DISABLE;
+    cmd.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+    cmd.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+    cmd.NbData            = 132;
+
+    HAL_QSPI_Command(&hqspi, &cmd, 100);
+
+    // Set DMA dest address
+    hmdma.Instance->CDAR = (uint32_t)&(QUADSPI->DR);
+#endif /* defined(STM32H750xx) */
+
+
+    /* Configure and clear buffers */
+    draw_buffer = buffer0;
 
     // VSYNC interrupt
     vsync_io = IOGetByTag(IO_TAG(VIDEO_VSYNC));
     IOInit(vsync_io, OWNER_OSD, RESOURCE_EXTI, 0);
     IOConfigGPIO(vsync_io, IOCFG_IN_FLOATING);
     EXTIHandlerInit(&vsyncIntCallbackRec, Vsync_ISR);
-    EXTIConfig(vsync_io, &vsyncIntCallbackRec, NVIC_PRIO_GYRO_INT_EXTI, EXTI_Trigger_Falling);
+    EXTIConfigFalling(vsync_io, &vsyncIntCallbackRec, STM32_ST_IRQ_PRIORITY);
 
     // HSYNC interrupt
     hsync_io = IOGetByTag(IO_TAG(VIDEO_HSYNC));
     IOInit(hsync_io, OWNER_OSD, RESOURCE_EXTI, 0);
     IOConfigGPIO(hsync_io, IOCFG_IN_FLOATING);
     EXTIHandlerInit(&hsyncIntCallbackRec, Hsync_ISR);
-    EXTIConfig(hsync_io, &hsyncIntCallbackRec, NVIC_PRIO_GYRO_INT_EXTI, EXTI_Trigger_Falling);
+    EXTIConfigFalling(hsync_io, &hsyncIntCallbackRec, STM32_ST_IRQ_PRIORITY);
 
     // DMA TC interrupt for last line
-    NVIC_SetPriority(DMA2_Stream7_IRQn, NVIC_PRIO_GYRO_INT_EXTI);
+#if defined(STM32F446xx)
+    NVIC_SetPriority(DMA2_Stream7_IRQn, STM32_ST_IRQ_PRIORITY);
     NVIC_EnableIRQ(DMA2_Stream7_IRQn);
     DMA_ITConfig(DMA2_Stream7, DMA_IT_TC, DISABLE); // will be enabled later
+#endif /* defined(STM32F446xx) */
+
+#if defined(STM32H750xx)
+    NVIC_SetPriority(MDMA_IRQn, STM32_ST_IRQ_PRIORITY);
+    NVIC_EnableIRQ(MDMA_IRQn);
+    __HAL_MDMA_DISABLE_IT(&hmdma, MDMA_IT_BFTC); // will be enabled later
+#endif /* defined(STM32H750xx) */
 
     // Enable interrupts
     EXTIEnable(vsync_io, true);
     EXTIEnable(hsync_io, true);
+
+    video_initialized = true;
 }
 
+bool VideoIsInitialized(void)
+{
+    return video_initialized;
+}
 /**
  *
  */

@@ -109,10 +109,18 @@
 
 PG_REGISTER_WITH_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig, PG_BRAINFPV_OSD_CONFIG, 0);
 
+#if !defined(BRAINFPV_OSD_WHITE_LEVEL_DEFAULT)
+#define BRAINFPV_OSD_WHITE_LEVEL_DEFAULT 0
+#endif
+
+#if !defined(BRAINFPV_OSD_BLACK_LEVEL_DEFAULT)
+#define BRAINFPV_OSD_BLACK_LEVEL_DEFAULT 0
+#endif
+
 PG_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig,
   .sync_threshold = BRAINFPV_OSD_SYNC_TH_DEFAULT,
-  .white_level    = 110,
-  .black_level    = 20,
+  .white_level    = BRAINFPV_OSD_WHITE_LEVEL_DEFAULT,
+  .black_level    = BRAINFPV_OSD_BLACK_LEVEL_DEFAULT,
   .x_offset       = -3,
   .x_scale        = 8,
   .sbs_3d_enabled = 0,
@@ -154,7 +162,6 @@ void draw_stick(int16_t x, int16_t y, int16_t horizontal, int16_t vertical);
 
 //uint16_t maxScreenSize = VIDEO_BUFFER_CHARS_PAL;
 
-static uint8_t videoSignalCfg = 0;
 
 static uint8_t current_font(void)
 {
@@ -169,7 +176,7 @@ static uint8_t current_font(void)
 
 void max7456Init(const videoSystem_e videoSystem)
 {
-    videoSignalCfg = videoSystem;
+    (void)videoSystem;
 }
 
 void max7456Update(void)
@@ -208,35 +215,23 @@ void max7456WriteNvm(uint16_t char_address, const osdCharacter_t *chr)
 
 uint16_t max7456GetScreenSize(void)
 {
-    switch (videoSignalCfg) {
-        case PAL:
-            return MAX7456_BUFFER_CHARS_PAL;
-        case NTSC:
-            return MAX7456_BUFFER_CHARS_NTSC;
-        default:
-            if (Video_GetType() == VIDEO_TYPE_NTSC)
-                return MAX7456_BUFFER_CHARS_NTSC;
-            else
-                return MAX7456_BUFFER_CHARS_PAL;
-    }
-    return MAX7456_BUFFER_CHARS_PAL;
-}
 
+    if (Video_GetType() == VIDEO_TYPE_NTSC) {
+        return MAX7456_BUFFER_CHARS_NTSC;
+    }
+    else {
+        return MAX7456_BUFFER_CHARS_PAL;
+    }
+}
 
 uint8_t max7456GetRowsCount(void)
 {
-    switch (videoSignalCfg) {
-        case PAL:
-            return MAX7456_LINES_NTSC;
-        case NTSC:
-            return MAX7456_LINES_PAL;
-        default:
-            if (Video_GetType() == VIDEO_TYPE_NTSC)
-                return MAX7456_LINES_NTSC;
-            else
-                return MAX7456_LINES_PAL;
+    if (Video_GetType() == VIDEO_TYPE_NTSC) {
+        return MAX7456_LINES_NTSC;
     }
-    return MAX7456_LINES_PAL;
+    else {
+        return MAX7456_LINES_PAL;
+    }
 }
 
 void max7456Write(uint8_t x, uint8_t y, const char *buff, uint8_t mode)
@@ -284,12 +279,94 @@ bool max7456ReadChar(uint8_t x, uint8_t y, uint16_t *c, uint8_t *mode)
 
 /*******************************************************************************/
 
+
+#if defined(BRAINFPV_OSD_USE_STM32CMP)
+
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx_hal_comp.h"
+
+DAC_HandleTypeDef hdac_video_cmp;
+COMP_HandleTypeDef hcomp_video_cmp;
+
+static void Error_Handler(void) { while (1) { } }
+
+static void brainFpvOsdInitStm32Cmp(void)
+{
+    DAC_ChannelConfTypeDef sConfig;
+
+    __HAL_RCC_DAC12_CLK_ENABLE();
+    __HAL_RCC_COMP12_CLK_ENABLE();
+
+    IO_t cmp_input = IOGetByTag(IO_TAG(BRAINFPV_OSD_STM32CMP_CMP_INPUT_PIN));
+    IO_t cmp_output = IOGetByTag(IO_TAG(BRAINFPV_OSD_STM32CMP_CMP_OUTPUT_PIN));
+
+    IOInit(cmp_input, OWNER_OSD, 0, 0);
+    IOConfigGPIO(cmp_input, IO_CONFIG(GPIO_MODE_ANALOG, 0, GPIO_NOPULL));
+
+    IOInit(cmp_output, OWNER_OSD, 0, 0);
+    IOConfigGPIOAF(cmp_output, IOCFG_AF_PP, GPIO_AF13_COMP2);
+
+    hdac_video_cmp.Instance = BRAINFPV_OSD_STM32CMP_DAC_INSTANCE;
+    if (HAL_DAC_Init(&hdac_video_cmp) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
+    sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+    sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
+    sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_ENABLE;
+    sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
+    if (HAL_DAC_ConfigChannel(&hdac_video_cmp, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    hcomp_video_cmp.Instance = BRAINFPV_OSD_STM32CMP_CMP_INSTANCE;
+    hcomp_video_cmp.Init.InvertingInput = COMP_INPUT_MINUS_DAC1_CH1;
+    hcomp_video_cmp.Init.NonInvertingInput = COMP_INPUT_PLUS_IO1;
+    hcomp_video_cmp.Init.OutputPol = COMP_OUTPUTPOL_NONINVERTED;
+    hcomp_video_cmp.Init.Hysteresis = COMP_HYSTERESIS_NONE;
+    hcomp_video_cmp.Init.BlankingSrce = COMP_BLANKINGSRC_NONE;
+    hcomp_video_cmp.Init.Mode = COMP_POWERMODE_HIGHSPEED;
+    hcomp_video_cmp.Init.WindowMode = COMP_WINDOWMODE_DISABLE;
+    hcomp_video_cmp.Init.TriggerMode = COMP_TRIGGERMODE_NONE;
+
+    if (HAL_COMP_Init(&hcomp_video_cmp) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    if(HAL_DAC_Start(&hdac_video_cmp, DAC_CHANNEL_1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    brainFpvOsdSetSyncThreshold(bfOsdConfig()->sync_threshold);
+
+    HAL_COMP_Start(&hcomp_video_cmp);
+}
+
+void brainFpvOsdSetSyncThreshold(uint8_t threshold)
+{
+    // threshold is in 2mV steps
+    if (hcomp_video_cmp.Instance) {
+        HAL_DAC_SetValue(&hdac_video_cmp, DAC_CHANNEL_1, DAC_ALIGN_12B_R, ((uint32_t)threshold * 4 * 4095) / 3300);
+    }
+}
+#endif /* defined(BRAINFPV_OSD_USE_STM32CMP) */
+
+
 void brainFpvOsdInit(void)
 {
-    Video_Init();
+#if defined(BRAINFPV_OSD_USE_STM32CMP)
+    brainFpvOsdInitStm32Cmp();
+#endif
 
-    displayPort_t *osdDisplayPort = max7456DisplayPortInit(osdConfig()->video_system);
-    osdInit(osdDisplayPort);
+#if VIDEO_BITS_PER_PIXEL == 4
+    set_text_color(OSD_COLOR_WHITE, OSD_COLOR_BLACK);
+    fill_2bit_mask_table();
+#endif
 
     for (uint16_t i=0; i<(image_userlogo.width * image_userlogo.height) / 4; i++) {
         if (image_userlogo.data[i] != 0) {
@@ -300,12 +377,6 @@ void brainFpvOsdInit(void)
 
     // update number of rows
     chThdSleep(TIME_MS2I(200));
-    if (Video_GetType() == VIDEO_TYPE_NTSC) {
-        osdDisplayPort->rows = MAX7456_LINES_NTSC;
-    }
-    else {
-        osdDisplayPort->rows = MAX7456_LINES_PAL;
-    }
 
     // Update elements that are being shown
     osdUpdateActiveElements();
@@ -423,7 +494,7 @@ void brainFpvOsdMain(void) {
         osd_draw_time_ms = millis() - osd_draw_time_ms;
         char string_buffer[20];
         tfp_sprintf(string_buffer, "draw: %lu ms", osd_draw_time_ms);
-        write_string(string_buffer, GRAPHICS_LEFT + 10, GRAPHICS_BOTTOM - 10, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, FONT8X10);
+        draw_string(string_buffer, GRAPHICS_LEFT + 10, GRAPHICS_BOTTOM - 10, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, FONT8X10);
 #endif
     }
 }

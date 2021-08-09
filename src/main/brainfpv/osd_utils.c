@@ -44,13 +44,13 @@
 #include "fonts.h"
 #include "osd_utils.h"
 #include "common/printf.h"
+#include "build/build_config.h"
 
 #if defined(USE_BRAINFPV_OSD)
 
 extern struct FontEntry* fonts[NUM_FONTS];
 
 extern uint8_t *draw_buffer;
-extern uint8_t *disp_buffer;
 
 void clearGraphics()
 {
@@ -60,9 +60,8 @@ void clearGraphics()
 
 #if VIDEO_BITS_PER_PIXEL == 4
 
-
-static FAST_RAM_ZERO_INIT uint16_t TWOBIT_TO_4BIT_VALUE[256];
-static FAST_RAM_ZERO_INIT uint16_t TWOBIT_TO_4BIT_MASK[256];
+STATIC_FASTRAM uint16_t TWOBIT_TO_4BIT_VALUE[256];
+STATIC_FASTRAM uint16_t TWOBIT_TO_4BIT_MASK[256];
 
 void fill_2bit_mask_table(void)
 {
@@ -81,7 +80,7 @@ void fill_2bit_mask_table(void)
     }
 }
 
-FAST_CODE_NOINLINE void set_text_color(OSDOSD_COLOR_t main_color, OSDOSD_COLOR_t outline_color)
+FAST_CODE void set_text_color(OSDOSD_COLOR_t main_color, OSDOSD_COLOR_t outline_color)
 {
     uint8_t value;
     uint16_t value_4bit;
@@ -108,7 +107,7 @@ FAST_CODE_NOINLINE void set_text_color(OSDOSD_COLOR_t main_color, OSDOSD_COLOR_t
     }
 }
 
-FAST_CODE_NOINLINE static void draw_2bit_pixels_aligned(uint32_t addr, uint8_t value)
+FAST_CODE static void draw_2bit_pixels_aligned(uint32_t addr, uint8_t value)
 {
     uint16_t draw_value = TWOBIT_TO_4BIT_VALUE[value];
     uint16_t draw_mask = TWOBIT_TO_4BIT_MASK[value];
@@ -118,7 +117,7 @@ FAST_CODE_NOINLINE static void draw_2bit_pixels_aligned(uint32_t addr, uint8_t v
     *p_draw = (*p_draw & ~draw_mask) | draw_value;
 }
 
-FAST_CODE_NOINLINE static void draw_2bit_pixels_unaligned(uint32_t addr, uint8_t value)
+FAST_CODE static void draw_2bit_pixels_unaligned(uint32_t addr, uint8_t value)
 {
     uint32_t draw_value = TWOBIT_TO_4BIT_VALUE[value];
     uint32_t draw_mask = TWOBIT_TO_4BIT_MASK[value];
@@ -131,7 +130,6 @@ FAST_CODE_NOINLINE static void draw_2bit_pixels_unaligned(uint32_t addr, uint8_t
     *p_draw = (*p_draw & ~draw_mask) | draw_value;
 }
 #endif
-
 
 
 #if VIDEO_BITS_PER_PIXEL == 2

@@ -3507,8 +3507,8 @@ groups:
     members:
       - name: brainfpv_osd_sync_thresh
         field: sync_threshold
-        min: 5
-        max: 60
+        min: 0
+        max: 255
         default_value: 30
       - name: brainfpv_osd_white_level
         field: white_level

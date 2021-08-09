@@ -4076,7 +4076,7 @@ displayCanvas_t *osdGetDisplayPortCanvas(void)
     return NULL;
 }
 
-textAttributes_t osdGetSystemMessage(char *buff, size_t buff_size, bool isCenteredText)
+SLOW_CODE textAttributes_t osdGetSystemMessage(char *buff, size_t buff_size, bool isCenteredText)
 {
     textAttributes_t elemAttr = TEXT_ATTRIBUTES_NONE;
 

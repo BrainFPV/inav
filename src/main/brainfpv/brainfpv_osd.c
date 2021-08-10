@@ -90,6 +90,7 @@
 #include "config/feature.h"
 #include "config/parameter_group.h"
 #include "config/parameter_group_ids.h"
+#include "settings_generated.h"
 
 //#include "pg/pg_ids.h"
 //#include "pg/vcd.h"
@@ -110,11 +111,11 @@
 PG_REGISTER_WITH_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig, PG_BRAINFPV_OSD_CONFIG, 0);
 
 #if !defined(BRAINFPV_OSD_WHITE_LEVEL_DEFAULT)
-#define BRAINFPV_OSD_WHITE_LEVEL_DEFAULT 0
+#define BRAINFPV_OSD_WHITE_LEVEL_DEFAULT SETTING_BRAINFPV_OSD_WHITE_LEVEL_DEFAULT
 #endif
 
 #if !defined(BRAINFPV_OSD_BLACK_LEVEL_DEFAULT)
-#define BRAINFPV_OSD_BLACK_LEVEL_DEFAULT 0
+#define BRAINFPV_OSD_BLACK_LEVEL_DEFAULT SETTING_BRAINFPV_OSD_BLACK_LEVEL_DEFAULT
 #endif
 
 PG_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig,

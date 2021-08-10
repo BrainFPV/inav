@@ -64,7 +64,7 @@ static THD_FUNCTION(InavThread, arg)
 #if defined(USE_BRAINFPV_OSD)
 #include "brainfpv/brainfpv_osd.h"
 
-static THD_WORKING_AREA(waOSDThread, 6 * 1024);
+static THD_WORKING_AREA(waOSDThread, 2 * 1024);
 static THD_FUNCTION(OSDThread, arg)
 {
     (void)arg;

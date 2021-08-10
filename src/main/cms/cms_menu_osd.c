@@ -418,6 +418,7 @@ static const CMS_Menu cmsx_menuOsdSettings = {
     .entries = menuOsdSettingsEntries,
 };
 
+#if !defined(USE_BRAINFPV_OSD)
 static const OSD_Entry menuOsdHud2Entries[] = {
     OSD_LABEL_ENTRY("--- HUD ITEMS ---"),
 
@@ -469,6 +470,8 @@ static const CMS_Menu cmsx_menuOsdHud = {
     .onGlobalExit = NULL,
     .entries = menuOsdHudEntries,
 };
+
+#endif /* !defined(USE_BRAINFPV_OSD) */
 
 static const OSD_Entry menuOsdEntries[] = {
     OSD_LABEL_ENTRY("--- OSD ---"),

@@ -31,6 +31,12 @@ extern uint8_t dmaram_end;
 extern uint8_t dmarwaxi_start;
 extern uint8_t dmarwaxi_end;
 
+#ifdef USE_BRAINFPV_OSD
+extern uint8_t videoram_start;
+extern uint8_t videoram_end;
+#endif
+
+
 mpuRegion_t mpuRegions[] = {
 #ifdef USE_ITCM_RAM
     {
@@ -68,6 +74,20 @@ mpuRegion_t mpuRegions[] = {
         .perm       = MPU_REGION_FULL_ACCESS,
         .exec       = MPU_INSTRUCTION_ACCESS_ENABLE,
         .shareable  = MPU_ACCESS_NOT_SHAREABLE,
+        .cacheable  = MPU_ACCESS_CACHEABLE,
+        .bufferable = MPU_ACCESS_NOT_BUFFERABLE,
+    },
+#endif
+
+#ifdef USE_BRAINFPV_OSD
+    {
+        // Video buffer in D2 RAM
+        .start      = (uint32_t)&videoram_start,
+        .end        = (uint32_t)&videoram_end,
+        .size       = 0,  // Size determined by ".end"
+        .perm       = MPU_REGION_FULL_ACCESS,
+        .exec       = MPU_INSTRUCTION_ACCESS_ENABLE,
+        .shareable  = MPU_ACCESS_SHAREABLE,
         .cacheable  = MPU_ACCESS_CACHEABLE,
         .bufferable = MPU_ACCESS_NOT_BUFFERABLE,
     },

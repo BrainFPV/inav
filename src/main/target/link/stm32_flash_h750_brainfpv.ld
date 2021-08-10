@@ -277,10 +277,13 @@ SECTIONS
   	KEEP(*(.SLOW_RAM))
   } > SLOW_RAM
   
-  video_ram (NOLOAD) : ALIGN(4)
+  video_ram (NOLOAD) :
   {
+  	. = ALIGN(32);
+  	PROVIDE(videoram_start = .);
     *(.video_ram)
     *(.video_ram.*)
+    PROVIDE(videoram_end = .);
   } > D2_RAM
   
   .DMA_RAM (NOLOAD) :

@@ -3793,6 +3793,7 @@ void osdRefresh(timeUs_t currentTimeUs)
     static uint32_t counter = 0;
     static uint32_t armTime = 0;
     static uint32_t disarmTime = 0;
+    static uint8_t stats_page = 0;
 #endif
 
     osdFilterData(currentTimeUs);
@@ -3879,7 +3880,19 @@ void osdRefresh(timeUs_t currentTimeUs)
         bool enter_menu = (IS_MID(THROTTLE) && IS_LO(YAW) && IS_HI(PITCH));
         if ((disarmTime > 0) && (now - disarmTime < 10000) && !enter_menu && !cmsInMenu) {
 
-            osdShowStatsPage1();
+            if (STATS_PAGE1) {
+                stats_page = 0;
+            } else if (STATS_PAGE2) {
+                stats_page = 1;
+            }
+
+            if (stats_page == 0) {
+                osdShowStatsPage1();
+            }
+            else {
+                osdShowStatsPage2();
+            }
+
             osd_arming_or_stats = true;
             return;
         }

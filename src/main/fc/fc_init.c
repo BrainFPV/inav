@@ -607,15 +607,6 @@ SLOW_CODE void init(void)
     cmsDisplayPortRegister(displayPortSrxlInit());
 #endif
 
-#ifdef USE_UAV_INTERCONNECT
-    uavInterconnectBusInit();
-#endif
-
-#if defined(USE_CMS) && defined(USE_SPEKTRUM_CMS_TELEMETRY) && defined(USE_TELEMETRY_SRXL)
-    // Register the srxl Textgen telemetry sensor as a displayport device
-    cmsDisplayPortRegister(displayPortSrxlInit());
-#endif
-
 #ifdef USE_GPS
     if (feature(FEATURE_GPS)) {
         gpsInit();

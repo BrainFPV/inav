@@ -174,6 +174,12 @@ SECTIONS
     __fastram_bss_end__ = .;
   } >FASTRAM
 
+  video_ram (NOLOAD) : ALIGN(4)
+  {
+    *(.video_ram)
+    *(.video_ram.*)
+  } > RAM
+
   /* Special section for process stack.*/
   .pstack :
   {

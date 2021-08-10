@@ -64,6 +64,8 @@ static THD_FUNCTION(InavThread, arg)
 #if defined(USE_BRAINFPV_OSD)
 #include "brainfpv/brainfpv_osd.h"
 
+binary_semaphore_t onScreenDisplaySemaphore;
+
 static THD_WORKING_AREA(waOSDThread, 2 * 1024);
 static THD_FUNCTION(OSDThread, arg)
 {
@@ -115,6 +117,7 @@ int main(void)
 
 #if defined(USE_BRAINFPV_OSD)
     if (VideoIsInitialized()) {
+        chBSemObjectInit(&onScreenDisplaySemaphore, FALSE);
         chThdCreateStatic(waOSDThread, sizeof(waOSDThread), NORMALPRIO, OSDThread, NULL);
     }
 #endif /* USE_BRAINFPV_OSD */

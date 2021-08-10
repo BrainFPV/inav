@@ -81,7 +81,7 @@ static IO_t vsync_io;
 extiCallbackRec_t vsyncIntCallbackRec;
 extiCallbackRec_t hsyncIntCallbackRec;
 
-binary_semaphore_t onScreenDisplaySemaphore;
+extern binary_semaphore_t onScreenDisplaySemaphore;
 
 #define GRPAHICS_RIGHT_NTSC 351
 #define GRPAHICS_RIGHT_PAL  359
@@ -307,6 +307,11 @@ FAST_CODE void DMA2_Stream7_IRQHandler(void)
         DMA2->HIFCR  |= DMA_FLAG_TCIF7;
 		DMA_ITConfig(DMA2_Stream7, DMA_IT_TC, DISABLE);
 
+	    if (!onScreenDisplaySemaphore.sem.queue.next || !onScreenDisplaySemaphore.sem.queue.prev) {
+	        // semaphore not initialized
+	        return;
+	    }
+
 		// Trigger OSD redraw
         chSysLockFromISR();
         chBSemSignalI(&onScreenDisplaySemaphore);
@@ -326,6 +331,11 @@ FAST_CODE void MDMA_IRQHandler(void)
         // Clear flag and disable interrupt
         __HAL_MDMA_CLEAR_FLAG(&hmdma, MDMA_FLAG_CTC);
         __HAL_MDMA_DISABLE_IT(&hmdma, MDMA_IT_CTC);
+
+        if (!onScreenDisplaySemaphore.sem.queue.next || !onScreenDisplaySemaphore.sem.queue.prev) {
+            // semaphore not initialized
+            return;
+        }
 
         // Trigger OSD redraw
         chSysLockFromISR();
@@ -363,8 +373,6 @@ void EXTIConfigFalling(IO_t io, extiCallbackRec_t *cb, int irqPriority)
  */
 void Video_Init(void)
 {
-    chBSemObjectInit(&onScreenDisplaySemaphore, FALSE);
-
     /* Map pins to QUADSPI */
     IOInit(IOGetByTag(IO_TAG(VIDEO_QSPI_CLOCK_PIN)),  OWNER_OSD, RESOURCE_SPI_SCK, 0);
     IOInit(IOGetByTag(IO_TAG(VIDEO_QSPI_IO0_PIN)), OWNER_OSD, RESOURCE_SPI_MOSI, 0);

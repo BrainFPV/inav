@@ -3542,7 +3542,7 @@ groups:
       - name: brainfpv_osd_font
         field: font
         min: 0
-        max: 2
+        max: 16
         default_value: 0
       - name: brainfpv_osd_ahi_steps
         field: ahi_steps

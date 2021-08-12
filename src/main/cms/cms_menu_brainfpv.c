@@ -75,13 +75,13 @@ static long menuBrainFPVOnExit(const OSD_Entry *from)
 
 #if defined(USE_BRAINFPV_OSD)
 const char *STICKS_DISPLAY_NAMES[] = {"OFF", "MODE2", "MODE1"};
-const char *FONT_NAMES[] = {"DEFAULT", "LARGE", "CLARITY"};
+extern const char *USER_FONT_NAMES[NUM_USER_FONTS];
 
 OSD_Entry cmsx_menuBrainFPVOsdEntries[] =
 {
     OSD_LABEL_ENTRY("-- BRAIN OSD ------"),
 
-    OSD_TAB_ENTRY("FONT", (&(const OSD_TAB_t){&bfOsdConfigCms.font, 2, &FONT_NAMES[0]})),
+    OSD_TAB_ENTRY("FONT", (&(const OSD_TAB_t){&bfOsdConfigCms.font, NUM_USER_FONTS - 1, &USER_FONT_NAMES[0]})),
 #if defined(BRAINFPV_OSD_WHITE_LEVEL_MIN)
     OSD_UINT8_ENTRY("OSD WHITE", (&(const OSD_UINT8_t){ &bfOsdConfigCms.white_level, 100, 120, 1 })),
     OSD_UINT8_ENTRY("OSD BLACK", (&(const OSD_UINT8_t){ &bfOsdConfigCms.black_level, 15, 40, 1 })),

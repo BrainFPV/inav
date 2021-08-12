@@ -134,6 +134,11 @@ SECTIONS
     PROVIDE_HIDDEN (__pg_resetdata_end = .);
   } >FLASH1
 
+  fonts : ALIGN(4)
+  {
+    KEEP(*(.font_section))
+  } > FLASH1
+
   /* used by the startup to initialize data */
   _sidata = .;
 

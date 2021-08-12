@@ -24,15 +24,28 @@
 
 
 
-#ifndef FONTS_H
-#define FONTS_H
+#ifndef FONTS_ARCH_H
+#define FONTS_ARCH_H
 
-#if defined(STM32F4)
-#include "fonts_stm32f4xx.h"
-#elif defined(STM32H7)
-#include "fonts_stm32h7xx.h"
-#else
-#error "Unknown CPU"
-#endif
+#include <stdint.h>
 
-#endif /* FONTS_H */
+struct FontEntry {
+	uint8_t width;
+	uint8_t height;
+	const uint8_t* lookup;
+	const uint16_t* data;
+};
+
+#define NUM_FONTS 7
+#define NUM_USER_FONTS 5
+
+#define DEFAULT 0
+#define CLARITY 1
+#define IMPACT 2
+#define VISION 3
+#define BOLD 4
+#define FONT8X10 5
+#define FONT_OUTLINED8X8 6
+
+
+#endif /* FONTS_ARCH_H */

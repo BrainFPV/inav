@@ -272,6 +272,11 @@ SECTIONS
     KEEP(*(.images_section))
   } > D2_RAM
     
+  fonts : ALIGN(4)
+  {
+    KEEP(*(.font_section))
+  } > D2_RAM
+  
   .SLOW_RAM (NOLOAD) :
   {
   	KEEP(*(.SLOW_RAM))

@@ -26,6 +26,10 @@
 
 #if defined(USE_CMS) && defined(USE_VTX_CONTROL)
 
+#if defined(USE_CHIBIOS)
+#include "ch.h"
+#endif
+
 #include "common/printf.h"
 #include "common/utils.h"
 
@@ -158,9 +162,18 @@ static long cms_Vtx_Commence(displayPort_t *pDisp, const void *self)
     UNUSED(pDisp);
     UNUSED(self);
 
+#if defined(USE_CHIBIOS)
+    // Make sure we have exclusive access to VTX
+    chSysLock();
+#endif
+
     vtxCommonSetBandAndChannel(vtxCommonDevice(), vtxBand, vtxChan);
     vtxCommonSetPowerByIndex(vtxCommonDevice(), vtxPower);
     vtxCommonSetPitMode(vtxCommonDevice(), vtxPitMode == 2 ? 1 : 0);
+
+#if defined(USE_CHIBIOS)
+    chSysUnlock();
+#endif
 
     vtxSettingsConfigMutable()->band = vtxBand;
     vtxSettingsConfigMutable()->channel = vtxChan;

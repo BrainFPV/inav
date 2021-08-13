@@ -21,6 +21,10 @@
 
 #include "platform.h"
 
+#if defined(BRAINFPV)
+#include "brainfpv/brainfpv_system.h"
+#endif
+
 #include "build/build_config.h"
 #include "build/debug.h"
 
@@ -420,9 +424,13 @@ void ensureEEPROMContainsValidData(void)
 
 void saveConfigAndNotify(void)
 {
+#if defined(BRAINFPV)
+    brainFPVSystemSetReq(BRAINFPV_REQ_SAVE_SETTINGS);
+#else
     writeEEPROM();
     readEEPROM();
     beeperConfirmationBeeps(1);
+#endif
 }
 
 uint8_t getConfigProfile(void)

@@ -715,7 +715,7 @@ void SystemInit (void)
 
     memProtConfigure(mpuRegions, mpuRegionCount);
 
-#if (CMAKE_BUILD_TYPE != Debug)
+#if !defined(DEBUG_BUILD)
     // Enable CPU L1-Cache
     SCB_EnableICache();
     SCB_EnableDCache();

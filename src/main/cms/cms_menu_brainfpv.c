@@ -112,6 +112,26 @@ CMS_Menu cmsx_menuBrainFPVOsd = {
 };
 #endif /* defined(USE_BRAINFPV_OSD) */
 
+#if defined(USE_BRAINFPV_RGB_STATUS_LED)
+#define NUM_COLORS 14
+const char * const LED_COLOR_NAMES[NUM_COLORS] = {
+    "BLACK",
+    "WHITE",
+    "RED",
+    "ORANGE",
+    "YELLOW",
+    "LIME_GREEN",
+    "GREEN",
+    "MINT_GREEN",
+    "CYAN",
+    "LIGHT_BLUE",
+    "BLUE",
+    "DARK_VIOLET",
+    "MAGENTA",
+    "DEEP_PINK"
+};
+#endif
+
 OSD_Entry cmsx_menuBrainFPVEntires[] =
 {
     OSD_LABEL_ENTRY("-- BRAINFPV --"),
@@ -120,7 +140,10 @@ OSD_Entry cmsx_menuBrainFPVEntires[] =
     OSD_SUBMENU_ENTRY("BRAIN OSD", &cmsx_menuBrainFPVOsd),
 #endif
 
-    // XXX: add RGB LED
+#if defined(USE_BRAINFPV_RGB_STATUS_LED)
+    OSD_TAB_ENTRY("LED COLOR", (&(OSD_TAB_t){&brainFpvSystemConfigCms.status_led_color, NUM_COLORS - 1, &LED_COLOR_NAMES[0]})),
+    OSD_UINT8_ENTRY("LED BRIGHTNESS", (&(const OSD_UINT8_t){ &brainFpvSystemConfigCms.status_led_brightness, 0, 255, 1 })),
+#endif
 
     OSD_BACK_ENTRY,
     OSD_END_ENTRY,

@@ -44,6 +44,10 @@ const timerHardware_t timerHardware[] = {
     DEF_TIM(TIM1,  CH3, PE13,  TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  6), // S7
     DEF_TIM(TIM1,  CH2, PE11,  TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  7), // S8
 
+    // Additional timer outputs using the UART2 pins
+    DEF_TIM(TIM15, CH1, PA2,   TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  0), // TX2 / S9
+    DEF_TIM(TIM15, CH2, PA3,   TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  0), // RX2 / S10
+
     //DEF_TIM(TIM14, CH1, PA7,   TIM_USE_CAMERA_CONTROL,      0,  0),
 };
 

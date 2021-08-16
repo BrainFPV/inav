@@ -221,7 +221,7 @@
 #define SERIALRX_UART           SERIAL_PORT_USART3
 #define SERIALRX_PROVIDER       SERIALRX_CRSF
 
-#define MAX_PWM_OUTPUT_PORTS    8
+#define MAX_PWM_OUTPUT_PORTS    10
 #define USE_SERIAL_4WAY_BLHELI_INTERFACE
 
 #define TARGET_IO_PORTA 0xffff
@@ -236,7 +236,6 @@
 #define USE_ESC_SENSOR
 #define USE_SERIALSHOT
 
-//#define DEBUG_BUILD
 #if defined(DEBUG_BUILD)
 // Disable feature to free up space
 #undef USE_DSHOT

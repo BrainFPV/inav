@@ -17,6 +17,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "ch.h"
 #include "hal_st.h"
@@ -34,6 +35,8 @@
 #include "brainfpv/brainfpv_system.h"
 
 extern uint32_t __process_stack_end__;
+extern uint32_t __process_stack_base__;
+
 
 volatile bool idleCounterClear = 0;
 volatile uint32_t idleCounter = 0;
@@ -99,6 +102,9 @@ int main(void)
 {
     // init from iNav
     init();
+
+    // Fill process stack
+    memset((void*)&__process_stack_base__, CH_DBG_STACK_FILL_VALUE, &__process_stack_end__ - &__process_stack_base__ - 4);
 
     // init ChibiOS
     asm("ldr     r0, =__process_stack_end__\n\t" // Set PSP

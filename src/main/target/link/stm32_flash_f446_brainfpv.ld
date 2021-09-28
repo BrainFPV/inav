@@ -34,9 +34,9 @@ REGION_ALIAS("FASTRAM", RAM)
 
 /* Stack & Heap sizes */
 _Min_Heap_Size = 0;
-_Min_Stack_Size = 0x1800;
+_Min_Stack_Size = 0x800;
 
-__process_stack_size__  = 0x4000;
+__process_stack_size__  = 0x400;
 
 
 /* Entry Point */

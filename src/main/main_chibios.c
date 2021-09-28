@@ -81,7 +81,7 @@ static THD_FUNCTION(DummyThread, arg)
 }
 #endif
 
-static THD_WORKING_AREA(waInavThread, 6 * 1024);
+static THD_WORKING_AREA(waInavThread, 8 * 1024);
 static THD_FUNCTION(InavThread, arg)
 {
     (void)arg;

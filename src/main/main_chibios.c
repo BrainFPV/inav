@@ -53,17 +53,6 @@ void appIdleHook(void)
     }
 }
 
-static THD_WORKING_AREA(waInavThread, 6 * 1024);
-static THD_FUNCTION(InavThread, arg)
-{
-    (void)arg;
-    chRegSetThreadName("INAV");
-
-    while (true) {
-        scheduler();
-    }
-}
-
 #if defined(USE_BRAINFPV_OSD)
 #include "brainfpv/brainfpv_osd.h"
 
@@ -92,34 +81,17 @@ static THD_FUNCTION(DummyThread, arg)
 }
 #endif
 
-
-#define CONTROL_MODE_PRIVILEGED             0
-#define CONTROL_USE_PSP                     2
-#define CONTROL_FPCA                        4
-#define CRT0_CONTROL_INIT (CONTROL_USE_PSP | CONTROL_MODE_PRIVILEGED | CONTROL_FPCA)
-
-int main(void)
+static THD_WORKING_AREA(waInavThread, 6 * 1024);
+static THD_FUNCTION(InavThread, arg)
 {
-    // init from iNav
+    (void)arg;
+    chRegSetThreadName("INAV");
+
+    // init
     init();
-
-    // Fill process stack
-    memset((void*)&__process_stack_base__, CH_DBG_STACK_FILL_VALUE, &__process_stack_end__ - &__process_stack_base__ - 4);
-
-    // init ChibiOS
-    asm("ldr     r0, =__process_stack_end__\n\t" // Set PSP
-        "msr     PSP, r0\n\t"
-        "movs    r0, %0\n\t" // Switch to thread mode with PSP
-        "msr     CONTROL, r0\n\t"
-        "isb\n\t" :: "i"(CRT0_CONTROL_INIT));
-
-    stInit();
-    chSysInit();
 
     brainFPVSystemInit();
     chBSemObjectInit(&gyroSem, FALSE);
-
-    chThdCreateStatic(waInavThread, sizeof(waInavThread), HIGHPRIO, InavThread, NULL);
 
 #if defined(USE_BRAINFPV_OSD)
     if (VideoIsInitialized()) {
@@ -128,6 +100,34 @@ int main(void)
     }
 #endif /* USE_BRAINFPV_OSD */
 
+    // run INAV scheduler forever
+    while (true) {
+        scheduler();
+    }
+}
+
+#define CONTROL_MODE_PRIVILEGED             0
+#define CONTROL_USE_PSP                     2
+#define CONTROL_FPCA                        4
+#define CRT0_CONTROL_INIT (CONTROL_USE_PSP | CONTROL_MODE_PRIVILEGED | CONTROL_FPCA)
+
+int main(void)
+{
+    // Fill process stack
+    uint32_t fill_size = (uint32_t)&__process_stack_end__ - (uint32_t)&__process_stack_base__ - 4;
+    memset((void*)&__process_stack_base__, CH_DBG_STACK_FILL_VALUE, fill_size);
+
+    // init ChibiOS
+    __set_PSP((uint32_t)&__process_stack_end__);
+    asm("movs    r0, %[ctl]\n\t" // Switch to thread mode with PSP
+        "msr     CONTROL, r0\n\t"
+        "isb\n\t":: [ctl] "i" (CRT0_CONTROL_INIT) : "r0");
+
+    stInit();
+    chSysInit();
+
+    chThdCreateStatic(waInavThread, sizeof(waInavThread), HIGHPRIO, InavThread, NULL);
+
 #if defined(USE_DUMMY_TASK)
     chThdCreateStatic(waDummyThread, sizeof(waDummyThread), NORMALPRIO, DummyThread, NULL);
 #endif
@@ -135,4 +135,3 @@ int main(void)
     // sleep forever
     chThdSleep(TIME_INFINITE);
 }
-

@@ -36,7 +36,7 @@
 
 #ifdef BEEPER
 
-#ifndef USE_BRAINFPV_FPGA
+#if !defined(USE_BRAINFPV_FPGA_BUZZER)
 static IO_t beeperIO = DEFIO_IO(NONE);
 static bool beeperInverted = false;
 #endif

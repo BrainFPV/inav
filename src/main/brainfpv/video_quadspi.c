@@ -44,6 +44,8 @@
 #include "drivers/light_led.h"
 #include "drivers/time.h"
 
+#include "common/log.h"
+
 #if defined(USE_BRAINFPV_OSD) && defined(INCLUDE_VIDEO_QUADSPI)
 
 #if defined(STM32F446xx)
@@ -86,6 +88,11 @@ extern binary_semaphore_t onScreenDisplaySemaphore;
 #define GRPAHICS_RIGHT_NTSC 351
 #define GRPAHICS_RIGHT_PAL  359
 
+// Line counts for format detection
+#define VIDEO_TYPE_PAL_LINES 315
+#define VIDEO_TYPE_NTSC_LINES 265
+#define VIDEO_TYPE_DET_MAX_LINE_COUNT_ERR 10
+
 static const struct video_type_boundary video_type_boundary_ntsc = {
     .graphics_right  = GRPAHICS_RIGHT_NTSC, // must be: graphics_width_real - 1
     .graphics_bottom = 239,                 // must be: graphics_hight_real - 1
@@ -113,23 +120,8 @@ static const struct video_type_cfg video_type_cfg_pal = {
     .dma_buffer_length     = PAL_BYTES + PAL_BYTES % 4, // DMA buffer length in bytes (has to be multiple of 4)
 };
 
-// Allocate buffers.
-// Must be allocated in one block, so it is in a struct.
-//struct _buffers {
-//    uint8_t buffer0[BUFFER_HEIGHT * BUFFER_WIDTH];
-//    uint8_t buffer1[BUFFER_HEIGHT * BUFFER_WIDTH];
-//} buffers;
-//
-//// Remove the struct definition (makes it easier to write for).
-//#define buffer0 (buffers.buffer0)
-//#define buffer1 (buffers.buffer1)
-
-uint8_t buffer0[BUFFER_HEIGHT * BUFFER_WIDTH] __attribute__ ((section(".video_ram"), aligned(4)));
-
-// Pointers to each of these buffers.
-uint8_t *draw_buffer;
-uint8_t *draw_buffer;
-
+// OSD buffer
+uint8_t draw_buffer[BUFFER_HEIGHT * BUFFER_WIDTH] __attribute__ ((section(".video_ram"), aligned(4)));
 
 const struct video_type_boundary *video_type_boundary_act = &video_type_boundary_pal;
 
@@ -141,15 +133,14 @@ static uint32_t buffer_offset;
 static int8_t y_offset = 0;
 static uint16_t num_video_lines = 0;
 static bool trigger_redraw;
-static int8_t video_type_tmp = VIDEO_TYPE_PAL;
-static int8_t video_type_act = VIDEO_TYPE_NONE;
+static VideoType_t video_type_tmp = VIDEO_TYPE_PAL;
+static VideoType_t video_type_act = VIDEO_TYPE_NONE;
 static const struct video_type_cfg *video_type_cfg_act = &video_type_cfg_pal;
 
 uint8_t black_pal = 30;
 uint8_t white_pal = 110;
 uint8_t black_ntsc = 10;
 uint8_t white_ntsc = 110;
-
 
 // Re-enable the video if it has been disabled
 void video_qspi_enable(void)
@@ -187,7 +178,6 @@ FAST_CODE void Vsync_ISR(extiCallbackRec_t *cb)
     }
     t_last = t_now;
 
-
     // discard spurious vsync pulses (due to improper grounding), so we don't overload the CPU
     if (active_line > 0 && active_line < video_type_cfg_ntsc.graphics_hight_real - 10) {
         return;
@@ -196,26 +186,32 @@ FAST_CODE void Vsync_ISR(extiCallbackRec_t *cb)
     // Update the number of video lines
     num_video_lines = active_line + video_type_cfg_act->graphics_line_start + y_offset;
 
-    // check video type
-    if (num_video_lines > VIDEO_TYPE_PAL_ROWS) {
+    //LOG_E(OSD, "num_video_lines %d\r", num_video_lines);
+
+    // detect video type
+    if ((num_video_lines >= (VIDEO_TYPE_NTSC_LINES - VIDEO_TYPE_DET_MAX_LINE_COUNT_ERR)) &&
+        (num_video_lines <= (VIDEO_TYPE_NTSC_LINES + VIDEO_TYPE_DET_MAX_LINE_COUNT_ERR))) {
+        video_type_tmp = VIDEO_TYPE_NTSC;
+    }
+    else if ((num_video_lines >= (VIDEO_TYPE_PAL_LINES - VIDEO_TYPE_DET_MAX_LINE_COUNT_ERR)) &&
+             (num_video_lines <= (VIDEO_TYPE_PAL_LINES + VIDEO_TYPE_DET_MAX_LINE_COUNT_ERR))) {
         video_type_tmp = VIDEO_TYPE_PAL;
+    }
+    else {
+        video_type_tmp = VIDEO_TYPE_NONE;
     }
 
     // if video type has changed set new active values
     if (video_type_act != video_type_tmp) {
         video_type_act = video_type_tmp;
-        if (video_type_act == VIDEO_TYPE_NTSC) {
-            video_type_boundary_act = &video_type_boundary_ntsc;
-            video_type_cfg_act = &video_type_cfg_ntsc;
-            //dev_cfg->set_bw_levels(black_ntsc, white_ntsc);
-        } else {
+        if (video_type_act == VIDEO_TYPE_PAL) {
             video_type_boundary_act = &video_type_boundary_pal;
             video_type_cfg_act = &video_type_cfg_pal;
-            //dev_cfg->set_bw_levels(black_pal, white_pal);
+        } else {
+            video_type_boundary_act = &video_type_boundary_ntsc;
+            video_type_cfg_act = &video_type_cfg_ntsc;
         }
     }
-
-    video_type_tmp = VIDEO_TYPE_NTSC;
 
     // Every VSYNC_REDRAW_CNT field: swap buffers and trigger redraw
     if (++Vsync_update >= VSYNC_REDRAW_CNT) {
@@ -228,6 +224,7 @@ FAST_CODE void Vsync_ISR(extiCallbackRec_t *cb)
 
     // Get ready for the first line. We will start outputting data at line zero.
     active_line = 0 - (video_type_cfg_act->graphics_line_start + y_offset);
+
     buffer_offset = 0;
 }
 
@@ -530,10 +527,6 @@ void Video_Init(void)
     hmdma.Instance->CDAR = (uint32_t)&(QUADSPI->DR);
 #endif /* defined(STM32H750xx) */
 
-
-    /* Configure and clear buffers */
-    draw_buffer = buffer0;
-
     // VSYNC interrupt
     vsync_io = IOGetByTag(IO_TAG(VIDEO_VSYNC));
     IOInit(vsync_io, OWNER_OSD, RESOURCE_EXTI, 0);
@@ -583,7 +576,7 @@ uint16_t Video_GetLines(void)
 /**
  *
  */
-uint16_t Video_GetType(void)
+VideoType_t Video_GetType(void)
 {
     return video_type_act;
 }

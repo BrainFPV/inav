@@ -57,6 +57,11 @@ struct video_type_cfg {
 	uint8_t  dma_buffer_length;
 };
 
+typedef enum {
+    VIDEO_TYPE_NONE = 0,
+    VIDEO_TYPE_NTSC = 1,
+    VIDEO_TYPE_PAL = 2,
+} VideoType_t;
 
 void Video_Init(void);
 bool VideoIsInitialized(void);
@@ -67,7 +72,7 @@ extern void Video_SetXScale(uint8_t pal_x_scale, uint8_t ntsc_x_scale);
 extern void Video_Set3DConfig(enum video_3d_mode mode, uint8_t right_eye_x_shift);
 
 uint16_t Video_GetLines(void);
-uint16_t Video_GetType(void);
+VideoType_t Video_GetType(void);
 
 // video boundary values
 extern const struct video_type_boundary *video_type_boundary_act;
@@ -78,12 +83,6 @@ extern const struct video_type_boundary *video_type_boundary_act;
 
 #define GRAPHICS_X_MIDDLE	((GRAPHICS_RIGHT + 1) / 2)
 #define GRAPHICS_Y_MIDDLE	((GRAPHICS_BOTTOM + 1) / 2)
-
-// video type defs for autodetect
-#define VIDEO_TYPE_NONE      0
-#define VIDEO_TYPE_NTSC      1
-#define VIDEO_TYPE_PAL       2
-#define VIDEO_TYPE_PAL_ROWS  300
 
 // draw area buffer values, for memory allocation, access and calculations we suppose the larger values for PAL, this also works for NTSC
 #define GRAPHICS_WIDTH_REAL  376                            // max columns

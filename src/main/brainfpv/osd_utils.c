@@ -50,7 +50,7 @@
 
 extern struct FontEntry* fonts[NUM_FONTS];
 
-extern uint8_t *draw_buffer;
+extern uint8_t draw_buffer[];
 
 void clearGraphics()
 {

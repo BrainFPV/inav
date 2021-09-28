@@ -91,8 +91,7 @@
 #define LED1 PE7
 #define LED1_INVERTED
 
-#define USE_BEEPER
-#define BEEPER_PIN              PD14
+#define BEEPER                  PD14
 #define BEEPER_INVERTED
 
 #define USE_LED_STRIP

@@ -48,6 +48,7 @@
 #include "common/utils.h"
 #include "common/printf.h"
 #include "common/typeconversion.h"
+#include "common/log.h"
 
 #include "drivers/sensor.h"
 #include "drivers/system.h"
@@ -466,6 +467,9 @@ void brainFpvOsdMain(void) {
         if (chBSemWaitTimeout(&onScreenDisplaySemaphore, TIME_MS2I(500)) == MSG_TIMEOUT) {
             // No trigger received within 500ms, re-enable the video
             video_qspi_enable();
+
+            // Don't do anything. Wait for next interrupt.
+            continue;
         }
 
         osd_draw_time_ms = millis();

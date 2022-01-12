@@ -502,6 +502,16 @@ Stick deadband in [r/c points], applied after r/c deadband and expo. Used to che
 
 ---
 
+### controlrate_profile
+
+Control rate profile to switch to when the battery profile is selected, 0 to disable and keep the currently selected control rate profile
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 0 | 0 | 3 |
+
+---
+
 ### cpu_underclock
 
 This option is only available on certain architectures (F3 CPUs at the moment). It makes CPU clock lower to reduce interference to long-range RC systems working at 433MHz
@@ -562,16 +572,6 @@ ADC , VIRTUAL, NONE. The virtual current sensor, once calibrated, estimates the 
 
 ---
 
-### d_boost_factor
-
-_// TODO_
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 1.25 | 1 | 3 |
-
----
-
 ### d_boost_gyro_delta_lpf_hz
 
 _// TODO_
@@ -582,6 +582,16 @@ _// TODO_
 
 ---
 
+### d_boost_max
+
+_// TODO_
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 1.25 | 1 | 3 |
+
+---
+
 ### d_boost_max_at_acceleration
 
 _// TODO_
@@ -589,6 +599,16 @@ _// TODO_
 | Default | Min | Max |
 | --- | --- | --- |
 | 7500 | 1000 | 16000 |
+
+---
+
+### d_boost_min
+
+_// TODO_
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 0.5 | 0 | 1 |
 
 ---
 
@@ -632,6 +652,16 @@ OFF = OSD hardware blink / ON = OSD software blink. If OSD warning text/values a
 
 ---
 
+### dji_cn_alternating_duration
+
+Alternating duration of craft name elements, in tenths of a second
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 30 | 1 | 150 |
+
+---
+
 ### dji_esc_temp_source
 
 Re-purpose the ESC temperature field for IMU/BARO temperature
@@ -642,9 +672,39 @@ Re-purpose the ESC temperature field for IMU/BARO temperature
 
 ---
 
+### dji_message_speed_source
+
+Sets the speed type displayed by the DJI OSD in craft name: GROUND, 3D, AIR
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 3D |  |  |
+
+---
+
+### dji_rssi_source
+
+Source of the DJI RSSI field: RSSI, CRSF_LQ
+
+| Default | Min | Max |
+| --- | --- | --- |
+| RSSI |  |  |
+
+---
+
+### dji_use_adjustments
+
+Show inflight adjustments in craft name field
+
+| Default | Min | Max |
+| --- | --- | --- |
+| OFF |  |  |
+
+---
+
 ### dji_use_name_for_messages
 
-Re-purpose the craft name field for messages. Replace craft name with :WTSED for Warnings|Throttle|Speed|Efficiency|Trip distance
+Re-purpose the craft name field for messages.
 
 | Default | Min | Max |
 | --- | --- | --- |
@@ -694,11 +754,11 @@ Cutoff frequency for stage 2 D-term low pass filter
 
 ### dterm_lpf2_type
 
-Defines the type of stage 1 D-term LPF filter. Possible values: `PT1`, `BIQUAD`. `PT1` offers faster filter response while `BIQUAD` better attenuation.
+Defines the type of stage 1 D-term LPF filter. Possible values: `PT1`, `BIQUAD`, `PT2`, `PT3`.
 
 | Default | Min | Max |
 | --- | --- | --- |
-| BIQUAD |  |  |
+| PT1 |  |  |
 
 ---
 
@@ -708,17 +768,17 @@ Dterm low pass filter cutoff frequency. Default setting is very conservative and
 
 | Default | Min | Max |
 | --- | --- | --- |
-| 40 | 0 | 500 |
+| 110 | 0 | 500 |
 
 ---
 
 ### dterm_lpf_type
 
-Defines the type of stage 1 D-term LPF filter. Possible values: `PT1`, `BIQUAD`. `PT1` offers faster filter response while `BIQUAD` better attenuation.
+Defines the type of stage 1 D-term LPF filter. Possible values: `PT1`, `BIQUAD`, `PT2`, `PT3`.
 
 | Default | Min | Max |
 | --- | --- | --- |
-| BIQUAD |  |  |
+| PT2 |  |  |
 
 ---
 
@@ -728,17 +788,17 @@ Enable/disable dynamic gyro notch also known as Matrix Filter
 
 | Default | Min | Max |
 | --- | --- | --- |
-| OFF |  |  |
+| ON |  |  |
 
 ---
 
 ### dynamic_gyro_notch_min_hz
 
-Minimum frequency for dynamic notches. Default value of `150` works best with 5" multirors. Should be lowered with increased size of propellers. Values around `100` work fine on 7" drones. 10" can go down to `60` - `70`
+Minimum frequency for dynamic notches. Default value of `150` works best with 5" multirotors. Should be lowered with increased size of propellers. Values around `100` work fine on 7" drones. 10" can go down to `60` - `70`
 
 | Default | Min | Max |
 | --- | --- | --- |
-| 150 | 30 | 1000 |
+| 50 | 30 | 1000 |
 
 ---
 
@@ -749,16 +809,6 @@ Q factor for dynamic notches
 | Default | Min | Max |
 | --- | --- | --- |
 | 120 | 1 | 1000 |
-
----
-
-### dynamic_gyro_notch_range
-
-Range for dynamic gyro notches. `MEDIUM` for 5", `HIGH` for 3" and `MEDIUM`/`LOW` for 7" and bigger propellers
-
-| Default | Min | Max |
-| --- | --- | --- |
-| MEDIUM |  |  |
 
 ---
 
@@ -854,7 +904,7 @@ Time in deciseconds to wait before activating failsafe when signal is lost. See 
 
 ### failsafe_fw_pitch_angle
 
-Amount of dive/climb when `SET-THR` failsafe is active on a fixed-wing machine. In 1/10 deg (deci-degrees). Negative values = climb
+Amount of dive/climb when `LAND` (or old `SET-THR`) failsafe is active on a fixed-wing machine. In 1/10 deg (deci-degrees). Negative values = climb
 
 | Default | Min | Max |
 | --- | --- | --- |
@@ -864,7 +914,7 @@ Amount of dive/climb when `SET-THR` failsafe is active on a fixed-wing machine. 
 
 ### failsafe_fw_roll_angle
 
-Amount of banking when `SET-THR` failsafe is active on a fixed-wing machine. In 1/10 deg (deci-degrees). Negative values = left roll
+Amount of banking when `LAND` (or old `SET-THR`) failsafe is active on a fixed-wing machine. In 1/10 deg (deci-degrees). Negative values = left roll
 
 | Default | Min | Max |
 | --- | --- | --- |
@@ -874,7 +924,7 @@ Amount of banking when `SET-THR` failsafe is active on a fixed-wing machine. In 
 
 ### failsafe_fw_yaw_rate
 
-Requested yaw rate to execute when `SET-THR` failsafe is active on a fixed-wing machine. In deg/s. Negative values = left turn
+Requested yaw rate to execute when `LAND` (or old `SET-THR`) failsafe is active on a fixed-wing machine. In deg/s. Negative values = left turn
 
 | Default | Min | Max |
 | --- | --- | --- |
@@ -958,7 +1008,7 @@ What failsafe procedure to initiate in Stage 2. See [Failsafe documentation](Fai
 
 | Default | Min | Max |
 | --- | --- | --- |
-| SET-THR |  |  |
+| LAND |  |  |
 
 ---
 
@@ -1092,53 +1142,23 @@ D-Series telemetry only: Set to 1 to send raw VBat value in 0.1V resolution for 
 
 ---
 
-### fw_autotune_ff_to_i_tc
-
-FF to I time (defines time for I to reach the same level of response as FF) [ms]
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 600 | 100 | 5000 |
-
----
-
-### fw_autotune_ff_to_p_gain
-
-FF to P gain (strength relationship) [%]
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 10 | 0 | 100 |
-
----
-
 ### fw_autotune_max_rate_deflection
 
 The target percentage of maximum mixer output used for determining the rates in `AUTO` and `LIMIT`.
 
 | Default | Min | Max |
 | --- | --- | --- |
-| 90 | 50 | 100 |
+| 80 | 50 | 100 |
 
 ---
 
 ### fw_autotune_min_stick
 
-Minimum stick input [%] to consider overshoot/undershoot detection
+Minimum stick input [%], after applying deadband and expo, to start recording the plane's response to stick input.
 
 | Default | Min | Max |
 | --- | --- | --- |
 | 50 | 0 | 100 |
-
----
-
-### fw_autotune_p_to_d_gain
-
-P to D gain (strength relationship) [%]
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 0 | 0 | 200 |
 
 ---
 
@@ -1482,36 +1502,6 @@ Enable use of Galileo satellites. This is at the expense of other regional const
 
 ---
 
-### gyro_abg_alpha
-
-Alpha factor for Gyro Alpha-Beta-Gamma filter
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 0 | 0 | 1 |
-
----
-
-### gyro_abg_boost
-
-Boost factor for Gyro Alpha-Beta-Gamma filter
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 0.35 | 0 | 2 |
-
----
-
-### gyro_abg_half_life
-
-Sample half-life for Gyro Alpha-Beta-Gamma filter
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 0.5 | 0 | 10 |
-
----
-
 ### gyro_anti_aliasing_lpf_hz
 
 Gyro processing anti-aliasing filter cutoff frequency. In normal operation this filter setting should never be changed. In Hz
@@ -1592,33 +1582,13 @@ Defines the type of the main gyro LPF filter. Possible values: `PT1`, `BIQUAD`. 
 
 ---
 
-### gyro_notch_cutoff
-
-_// TODO_
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 1 | 1 | 500 |
-
----
-
-### gyro_notch_hz
-
-_// TODO_
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 0 |  | 500 |
-
----
-
 ### gyro_to_use
 
 _// TODO_
 
 | Default | Min | Max |
 | --- | --- | --- |
-| 0 | 0 | 1 |
+| 0 | 0 | 2 |
 
 ---
 
@@ -1888,7 +1858,7 @@ Inertial Measurement Unit KP Gain for accelerometer measurements
 
 | Default | Min | Max |
 | --- | --- | --- |
-| 2500 |  | 65535 |
+| 1000 |  | 65535 |
 
 ---
 
@@ -1898,7 +1868,7 @@ Inertial Measurement Unit KP Gain for compass measurements
 
 | Default | Min | Max |
 | --- | --- | --- |
-| 10000 |  | 65535 |
+| 5000 |  | 65535 |
 
 ---
 
@@ -2418,7 +2388,7 @@ Exposition value used for the PITCH/ROLL axes by the `MANUAL` flight mode [0-100
 
 | Default | Min | Max |
 | --- | --- | --- |
-| 70 | 0 | 100 |
+| 35 | 0 | 100 |
 
 ---
 
@@ -2792,26 +2762,6 @@ When powering up, gyro bias is calculated. If the model is shaking/moving during
 
 ---
 
-### motor_accel_time
-
-Minimum time for the motor(s) to accelerate from 0 to 100% throttle (ms) [0-1000]
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 0 | 0 | 1000 |
-
----
-
-### motor_decel_time
-
-Minimum time for the motor(s) to deccelerate from 100 to 0% throttle (ms) [0-1000]
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 0 | 0 | 1000 |
-
----
-
 ### motor_direction_inverted
 
 Use if you need to inverse yaw motor direction.
@@ -2884,7 +2834,7 @@ Maximum climb/descent rate that UAV is allowed to reach during navigation modes.
 
 ### nav_auto_speed
 
-Maximum velocity firmware is allowed in full auto modes (RTH, WP) [cm/s] [Multirotor only]
+Speed in fully autonomous modes (RTH, WP) [cm/s]. Used for WP mode when no specific WP speed set. [Multirotor only]
 
 | Default | Min | Max |
 | --- | --- | --- |
@@ -3322,6 +3272,26 @@ P gain of altitude PID controller (Fixedwing)
 
 ---
 
+### nav_fw_soaring_motor_stop
+
+Stops motor when Soaring mode enabled.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| OFF |  |  |
+
+---
+
+### nav_fw_soaring_pitch_deadband
+
+Pitch Angle deadband when soaring mode enabled (deg). Angle mode inactive within deadband allowing pitch to free float whilst soaring.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 5 | 0 | 15 |
+
+---
+
 ### nav_fw_yaw_deadband
 
 Deadband for heading trajectory PID controller. When heading error is below the deadband, controller assumes that vehicle is on course
@@ -3384,7 +3354,7 @@ Maximum climb/descent rate firmware is allowed when processing pilot input for A
 
 ### nav_manual_speed
 
-Maximum velocity firmware is allowed when processing pilot input for POSHOLD/CRUISE control mode [cm/s] [Multirotor only]
+Maximum speed allowed when processing pilot input for POSHOLD/CRUISE control mode [cm/s] [Multirotor only]
 
 | Default | Min | Max |
 | --- | --- | --- |
@@ -3399,6 +3369,16 @@ Max allowed altitude (above Home Point) that applies to all NAV modes (including
 | Default | Min | Max |
 | --- | --- | --- |
 | 0 | 0 | 65000 |
+
+---
+
+### nav_max_auto_speed
+
+Maximum speed allowed in fully autonomous modes (RTH, WP) [cm/s] [Multirotor only]
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 1000 | 10 | 2000 |
 
 ---
 
@@ -3702,6 +3682,16 @@ Minimum distance from homepoint when RTH full procedure will be activated [cm]. 
 
 ---
 
+### nav_mission_planner_reset
+
+With Reset ON WP Mission Planner waypoint count can be reset to 0 by toggling the mode switch ON-OFF-ON.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| ON |  |  |
+
+---
+
 ### nav_overrides_motor_stop
 
 When set to OFF the navigation system will not take over the control of the motor if the throttle is low (motor will stop). When set to OFF_ALWAYS the navigation system will not take over the control of the motor if the throttle was low even when failsafe is triggered. When set to AUTO_ONLY the navigation system will only take over the control of the throttle in autonomous navigation modes (NAV WP and NAV RTH). When set to ALL_NAV (default) the navigation system will take over the control of the motor completely and never allow the motor to stop even when the throttle is low. This setting only has an effect on NAV modes which take control of the throttle when combined with MOTOR_STOP and is likely to cause a stall if fw_min_throttle_down_pitch isn't set correctly or the pitch estimation is wrong for fixed wing models when not set to ALL_NAV
@@ -3782,6 +3772,26 @@ If set to ON or ON_FW_SPIRAL aircraft will climb to nav_rth_altitude first befor
 
 ---
 
+### nav_rth_climb_first_stage_altitude
+
+The altitude [cm] at which climb first will transition to turn first. How the altitude is used, is determined by nav_rth_climb_first_stage_mode. Default=0; feature disabled.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 0 |  | 65000 |
+
+---
+
+### nav_rth_climb_first_stage_mode
+
+This determines how rth_climb_first_stage_altitude is used. Default is AT_LEAST.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| AT_LEAST |  |  |
+
+---
+
 ### nav_rth_climb_ignore_emerg
 
 If set to ON, aircraft will execute initial climb regardless of position sensor (GPS) status.
@@ -3849,6 +3859,26 @@ If set to ON, waypoints will be automatically loaded from EEPROM to the FC durin
 | Default | Min | Max |
 | --- | --- | --- |
 | OFF |  |  |
+
+---
+
+### nav_wp_mission_restart
+
+Sets restart behaviour for a WP mission when interrupted mid mission. START from first WP, RESUME from last active WP or SWITCH between START and RESUME each time WP Mode is reselected ON. SWITCH effectively allows resuming once only from a previous mid mission waypoint after which the mission will restart from the first waypoint.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| RESUME |  |  |
+
+---
+
+### nav_wp_multi_mission_index
+
+Index of mission selected from multi mission WP entry loaded in flight controller. 1 is the first useable WP mission in the entry. Limited to a maximum of 9 missions. Set index to 0 to display current active WP count in OSD Mission field.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 1 | 0 | 9 |
 
 ---
 
@@ -3972,6 +4002,26 @@ AHI width in pixels (pixel OSD only)
 
 ---
 
+### osd_airspeed_alarm_max
+
+Airspeed above which the airspeed OSD element will start blinking (cm/s)
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 0 | 0 | 27000 |
+
+---
+
+### osd_airspeed_alarm_min
+
+Airspeed under which the airspeed OSD element will start blinking (cm/s)
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 0 | 0 | 27000 |
+
+---
+
 ### osd_alt_alarm
 
 Value above which to make the OSD relative altitude indicator blink (meters)
@@ -4079,6 +4129,16 @@ Value above which to make the OSD distance from home indicator blink (meters)
 | Default | Min | Max |
 | --- | --- | --- |
 | 1000 | 0 | 50000 |
+
+---
+
+### osd_esc_rpm_precision
+
+Number of characters used to display the RPM value.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 3 | 3 | 6 |
 
 ---
 
@@ -4502,6 +4562,16 @@ Display minimum voltage of the `BATTERY` or the average per `CELL` in the OSD st
 
 ---
 
+### osd_stats_page_auto_swap_time
+
+Auto swap display time interval between disarm stats pages (seconds). Reverts to manual control when Roll stick used to change pages. Disabled when set to 0.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 3 | 0 | 10 |
+
+---
+
 ### osd_telemetry
 
 To enable OSD telemetry for antenna tracker. Possible values are `OFF`, `ON` and `TEST`
@@ -4729,6 +4799,66 @@ Limits acceleration of YAW rotation speed that can be requested by stick input. 
 | Default | Min | Max |
 | --- | --- | --- |
 | 10000 |  | 500000 |
+
+---
+
+### rate_dynamics_center_correction
+
+The center stick correction for Rate Dynamics
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 10 | 10 | 95 |
+
+---
+
+### rate_dynamics_center_sensitivity
+
+The center stick sensitivity for Rate Dynamics
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 100 | 25 | 175 |
+
+---
+
+### rate_dynamics_center_weight
+
+The center stick weight for Rate Dynamics
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 0 | 0 | 95 |
+
+---
+
+### rate_dynamics_end_correction
+
+The end  stick correction for Rate Dynamics
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 10 | 10 | 95 |
+
+---
+
+### rate_dynamics_end_sensitivity
+
+The end stick sensitivity for Rate Dynamics
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 100 | 25 | 175 |
+
+---
+
+### rate_dynamics_end_weight
+
+The end  stick weight for Rate Dynamics
+
+| Default | Min | Max |
+| --- | --- | --- |
+| 0 | 0 | 95 |
 
 ---
 
@@ -5074,11 +5204,11 @@ Output frequency (in Hz) servo pins. When using tricopters or gimbal with digita
 
 ### setpoint_kalman_enabled
 
-Enable Kalman filter on the PID controller setpoint
+Enable Kalman filter on the gyro data
 
 | Default | Min | Max |
 | --- | --- | --- |
-| OFF |  |  |
+| ON |  |  |
 
 ---
 
@@ -5089,26 +5219,6 @@ Quality factor of the setpoint Kalman filter. Higher values means less filtering
 | Default | Min | Max |
 | --- | --- | --- |
 | 100 | 1 | 16000 |
-
----
-
-### setpoint_kalman_sharpness
-
-Dynamic factor for the setpoint Kalman filter. In general, the higher the value, the more dynamic Kalman filter gets
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 100 | 1 | 16000 |
-
----
-
-### setpoint_kalman_w
-
-Window size for the setpoint Kalman filter. Wider the window, more samples are used to compute variance. In general, wider window results in smoother filter response
-
-| Default | Min | Max |
-| --- | --- | --- |
-| 4 | 1 | 40 |
 
 ---
 
@@ -5518,7 +5628,7 @@ Battery voltage calibration value. 1100 = 11:1 voltage divider (10k:1k) x 100. A
 
 | Default | Min | Max |
 | --- | --- | --- |
-| _target default_ | VBAT_SCALE_MIN | VBAT_SCALE_MAX |
+| _target default_ | 0 | 65535 |
 
 ---
 
@@ -5602,6 +5712,16 @@ VTX RF power level to use. The exact number of mw depends on the VTX hardware.
 
 ---
 
+### vtx_smartaudio_alternate_softserial_method
+
+Enable the alternate softserial method. This is the method used in iNav 3.0 and ealier.
+
+| Default | Min | Max |
+| --- | --- | --- |
+| ON |  |  |
+
+---
+
 ### vtx_smartaudio_early_akk_workaround
 
 Enable workaround for early AKK SAudio-enabled VTX bug.
@@ -5624,7 +5744,7 @@ These are values (in us) by how much RC input can be different before it's consi
 
 ### yaw_lpf_hz
 
-Yaw low pass filter cutoff frequency. Should be disabled (set to `0`) on small multirotors (7 inches and below)
+Yaw P term low pass filter cutoff frequency. Should be disabled (set to `0`) on small multirotors (7 inches and below)
 
 | Default | Min | Max |
 | --- | --- | --- |

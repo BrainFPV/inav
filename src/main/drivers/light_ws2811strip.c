@@ -44,6 +44,12 @@
 #include "drivers/light_ws2811strip.h"
 
 #ifndef USE_BRAINFPV_FPGA
+#define WS2811_PERIOD (WS2811_TIMER_HZ / WS2811_CARRIER_HZ)
+#define WS2811_BIT_COMPARE_1 ((WS2811_PERIOD * 2) / 3)
+#define WS2811_BIT_COMPARE_0 (WS2811_PERIOD / 3)
+
+static DMA_RAM timerDMASafeType_t ledStripDMABuffer[WS2811_DMA_BUFFER_SIZE];
+
 static IO_t ws2811IO = IO_NONE;
 static TCH_t * ws2811TCH = NULL;
 static bool ws2811Initialised = false;

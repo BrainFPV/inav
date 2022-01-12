@@ -21,13 +21,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_ll_i2c.h"
 #include "stm32h7xx_ll_bus.h"
-#ifdef  USE_FULL_ASSERT
-#include "stm32_assert.h"
-#else
-#if !defined(assert_param)
-#define assert_param(expr) ((void)0U)
-#endif
-#endif
 
 /** @addtogroup STM32H7xx_LL_Driver
   * @{

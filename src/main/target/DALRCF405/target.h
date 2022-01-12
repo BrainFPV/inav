@@ -98,7 +98,6 @@
 #define BNO055_I2C_BUS          BUS_I2C1
 
 #define USE_RANGEFINDER
-#define USE_RANGEFINDER_HCSR04_I2C
 #define RANGEFINDER_I2C_BUS     DEFAULT_I2C_BUS
 
 #define PITOT_I2C_BUS           DEFAULT_I2C_BUS
@@ -150,3 +149,5 @@
 
 //TIMER
 #define MAX_PWM_OUTPUT_PORTS       10
+
+#define USE_DSHOT

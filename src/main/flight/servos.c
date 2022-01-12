@@ -105,9 +105,9 @@ int16_t servo[MAX_SUPPORTED_SERVOS];
 
 static uint8_t servoRuleCount = 0;
 static servoMixer_t currentServoMixer[MAX_SERVO_RULES];
-static int servoOutputEnabled;
+static bool servoOutputEnabled;
 
-static uint8_t mixerUsesServos;
+static bool mixerUsesServos;
 static uint8_t minServoIndex;
 static uint8_t maxServoIndex;
 
@@ -151,8 +151,8 @@ void servosInit(void)
 
     // If there are servo rules after all, update variables
     if (servoRuleCount > 0) {
-        servoOutputEnabled = 1;
-        mixerUsesServos = 1;
+        servoOutputEnabled = true;
+        mixerUsesServos = true;
     }
 
     for (uint8_t i = 0; i < MAX_SUPPORTED_SERVOS; i++) {
@@ -498,7 +498,7 @@ void processContinuousServoAutotrim(const float dT)
     static servoAutotrimState_e trimState = AUTOTRIM_IDLE;    
     static uint32_t servoMiddleUpdateCount;
 
-    const float rotRateMagnitudeFiltered = pt1FilterApply4(&rotRateFilter, sqrtf(vectorNormSquared(&imuMeasuredRotationBF)), SERVO_AUTOTRIM_FILTER_CUTOFF, dT);
+    const float rotRateMagnitudeFiltered = pt1FilterApply4(&rotRateFilter, fast_fsqrtf(vectorNormSquared(&imuMeasuredRotationBF)), SERVO_AUTOTRIM_FILTER_CUTOFF, dT);
     const float targetRateMagnitudeFiltered = pt1FilterApply4(&targetRateFilter, getTotalRateTarget(), SERVO_AUTOTRIM_FILTER_CUTOFF, dT);
 
     if (ARMING_FLAG(ARMED)) {

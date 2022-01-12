@@ -142,7 +142,8 @@ typedef struct pidProfile_s {
     uint8_t iterm_relax;                    // Enable iterm suppression during stick input
 
 #ifdef USE_D_BOOST
-    float dBoostFactor;
+    float dBoostMin;
+    float dBoostMax;
     float dBoostMaxAtAlleceleration;
     uint8_t dBoostGyroDeltaLpfHz;
 #endif
@@ -155,13 +156,6 @@ typedef struct pidProfile_s {
 
     uint16_t navFwPosHdgPidsumLimit;
     uint8_t controlDerivativeLpfHz;
-
-#ifdef USE_GYRO_KALMAN
-    uint16_t kalman_q;
-    uint16_t kalman_w;
-    uint16_t kalman_sharpness;
-    uint8_t kalmanEnabled;
-#endif
 
     float fixedWingLevelTrim;
     float fixedWingLevelTrimGain;

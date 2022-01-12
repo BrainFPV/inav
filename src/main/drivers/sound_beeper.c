@@ -65,6 +65,7 @@ void systemBeep(bool onoff)
     BRAINFPVFPGA_Buzzer(onoff);
     beeperState = onoff;
 #endif
+
 }
 
 void systemBeepToggle(void)

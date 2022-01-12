@@ -71,10 +71,6 @@ main_sources(COMMON_SRC
 
     drivers/accgyro/accgyro.c
     drivers/accgyro/accgyro.h
-    drivers/accgyro/accgyro_adxl345.c
-    drivers/accgyro/accgyro_adxl345.h
-    drivers/accgyro/accgyro_bma280.c
-    drivers/accgyro/accgyro_bma280.h
     drivers/accgyro/accgyro_bmi088.c
     drivers/accgyro/accgyro_bmi088.h
     drivers/accgyro/accgyro_bmi160.c
@@ -88,14 +84,10 @@ main_sources(COMMON_SRC
     drivers/accgyro/accgyro_icm20689.h
     drivers/accgyro/accgyro_icm42605.c
     drivers/accgyro/accgyro_icm42605.h
-    drivers/accgyro/accgyro_l3g4200d.c
-    drivers/accgyro/accgyro_l3g4200d.h
     drivers/accgyro/accgyro_l3gd20.c
     drivers/accgyro/accgyro_l3gd20.h
     drivers/accgyro/accgyro_lsm303dlhc.c
     drivers/accgyro/accgyro_lsm303dlhc.h
-    drivers/accgyro/accgyro_mma845x.c
-    drivers/accgyro/accgyro_mma845x.h
     drivers/accgyro/accgyro_mpu.c
     drivers/accgyro/accgyro_mpu.h
     drivers/accgyro/accgyro_mpu3050.c
@@ -167,6 +159,10 @@ main_sources(COMMON_SRC
     drivers/compass/compass_qmc5883l.h
     drivers/compass/compass_rm3100.c
     drivers/compass/compass_rm3100.h
+    drivers/compass/compass_vcm5883.c
+    drivers/compass/compass_vcm5883.h
+    drivers/compass/compass_mlx90393.c
+    drivers/compass/compass_mlx90393.h
     drivers/compass/compass_msp.c
     drivers/compass/compass_msp.h
 
@@ -233,10 +229,6 @@ main_sources(COMMON_SRC
     drivers/pinio.c
     drivers/pinio.h
 
-    drivers/rangefinder/rangefinder_hcsr04.c
-    drivers/rangefinder/rangefinder_hcsr04.h
-    drivers/rangefinder/rangefinder_hcsr04_i2c.c
-    drivers/rangefinder/rangefinder_hcsr04_i2c.h
     drivers/rangefinder/rangefinder_srf10.c
     drivers/rangefinder/rangefinder_srf10.h
     drivers/rangefinder/rangefinder_vl53l0x.c
@@ -247,13 +239,13 @@ main_sources(COMMON_SRC
     drivers/rangefinder/rangefinder_virtual.h
     drivers/rangefinder/rangefinder_us42.c
     drivers/rangefinder/rangefinder_us42.h
-    
+    drivers/rangefinder/rangefinder_tof10120_i2c.c
+    drivers/rangefinder/rangefinder_tof10120_i2c.h
+
     drivers/resource.c
     drivers/resource.h
     drivers/rcc.c
     drivers/rcc.h
-    drivers/rx_pwm.c
-    drivers/rx_pwm.h
     drivers/rx_spi.c
     drivers/rx_spi.h
     drivers/serial.c
@@ -285,6 +277,7 @@ main_sources(COMMON_SRC
     fc/config.h
     fc/controlrate_profile.c
     fc/controlrate_profile.h
+    fc/controlrate_profile_config_struct.h
     fc/fc_core.c
     fc/fc_core.h
     fc/fc_init.c
@@ -327,6 +320,8 @@ main_sources(COMMON_SRC
     flight/kalman.h
     flight/smith_predictor.c
     flight/smith_predictor.h
+    flight/rate_dynamics.c
+    flight/rate_dynamics.h
     flight/mixer.c
     flight/mixer.h
     flight/pid.c
@@ -353,8 +348,6 @@ main_sources(COMMON_SRC
 
     io/beeper.c
     io/beeper.h
-    io/esc_serialshot.c
-    io/esc_serialshot.h
     io/servo_sbus.c
     io/servo_sbus.h
     io/frsky_osd.c
@@ -415,8 +408,6 @@ main_sources(COMMON_SRC
     rx/msp.h
     rx/msp_override.c
     rx/msp_override.h
-    rx/pwm.c
-    rx/pwm.h
     rx/frsky_crc.c
     rx/frsky_crc.h
     rx/rx.c
@@ -445,6 +436,7 @@ main_sources(COMMON_SRC
     sensors/acceleration.h
     sensors/battery.c
     sensors/battery.h
+    sensors/battery_config_structs.h
     sensors/boardalignment.c
     sensors/boardalignment.h
     sensors/compass.c

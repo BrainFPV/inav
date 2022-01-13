@@ -209,10 +209,20 @@ bool brainfpv_is_radixli(void);
 #undef USE_RANGEFINDER_BENEWAKE
 #undef USE_RANGEFINDER_VL53L0X
 #undef USE_RANGEFINDER_HCSR04_I2C
+#undef USE_RANGEFINDER_US42
+#undef USE_RANGEFINDER_TOF10120_I2C
 
 #undef USE_OPFLOW
 #undef USE_OPFLOW_CXOF
 #undef USE_OPFLOW_MSP
+
+#undef USE_GPS_PROTO_NMEA
+#undef USE_GPS_PROTO_MTK
+#undef USE_GPS_PROTO_MSP
+
+#undef USE_SECONDARY_IMU
+#undef USE_IMU_BNO055
+
 
 #undef USE_PITOT_MS4525
 #undef USE_1WIRE
@@ -227,6 +237,7 @@ bool brainfpv_is_radixli(void);
 #undef USE_FRSKYOSD
 #undef USE_USB_MSC
 #undef USE_SERVO_SBUS
+#undef USE_I2C_IO_EXPANDER
+
 #undef USE_TELEMETRY_LTM
-
-
+#undef USE_MSP_OVER_TELEMETRY

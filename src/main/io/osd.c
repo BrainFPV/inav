@@ -4177,6 +4177,7 @@ void osdRefresh(timeUs_t currentTimeUs)
             osdSetNextRefreshIn(STATS_SCREEN_DISPLAY_TIME);
 #if defined(USE_BRAINFPV_OSD)
             disarmTime = millis();
+            (void)statsPageAutoSwapCntl;
 #endif
             statsPageAutoSwapCntl = osdConfig()->stats_page_auto_swap_time > 0 ? 0 : 2; // disable swapping pages when time = 0
         }

@@ -30,6 +30,7 @@
 #include "fpga_drv.h"
 #include "brainfpv/brainfpv_osd.h"
 #include "brainfpv/brainfpv_system.h"
+#include "brainfpv/auto_sync_threshold.h"
 
 const timerHardware_t timerHardware[] = {
     DEF_TIM(TIM12, CH1, PB14,  TIM_USE_PPM,                         0,  0), // PPM input
@@ -79,8 +80,9 @@ void brainFPVUpdateSettings(void) {
     }
 
 #if defined(USE_BRAINFPV_OSD)
-    brainFpvOsdSetSyncThreshold(bfOsdConfigUse->sync_threshold);
-
+    if (bfOsdConfigUse->sync_threshold_mode == SYNC_THRESHOLD_MANUAL) {
+        brainFpvOsdSetSyncThresholdMv(4 * bfOsdConfigUse->sync_threshold);
+    }
     BRAINFPVFPGA_SetXOffset(bfOsdConfigUse->x_offset);
     BRAINFPVFPGA_SetXScale(bfOsdConfigUse->x_scale);
 #endif

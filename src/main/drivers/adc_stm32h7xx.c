@@ -41,7 +41,7 @@
 #include "adc_impl.h"
 
 
-static adcDevice_t adcHardware[ADCDEV_COUNT] = {
+adcDevice_t adcHardware[ADCDEV_COUNT] = {
     {
         .ADCx = ADC1,
         .rccADC = RCC_AHB1(ADC12),
@@ -51,7 +51,7 @@ static adcDevice_t adcHardware[ADCDEV_COUNT] = {
         .enabled = false, 
         .usedChannelCount = 0
     },
-    /* currently not used
+#ifdef USE_BRAINFPV_AUTO_SYNC_THRESHOLD
     { 
         .ADCx = ADC2,
         .rccADC = RCC_AHB1(ADC12),
@@ -61,7 +61,7 @@ static adcDevice_t adcHardware[ADCDEV_COUNT] = {
         .enabled = false, 
         .usedChannelCount = 0
     }
-    */
+#endif
 };
 
 adcDevice_t adcDevice[ADCDEV_COUNT];

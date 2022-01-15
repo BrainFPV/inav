@@ -34,6 +34,8 @@
 
 #include "ch.h"
 #include "video.h"
+#include "brainfpv_osd.h"
+#include "auto_sync_threshold.h"
 
 #include "platform.h"
 //#include "system.h"
@@ -141,6 +143,10 @@ uint8_t black_pal = 30;
 uint8_t white_pal = 110;
 uint8_t black_ntsc = 10;
 uint8_t white_ntsc = 110;
+
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+bool useAutoSyncThreshold = false;
+#endif
 
 // Re-enable the video if it has been disabled
 void video_qspi_enable(void)
@@ -557,6 +563,14 @@ void Video_Init(void)
     // Enable interrupts
     EXTIEnable(vsync_io, true);
     EXTIEnable(hsync_io, true);
+
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+   if (bfOsdConfig()->sync_threshold_mode == SYNC_THRESHOLD_AUTO) {
+       if (autoSyncThresholdInit() == 0) {
+           useAutoSyncThreshold = true;
+       }
+   }
+#endif
 
     video_initialized = true;
 }

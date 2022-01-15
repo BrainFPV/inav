@@ -27,6 +27,7 @@ typedef struct bfOsdConfig_s {
     uint8_t show_pilot_logo;
     uint8_t invert;
     int8_t center_mark_offset;
+    uint8_t sync_threshold_mode;
 } bfOsdConfig_t;
 
 PG_DECLARE(bfOsdConfig_t, bfOsdConfig);
@@ -44,7 +45,7 @@ void brainFpvRadarMap(void);
 void brainFpvOsdHeadingGraph(uint16_t x, uint16_t y);
 
 #if defined(BRAINFPV_OSD_USE_STM32CMP)
-void brainFpvOsdSetSyncThreshold(uint8_t threshold);
+void brainFpvOsdSetSyncThresholdMv(uint16_t threshold_mv);
 #endif
 
 #endif /* BRAINFPV_OSD */

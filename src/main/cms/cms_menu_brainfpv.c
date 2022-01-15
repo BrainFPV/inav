@@ -77,6 +77,10 @@ static long menuBrainFPVOnExit(const OSD_Entry *from)
 const char *STICKS_DISPLAY_NAMES[] = {"OFF", "MODE2", "MODE1"};
 extern const char *USER_FONT_NAMES[NUM_USER_FONTS];
 
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+const char *SYNC_TH_MODE_NAMES[] = {"MANUAL", "AUTO"};
+#endif
+
 OSD_Entry cmsx_menuBrainFPVOsdEntries[] =
 {
     OSD_LABEL_ENTRY("-- BRAIN OSD ------"),
@@ -87,6 +91,9 @@ OSD_Entry cmsx_menuBrainFPVOsdEntries[] =
     OSD_UINT8_ENTRY("OSD BLACK", (&(const OSD_UINT8_t){ &bfOsdConfigCms.black_level, 15, 40, 1 })),
 #endif
     OSD_BOOL_ENTRY("INVERT",  &bfOsdConfigCms.invert),
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+    OSD_TAB_ENTRY("OSD SYNC TH MODE", (&(const OSD_TAB_t){&bfOsdConfigCms.sync_threshold_mode, 1, &SYNC_TH_MODE_NAMES[0]})),
+#endif
     OSD_UINT8_ENTRY("OSD SYNC TH", (&(const OSD_UINT8_t){ &bfOsdConfigCms.sync_threshold, BRAINFPV_OSD_SYNC_TH_MIN, BRAINFPV_OSD_SYNC_TH_MAX, 1 })),
     OSD_INT8_ENTRY("OSD X OFF", (&(const OSD_INT8_t){ &bfOsdConfigCms.x_offset, -8, 7, 1 })),
     OSD_UINT8_ENTRY("OSD X SC", (&(const OSD_UINT8_t){ &bfOsdConfigCms.x_scale, 0, 15, 1 })),

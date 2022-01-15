@@ -41,6 +41,7 @@
 #include "video.h"
 #include "images.h"
 #include "osd_utils.h"
+#include "auto_sync_threshold.h"
 
 #include "common/maths.h"
 #include "common/axis.h"
@@ -119,6 +120,12 @@ PG_REGISTER_WITH_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig, PG_BRAINFPV_OSD_CONF
 #define BRAINFPV_OSD_BLACK_LEVEL_DEFAULT SETTING_BRAINFPV_OSD_BLACK_LEVEL_DEFAULT
 #endif
 
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+#define BRAINFPV_OSD_SYNC_TH_MODE_DEFAULT SYNC_THRESHOLD_AUTO
+#else
+#define BRAINFPV_OSD_SYNC_TH_MODE_DEFAULT SYNC_THRESHOLD_MANUAL
+#endif
+
 PG_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig,
   .sync_threshold = BRAINFPV_OSD_SYNC_TH_DEFAULT,
   .white_level    = BRAINFPV_OSD_WHITE_LEVEL_DEFAULT,
@@ -140,6 +147,7 @@ PG_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig,
   .show_pilot_logo = 1,
   .invert = 0,
   .center_mark_offset = 0,
+  .sync_threshold_mode = BRAINFPV_OSD_SYNC_TH_MODE_DEFAULT,
 );
 
 void video_qspi_enable(void);
@@ -150,6 +158,10 @@ bool brainfpv_user_avatar_set = false;
 bool osd_arming_or_stats = false;
 uint32_t osd_draw_time_ms;
 bool hide_blinking_items;
+
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+extern bool useAutoSyncThreshold;
+#endif
 
 static void simple_artificial_horizon(int16_t roll, int16_t pitch, int16_t x, int16_t y,
         int16_t width, int16_t height, int8_t max_pitch,
@@ -344,16 +356,15 @@ static void brainFpvOsdInitStm32Cmp(void)
         Error_Handler();
     }
 
-    brainFpvOsdSetSyncThreshold(bfOsdConfig()->sync_threshold);
+    brainFpvOsdSetSyncThresholdMv(4 * bfOsdConfig()->sync_threshold);
 
     HAL_COMP_Start(&hcomp_video_cmp);
 }
 
-void brainFpvOsdSetSyncThreshold(uint8_t threshold)
+void brainFpvOsdSetSyncThresholdMv(uint16_t threshold_mv)
 {
-    // threshold is in 2mV steps
     if (hcomp_video_cmp.Instance) {
-        HAL_DAC_SetValue(&hdac_video_cmp, DAC_CHANNEL_1, DAC_ALIGN_12B_R, ((uint32_t)threshold * 4 * 4095) / 3300);
+        HAL_DAC_SetValue(&hdac_video_cmp, DAC_CHANNEL_1, DAC_ALIGN_12B_R, ((uint32_t)threshold_mv * 4095) / ADCVREF);
     }
 }
 #endif /* defined(BRAINFPV_OSD_USE_STM32CMP) */
@@ -462,11 +473,22 @@ void osdRefresh(timeUs_t currentTimeUs);
 
 
 void brainFpvOsdMain(void) {
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+    uint32_t draw_cnt = 0;
+    uint16_t syncTh;
+#endif
 
     while (1) {
         if (chBSemWaitTimeout(&onScreenDisplaySemaphore, TIME_MS2I(500)) == MSG_TIMEOUT) {
             // No trigger received within 500ms, re-enable the video
             video_qspi_enable();
+
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+            if (useAutoSyncThreshold) {
+                syncTh = autoSyncThresholdGet();
+                brainFpvOsdSetSyncThresholdMv(syncTh);
+            }
+#endif
 
             // Don't do anything. Wait for next interrupt.
             continue;
@@ -495,11 +517,25 @@ void brainFpvOsdMain(void) {
         // Update elements that are being shown
         osdUpdateActiveElements();
 
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+        if (useAutoSyncThreshold && (draw_cnt & 0x04)) {
+            syncTh = autoSyncThresholdGet();
+            brainFpvOsdSetSyncThresholdMv(syncTh);
+        }
+        //char tmp[30];
+        //tfp_sprintf(tmp, "SYNC TH: %d mV", syncTh);
+        //draw_string(tmp, GRAPHICS_LEFT, GRAPHICS_BOTTOM - 20, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, FONT8X10);
+#endif
+
 #if defined(OSD_SHOW_DRAW_TIME)
         osd_draw_time_ms = millis() - osd_draw_time_ms;
         char string_buffer[20];
         tfp_sprintf(string_buffer, "draw: %lu ms", osd_draw_time_ms);
         draw_string(string_buffer, GRAPHICS_LEFT + 10, GRAPHICS_BOTTOM - 10, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, FONT8X10);
+#endif
+
+#if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
+        draw_cnt += 1;
 #endif
     }
 }

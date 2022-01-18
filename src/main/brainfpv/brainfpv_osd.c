@@ -153,6 +153,8 @@ PG_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig,
 void video_qspi_enable(void);
 extern binary_semaphore_t onScreenDisplaySemaphore;
 
+extern displayPort_t max7456DisplayPort;
+
 extern bool cmsInMenu;
 bool brainfpv_user_avatar_set = false;
 bool osd_arming_or_stats = false;
@@ -533,6 +535,14 @@ void brainFpvOsdMain(void) {
         tfp_sprintf(string_buffer, "draw: %lu ms", osd_draw_time_ms);
         draw_string(string_buffer, GRAPHICS_LEFT + 10, GRAPHICS_BOTTOM - 10, 0, 0, TEXT_VA_TOP, TEXT_HA_LEFT, FONT8X10);
 #endif
+
+        // Update number of lines
+        if (Video_GetType() == VIDEO_TYPE_NTSC) {
+            max7456DisplayPort.rows = MAX7456_LINES_NTSC;
+        }
+        else {
+            max7456DisplayPort.rows = MAX7456_LINES_PAL;
+        }
 
 #if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
         draw_cnt += 1;

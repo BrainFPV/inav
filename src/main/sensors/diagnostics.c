@@ -230,7 +230,7 @@ bool isHardwareHealthy(void)
 #ifdef USE_SECONDARY_IMU
     const hardwareSensorStatus_e imu2Status = getHwSecondaryImuStatus();
 #else
-    const hardwareSensorStatus_e imu2Status = HW_SENSOR_UNAVAILABLE;
+    const hardwareSensorStatus_e imu2Status = HW_SENSOR_NONE;
 #endif
 
     // Sensor is considered failing if it's either unavailable (selected but not detected) or unhealthy (returning invalid readings)

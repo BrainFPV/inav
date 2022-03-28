@@ -24,25 +24,10 @@
 
 #pragma once
 
-#include <stdint.h>
-#include "common/axis.h"
-#include "common/filter.h"
-#include "sensors/gyro.h"
+#include "drivers/osd.h"
+#include "msp/msp_serial.h"
 
-#define DYNAMIC_NOTCH_DEFAULT_CENTER_HZ 350
+typedef struct displayPort_s displayPort_t;
 
-typedef struct dynamicGyroNotchState_s {
-    // uint16_t frequency[XYZ_AXIS_COUNT];
-    float dynNotchQ;
-    float dynNotch1Ctr;
-    float dynNotch2Ctr;
-    uint32_t looptime;
-    uint8_t enabled;
-    
-    biquadFilter_t filters[XYZ_AXIS_COUNT][DYN_NOTCH_PEAK_COUNT];
-    filterApplyFnPtr filtersApplyFn[XYZ_AXIS_COUNT][DYN_NOTCH_PEAK_COUNT];
-} dynamicGyroNotchState_t;
-
-void dynamicGyroNotchFiltersInit(dynamicGyroNotchState_t *state);
-void dynamicGyroNotchFiltersUpdate(dynamicGyroNotchState_t *state, int axis, float frequency[]);
-float dynamicGyroNotchFiltersApply(dynamicGyroNotchState_t *state, int axis, float input);
+displayPort_t *hdzeroOsdDisplayPortInit(void);
+void hdzeroOsdSerialProcess(mspProcessCommandFnPtr mspProcessCommandFn);

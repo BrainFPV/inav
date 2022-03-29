@@ -412,13 +412,9 @@ void brainFpvOsdWelcome(void)
 static int32_t getAltitude(void)
 {
     int32_t alt;
-#if defined(USE_NAV)
+
     alt = getEstimatedActualPosition(Z);
-#elif defined(USE_BARO)
-    alt = baro.alt;
-#else
-    alt = 0;
-#endif
+
     switch (osdConfig()->units) {
         case OSD_UNIT_IMPERIAL:
             return (alt * 328) / 100; // Convert to feet / 100

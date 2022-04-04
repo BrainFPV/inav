@@ -467,8 +467,7 @@ void osdUpdateLocal(void)
 #define IS_LO(X)  (rxGetChannelValue(X) < 1250)
 #define IS_MID(X) (rxGetChannelValue(X) > 1250 && rxGetChannelValue(X) < 1750)
 
-void osdRefresh(timeUs_t currentTimeUs);
-
+void osdRefreshBrainFpv(timeUs_t currentTimeUs);
 
 void brainFpvOsdMain(void) {
 #if defined(USE_BRAINFPV_AUTO_SYNC_THRESHOLD)
@@ -506,7 +505,7 @@ void brainFpvOsdMain(void) {
         else {
             // draw normal OSD
             uint32_t currentTimeUs = micros();
-            osdRefresh(currentTimeUs);
+            osdRefreshBrainFpv(currentTimeUs);
             if (!cmsInMenu && !osd_arming_or_stats){
                 osdUpdateLocal();
             }

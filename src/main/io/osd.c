@@ -120,6 +120,8 @@ extern bool brainfpv_user_avatar_set;
 extern bool cmsInMenu;
 extern timeMs_t cmsYieldUntil;
 extern bool osd_arming_or_stats;
+
+bool brainFpvOsdMode = false;
 #endif
 
 #define VIDEO_BUFFER_CHARS_PAL    480
@@ -186,14 +188,12 @@ static bool fullRedraw = false;
 static uint8_t armState;
 static uint8_t statsPagesCheck = 0;
 
-#if !defined(USE_BRAINFPV_OSD)
 typedef struct osdMapData_s {
     uint32_t scale;
     char referenceSymbol;
 } osdMapData_t;
 
 static osdMapData_t osdMapData;
-#endif
 
 static displayPort_t *osdDisplayPort;
 static bool osdDisplayIsReady = false;
@@ -995,14 +995,12 @@ static void osdUpdateBatteryCapacityOrVoltageTextAttributes(textAttributes_t *at
         TEXT_ATTRIBUTES_ADD_BLINK(*attr);
 }
 
-#if !defined(USE_BRAINFPV_OSD)
 void osdCrosshairPosition(uint8_t *x, uint8_t *y)
 {
     *x = osdDisplayPort->cols / 2;
     *y = osdDisplayPort->rows / 2;
     *y += osdConfig()->horizon_offset;
 }
-#endif
 
 /**
  * Formats throttle position prefixed by its symbol.
@@ -1137,8 +1135,6 @@ int osdGetHeadingAngle(int angle)
 }
 
 #if defined(USE_GPS)
-
-#if !defined(USE_BRAINFPV_OSD)
 
 /* Draws a map with the given symbol in the center and given point of interest
  * defined by its distance in meters and direction in degrees.
@@ -1304,7 +1300,6 @@ static void osdDrawRadar(uint16_t *drawn, uint32_t *usedScale)
     int16_t poiDirection = osdGetHeadingAngle(GPS_directionToHome + 180);
     osdDrawMap(reference, 0, SYM_ARROW_UP, GPS_distanceToHome, poiDirection, SYM_HOME, drawn, usedScale);
 }
-#endif /* !defined(USE_BRAINFPV_OSD) */
 
 static uint16_t crc_accumulate(uint8_t data, uint16_t crcAccum)
 {
@@ -1519,7 +1514,9 @@ static bool osdDrawSingleElement(uint8_t item)
         return false;
     }
 
+#if defined(USE_BRAINFPV_OSD)
     bool brainfpv_item = false;
+#endif
 
     uint8_t elemPosX = OSD_X(pos);
     uint8_t elemPosY = OSD_Y(pos);
@@ -1666,13 +1663,13 @@ static bool osdDrawSingleElement(uint8_t item)
 
     case OSD_HOME_DIR:
 #if defined(USE_BRAINFPV_OSD)
-        {
+        if (brainFpvOsdMode) {
             int16_t home_dir = GPS_directionToHome - DECIDEGREES_TO_DEGREES(attitude.values.yaw);
             brainFfpvOsdHomeArrow(home_dir, elemPosX, elemPosY);
             brainfpv_item = true;
-            break;
+            return true;
         }
-#else
+#endif
         {
             if (STATE(GPS_FIX) && STATE(GPS_FIX_HOME) && isImuHeadingValid()) {
                 if (GPS_distanceToHome < (navConfig()->general.min_rth_distance / 100) ) {
@@ -1697,6 +1694,7 @@ static bool osdDrawSingleElement(uint8_t item)
             }
             return true;
         }
+        break;
 
     case OSD_HOME_HEADING_ERROR:
         {
@@ -1714,7 +1712,6 @@ static bool osdDrawSingleElement(uint8_t item)
             buff[7] = '\0';
             break;
         }
-#endif
     case OSD_HOME_DIST:
         {
             buff[0] = SYM_HOME;
@@ -1803,40 +1800,44 @@ static bool osdDrawSingleElement(uint8_t item)
             break;
         }
     case OSD_MAP_NORTH:
-#if !defined(USE_BRAINFPV_OSD)
+#if defined(USE_BRAINFPV_OSD)
+        if (brainFpvOsdMode) {
+            return true;
+        }
+#endif
         {
             static uint16_t drawn = 0;
             static uint32_t scale = 0;
             osdDrawHomeMap(0, 'N', &drawn, &scale);
             return true;
         }
-#else
-        return true;
-#endif
     case OSD_MAP_TAKEOFF:
-#if !defined(USE_BRAINFPV_OSD)
+#if defined(USE_BRAINFPV_OSD)
+        if (brainFpvOsdMode) {
+            return true;
+        }
+#endif
         {
             static uint16_t drawn = 0;
             static uint32_t scale = 0;
             osdDrawHomeMap(CENTIDEGREES_TO_DEGREES(navigationGetHomeHeading()), 'T', &drawn, &scale);
             return true;
         }
-#else
-        return true;
-#endif
+
     case OSD_RADAR:
 #if defined(USE_BRAINFPV_OSD)
-        brainfpv_item = true;
-        brainFpvRadarMap();
-        break;
-#else
+        if (brainFpvOsdMode) {
+            brainfpv_item = true;
+            brainFpvRadarMap();
+            break;
+        }
+#endif
         {
             static uint16_t drawn = 0;
             static uint32_t scale = 0;
             osdDrawRadar(&drawn, &scale);
             return true;
         }
-#endif /* defined(USE_BRAINFPV_OSD) */
 #endif // GPS
 
     case OSD_ALTITUDE:
@@ -2015,7 +2016,7 @@ static bool osdDrawSingleElement(uint8_t item)
 
     case OSD_CRAFT_NAME:
 #if defined(USE_BRAINFPV_OSD)
-        if (brainfpv_user_avatar_set && bfOsdConfig()->show_pilot_logo) {
+        if (brainFpvOsdMode && brainfpv_user_avatar_set && bfOsdConfig()->show_pilot_logo) {
             brainFpvOsdUserLogo(elemPosX + 4, elemPosY);
             brainfpv_item = true;
         }
@@ -2155,9 +2156,12 @@ static bool osdDrawSingleElement(uint8_t item)
 
     case OSD_CROSSHAIRS: // Hud is a sub-element of the crosshair
 #if defined(USE_BRAINFPV_OSD)
-        brainFpvOsdCenterMark();
-        brainfpv_item = true;
-#else
+        if (brainFpvOsdMode) {
+            brainFpvOsdCenterMark();
+            brainfpv_item = true;
+            break;
+        }
+#endif
         osdCrosshairPosition(&elemPosX, &elemPosY);
         osdHudDrawCrosshair(osdGetDisplayPortCanvas(), elemPosX, elemPosY);
 
@@ -2221,7 +2225,6 @@ static bool osdDrawSingleElement(uint8_t item)
             }
         }
 
-#endif /* USE_BRAINFPV_OSD */
         return true;
         break;
 
@@ -2244,10 +2247,12 @@ static bool osdDrawSingleElement(uint8_t item)
 
     case OSD_ARTIFICIAL_HORIZON:
 #if defined(USE_BRAINFPV_OSD)
-        brainFpvOsdArtificialHorizon();
-        brainfpv_item = true;
-        break;
-#else
+        if (brainFpvOsdMode) {
+            brainFpvOsdArtificialHorizon();
+            brainfpv_item = true;
+            break;
+        }
+#endif
         {
             float rollAngle;
             float pitchAngle;
@@ -2279,10 +2284,15 @@ static bool osdDrawSingleElement(uint8_t item)
 
     case OSD_HORIZON_SIDEBARS:
         {
+#if defined(USE_BRAINFPV_OSD)
+            if (!brainFpvOsdMode) {
+                osdDrawSidebars(osdDisplayPort, osdGetDisplayPortCanvas());
+            }
+#else
             osdDrawSidebars(osdDisplayPort, osdGetDisplayPortCanvas());
+#endif
             return true;
         }
-#endif /* USE_BRAINFPV_OSD */
 
 #if defined(USE_BARO) || defined(USE_GPS)
     case OSD_VARIO:
@@ -2587,10 +2597,12 @@ static bool osdDrawSingleElement(uint8_t item)
 
     case OSD_HEADING_GRAPH:
 #if defined(USE_BRAINFPV_OSD)
-        brainFpvOsdHeadingGraph(elemPosX, elemPosY);
-        brainfpv_item = true;
-        break;
-#else
+        if (brainFpvOsdMode) {
+            brainFpvOsdHeadingGraph(elemPosX, elemPosY);
+            brainfpv_item = true;
+            break;
+        }
+#endif
         {
             if (osdIsHeadingValid()) {
                 osdDrawHeadingGraph(osdDisplayPort, osdGetDisplayPortCanvas(), OSD_DRAW_POINT_GRID(elemPosX, elemPosY), osdGetHeading());
@@ -2602,7 +2614,6 @@ static bool osdDrawSingleElement(uint8_t item)
             }
             break;
         }
-#endif
 
     case OSD_EFFICIENCY_MAH_PER_KM:
         {
@@ -2885,7 +2896,11 @@ static bool osdDrawSingleElement(uint8_t item)
         }
 
     case OSD_MAP_SCALE:
-#if !defined(USE_BRAINFPV_OSD)
+#if defined(USE_BRAINFPV_OSD)
+        if (brainFpvOsdMode) {
+            break;
+        }
+#endif
         {
             float scaleToUnit;
             int scaleUnitDivisor;
@@ -2933,11 +2948,13 @@ static bool osdDrawSingleElement(uint8_t item)
             buff[5] = '\0';
             break;
         }
-#else
-        break;
-#endif
+
     case OSD_MAP_REFERENCE:
-#if !defined(USE_BRAINFPV_OSD)
+#if defined(USE_BRAINFPV_OSD)
+        if (brainFpvOsdMode) {
+            break;
+        }
+#endif
         {
             char referenceSymbol;
             if (osdMapData.referenceSymbol) {
@@ -2951,9 +2968,7 @@ static bool osdDrawSingleElement(uint8_t item)
             displayWriteChar(osdDisplayPort, elemPosX, elemPosY + 1, referenceSymbol);
             return true;
         }
-#else
         break;
-#endif
 
     case OSD_GVAR_0:
     {
@@ -3254,7 +3269,7 @@ void osdUpdateActiveElements(void)
 
 #define DRAW_FIRST_PASS_Y_MAX 4
 
-void osdDrawNextElement(void)
+void osdDrawElementSorted(void)
 {
 	uint8_t draw_idx;
 	uint8_t ypos;
@@ -3282,7 +3297,8 @@ void osdDrawNextElement(void)
     }
 }
 
-#else
+#endif /* defined(USE_BRAINFPV_OSD) */
+
 void osdDrawNextElement(void)
 {
     static uint8_t elementIndex = 0;
@@ -3293,14 +3309,11 @@ void osdDrawNextElement(void)
     } while(!osdDrawSingleElement(elementIndex) && index != elementIndex);
 
     // Draw artificial horizon + tracking telemtry last
-		osdDrawSingleElement(OSD_ARTIFICIAL_HORIZON);
-		if (osdConfig()->telemetry>0){
-		  osdDisplayTelemetry();
-		}
-    }
+    osdDrawSingleElement(OSD_ARTIFICIAL_HORIZON);
+	if (osdConfig()->telemetry>0){
+	    osdDisplayTelemetry();
+	}
 }
-#endif
-
 
 PG_RESET_TEMPLATE(osdConfig_t, osdConfig,
     .rssi_alarm = SETTING_OSD_RSSI_ALARM_DEFAULT,
@@ -3699,6 +3712,12 @@ void osdInit(displayPort_t *osdDisplayPortToUse)
     if (!osdDisplayPortToUse)
         return;
 
+#if defined(USE_BRAINFPV_OSD)
+    if (VideoIsInitialized()) {
+        brainFpvOsdMode = true;
+    }
+#endif
+
     BUILD_BUG_ON(OSD_POS_MAX != OSD_POS(63,63));
 
     osdDisplayPort = osdDisplayPortToUse;
@@ -4000,29 +4019,34 @@ static void osdShowArmed(void)
     char versionBuf[30];
     char *date;
     char *time;
+    uint8_t y;
 
 #if defined(USE_BRAINFPV_OSD)
-    if (bfOsdConfig()->show_logo_on_arm) {
-        brainFpvOsdMainLogo(GRAPHICS_X_MIDDLE, 80);
-    }
+    if (brainFpvOsdMode) {
+        if (bfOsdConfig()->show_logo_on_arm) {
+            brainFpvOsdMainLogo(GRAPHICS_X_MIDDLE, 80);
+        }
 
-    uint8_t y = 9;
+        y = 9;
 
-    displayWrite(osdDisplayPort, 12, y, "ARMED");
-    y += 1;
-#else
-    // We need 12 visible rows, start row never < first fully visible row 1
-    uint8_t y = osdDisplayPort->rows > 13 ? (osdDisplayPort->rows - 12) / 2 : 1;
-
-    displayClearScreen(osdDisplayPort);
-    displayWrite(osdDisplayPort, 12, y, "ARMED");
-    y += 2;
-#endif /* defined(USE_BRAINFPV_OSD) */
-
-    if (strlen(systemConfig()->name) > 0) {
-        osdFormatCraftName(craftNameBuf);
-        displayWrite(osdDisplayPort, (osdDisplayPort->cols - strlen(systemConfig() -> name)) / 2, y, craftNameBuf );
+        displayWrite(osdDisplayPort, 12, y, "ARMED");
         y += 1;
+    }
+    else
+#endif /* defined(USE_BRAINFPV_OSD) */
+    // We need 12 visible rows, start row never < first fully visible row 1
+    {
+        y = osdDisplayPort->rows > 13 ? (osdDisplayPort->rows - 12) / 2 : 1;
+
+        displayClearScreen(osdDisplayPort);
+        displayWrite(osdDisplayPort, 12, y, "ARMED");
+        y += 2;
+
+        if (strlen(systemConfig()->name) > 0) {
+            osdFormatCraftName(craftNameBuf);
+            displayWrite(osdDisplayPort, (osdDisplayPort->cols - strlen(systemConfig() -> name)) / 2, y, craftNameBuf );
+            y += 1;
+        }
     }
     if (posControl.waypointListValid && posControl.waypointCount > 0) {
 #ifdef USE_MULTI_MISSION
@@ -4105,27 +4129,24 @@ static void osdFilterData(timeUs_t currentTimeUs) {
     lastRefresh = currentTimeUs;
 }
 
-
-void osdRefresh(timeUs_t currentTimeUs)
-{
 #if defined(USE_BRAINFPV_OSD)
+#define IS_HI(X)  (rxGetChannelValue(X) > 1750)
+#define IS_LO(X)  (rxGetChannelValue(X) < 1250)
+#define IS_MID(X) (rxGetChannelValue(X) > 1250 && rxGetChannelValue(X) < 1750)
+
+void osdRefreshBrainFpv(timeUs_t currentTimeUs)
+{
     static uint32_t counter = 0;
     static uint32_t armTime = 0;
     static uint32_t disarmTime = 0;
     static uint8_t stats_page = 0;
-#endif
 
     osdFilterData(currentTimeUs);
 
-#if defined(USE_CMS) && !defined(USE_BRAINFPV_OSD)
-    if (IS_RC_MODE_ACTIVE(BOXOSD) && (!cmsInMenu) && !(osdConfig()->osd_failsafe_switch_layout && FLIGHT_MODE(FAILSAFE_MODE))) {
-#else
     if (IS_RC_MODE_ACTIVE(BOXOSD) && !(osdConfig()->osd_failsafe_switch_layout && FLIGHT_MODE(FAILSAFE_MODE))) {
-#endif
-
-      displayClearScreen(osdDisplayPort);
-      armState = ARMING_FLAG(ARMED);
-      return;
+        displayClearScreen(osdDisplayPort);
+        armState = ARMING_FLAG(ARMED);
+        return;
     }
 
     // detect arm/disarm
@@ -4135,9 +4156,7 @@ void osdRefresh(timeUs_t currentTimeUs)
             osdResetStats();
             statsPageAutoSwapCntl = 2;
             osdShowArmed(); // reset statistic etc
-#if defined(USE_BRAINFPV_OSD)
             armTime = millis();
-#endif
 
             uint32_t delay = ARMED_SCREEN_DISPLAY_TIME;
             statsPagesCheck = 0;
@@ -4149,10 +4168,8 @@ void osdRefresh(timeUs_t currentTimeUs)
         } else {
             osdShowStatsPage1(); // show first page of statistics
             osdSetNextRefreshIn(STATS_SCREEN_DISPLAY_TIME);
-#if defined(USE_BRAINFPV_OSD)
             disarmTime = millis();
             (void)statsPageAutoSwapCntl;
-#endif
             statsPageAutoSwapCntl = osdConfig()->stats_page_auto_swap_time > 0 ? 0 : 2; // disable swapping pages when time = 0
         }
 
@@ -4186,10 +4203,7 @@ void osdRefresh(timeUs_t currentTimeUs)
     }
 #endif
 
-#if defined(USE_BRAINFPV_OSD)
-#define IS_HI(X)  (rxGetChannelValue(X) > 1750)
-#define IS_LO(X)  (rxGetChannelValue(X) < 1250)
-#define IS_MID(X) (rxGetChannelValue(X) > 1250 && rxGetChannelValue(X) < 1750)
+
     osd_arming_or_stats = false;
     uint32_t now = millis();
     if (ARMING_FLAG(ARMED)) {
@@ -4221,7 +4235,6 @@ void osdRefresh(timeUs_t currentTimeUs)
         }
     }
 
-
     #define STATS_FREQ_DENOM    50
     counter++;
 
@@ -4233,10 +4246,49 @@ void osdRefresh(timeUs_t currentTimeUs)
     cmsUpdate(currentTimeUs);
 
     if (!cmsInMenu || (cmsYieldUntil > 0)) {
-        osdDrawNextElement();
+        osdDrawElementSorted();
         displayHeartbeat(osdDisplayPort);
     }
+}
+#endif /* defined(USE_BRAINFPV_OSD) */
+
+static void osdRefresh(timeUs_t currentTimeUs)
+{
+    osdFilterData(currentTimeUs);
+
+#ifdef USE_CMS
+    if (IS_RC_MODE_ACTIVE(BOXOSD) && (!cmsInMenu) && !(osdConfig()->osd_failsafe_switch_layout && FLIGHT_MODE(FAILSAFE_MODE))) {
 #else
+    if (IS_RC_MODE_ACTIVE(BOXOSD) && !(osdConfig()->osd_failsafe_switch_layout && FLIGHT_MODE(FAILSAFE_MODE))) {
+#endif
+      displayClearScreen(osdDisplayPort);
+      armState = ARMING_FLAG(ARMED);
+      return;
+    }
+
+    // detect arm/disarm
+    static uint8_t statsPageAutoSwapCntl = 2;
+    if (armState != ARMING_FLAG(ARMED)) {
+        if (ARMING_FLAG(ARMED)) {
+            osdResetStats();
+            statsPageAutoSwapCntl = 2;
+            osdShowArmed(); // reset statistic etc
+            uint32_t delay = ARMED_SCREEN_DISPLAY_TIME;
+            statsPagesCheck = 0;
+#if defined(USE_SAFE_HOME)
+            if (safehome_distance)
+                delay *= 3;
+#endif
+            osdSetNextRefreshIn(delay);
+        } else {
+            osdShowStatsPage1(); // show first page of statistics
+            osdSetNextRefreshIn(STATS_SCREEN_DISPLAY_TIME);
+            statsPageAutoSwapCntl = osdConfig()->stats_page_auto_swap_time > 0 ? 0 : 2; // disable swapping pages when time = 0
+        }
+
+        armState = ARMING_FLAG(ARMED);
+    }
+
     if (resumeRefreshAt) {
         // If we already reached he time for the next refresh,
         // or THR is high or PITCH is high, resume refreshing.
@@ -4299,8 +4351,6 @@ void osdRefresh(timeUs_t currentTimeUs)
 #endif
     }
 #endif
-#endif
-
 }
 
 /*

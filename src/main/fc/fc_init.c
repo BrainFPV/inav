@@ -706,10 +706,17 @@ SLOW_CODE void init(void)
 #endif
     fcTasksInit();
 
-#if defined(USE_OSD) && !defined(USE_BRAINFPV_OSD)
+#if defined(USE_OSD)
+#if !defined(USE_BRAINFPV_OSD)
     if (feature(FEATURE_OSD) && (osdDisplayPort != NULL)) {
         setTaskEnabled(TASK_OSD, feature(FEATURE_OSD));
     }
+#else
+    if (feature(FEATURE_OSD) && (osdDisplayPort != NULL) && (!VideoIsInitialized())) {
+        // OSD task is only started if BrainFPV OSD is not active
+        setTaskEnabled(TASK_OSD, feature(FEATURE_OSD));
+    }
+#endif
 #endif
 
 #ifdef USE_RPM_FILTER

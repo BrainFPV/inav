@@ -94,6 +94,10 @@
 #include "sensors/rangefinder.h"
 #include "sensors/opflow.h"
 
+#if defined(USE_BRAINFPV_OSD)
+#include "brainfpv/video.h"
+#endif
+
 #include "telemetry/telemetry.h"
 
 #include "config/feature.h"
@@ -385,8 +389,13 @@ SLOW_CODE void fcTasksInit(void)
     setTaskEnabled(TASK_PWMDRIVER, (servoConfig()->servo_protocol == SERVO_TYPE_SERVO_DRIVER) || (servoConfig()->servo_protocol == SERVO_TYPE_SBUS) || (servoConfig()->servo_protocol == SERVO_TYPE_SBUS_PWM));
 #endif
 #ifdef USE_CMS
-#if defined(USE_MSP_DISPLAYPORT) && !defined(USE_BRAINFPV_OSD)
+#if defined(USE_MSP_DISPLAYPORT)
+#if !defined(USE_BRAINFPV_OSD)
     setTaskEnabled(TASK_CMS, (feature(FEATURE_OSD) || feature(FEATURE_DASHBOARD)));
+#else
+    // CMS task is only started if BrainFPV OSD is not active
+    setTaskEnabled(TASK_CMS, (feature(FEATURE_OSD) || feature(FEATURE_DASHBOARD)) && (!VideoIsInitialized()));
+#endif
 #endif
 #endif
 #ifdef USE_OPFLOW

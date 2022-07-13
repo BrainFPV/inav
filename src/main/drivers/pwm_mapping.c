@@ -163,7 +163,7 @@ static bool checkPwmTimerConflicts(const timerHardware_t *timHw)
     }
 #endif
 
-#if defined(USE_LED_STRIP)
+#if defined(USE_LED_STRIP) && !defined(USE_BRAINFPV_FPGA)
     if (feature(FEATURE_LED_STRIP)) {
         const timerHardware_t * ledTimHw = timerGetByTag(IO_TAG(WS2811_PIN), TIM_USE_ANY);
         if (ledTimHw != NULL && timHw->tim == ledTimHw->tim) {

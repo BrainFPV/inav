@@ -65,7 +65,6 @@
 #include "io/gps.h"
 #include "io/ledstrip.h"
 #include "io/osd.h"
-#include "io/pwmdriver_i2c.h"
 #include "io/serial.h"
 #include "io/rcdevice_cam.h"
 #include "io/smartport_master.h"
@@ -302,9 +301,6 @@ void taskSyncServoDriver(timeUs_t currentTimeUs)
     sbusServoSendUpdate();
 #endif
 
-#ifdef USE_PWM_SERVO_DRIVER
-    pwmDriverSync();
-#endif
 }
 
 #ifdef USE_OSD
@@ -385,8 +381,8 @@ SLOW_CODE void fcTasksInit(void)
 #ifdef STACK_CHECK
     setTaskEnabled(TASK_STACK_CHECK, true);
 #endif
-#if defined(USE_PWM_SERVO_DRIVER) || defined(USE_SERVO_SBUS)
-    setTaskEnabled(TASK_PWMDRIVER, (servoConfig()->servo_protocol == SERVO_TYPE_SERVO_DRIVER) || (servoConfig()->servo_protocol == SERVO_TYPE_SBUS) || (servoConfig()->servo_protocol == SERVO_TYPE_SBUS_PWM));
+#if defined(USE_SERVO_SBUS)
+    setTaskEnabled(TASK_PWMDRIVER, (servoConfig()->servo_protocol == SERVO_TYPE_SBUS) || (servoConfig()->servo_protocol == SERVO_TYPE_SBUS_PWM));
 #endif
 #ifdef USE_CMS
 #if defined(USE_MSP_DISPLAYPORT)
@@ -579,7 +575,7 @@ cfTask_t cfTasks[TASK_COUNT] = {
     },
 #endif
 
-#if defined(USE_PWM_SERVO_DRIVER) || defined(USE_SERVO_SBUS)
+#if defined(USE_SERVO_SBUS)
     [TASK_PWMDRIVER] = {
         .taskName = "SERVOS",
         .taskFunc = taskSyncServoDriver,

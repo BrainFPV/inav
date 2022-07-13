@@ -53,7 +53,6 @@ typedef struct gyro_s {
 extern gyro_t gyro;
 
 typedef struct gyroConfig_s {
-    sensor_align_e gyro_align;              // gyro alignment
     uint8_t  gyroMovementCalibrationThreshold; // people keep forgetting that moving model while init results in wrong gyro offsets. and then they never reset gyro. so this is now on by default.
     uint16_t looptime;                      // imu loop time in us
     uint8_t  gyro_lpf;                      // gyro LPF setting - values are driver specific, in case of invalid number, a reasonable default ~30-40HZ is chosen.
@@ -77,6 +76,9 @@ typedef struct gyroConfig_s {
     uint16_t kalman_q;
     uint8_t kalmanEnabled;
 #endif
+    bool init_gyro_cal_enabled;
+    int16_t gyro_zero_cal[XYZ_AXIS_COUNT];
+    float gravity_cmss_cal;
 } gyroConfig_t;
 
 PG_DECLARE(gyroConfig_t, gyroConfig);
@@ -91,3 +93,4 @@ bool gyroReadTemperature(void);
 int16_t gyroGetTemperature(void);
 int16_t gyroRateDps(int axis);
 void gyroUpdateDynamicLpf(float cutoffFreq);
+float averageAbsGyroRates(void);

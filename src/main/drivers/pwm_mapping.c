@@ -163,7 +163,7 @@ static bool checkPwmTimerConflicts(const timerHardware_t *timHw)
     }
 #endif
 
-#if defined(USE_LED_STRIP) && !defined(USE_BRAINFPV_FPGA)
+#if defined(USE_LED_STRIP)
     if (feature(FEATURE_LED_STRIP)) {
         const timerHardware_t * ledTimHw = timerGetByTag(IO_TAG(WS2811_PIN), TIM_USE_ANY);
         if (ledTimHw != NULL && timHw->tim == ledTimHw->tim) {
@@ -198,13 +198,44 @@ static bool checkPwmTimerConflicts(const timerHardware_t *timHw)
     return false;
 }
 
-void pwmBuildTimerOutputList(timMotorServoHardware_t * timOutputs, bool isMixerUsingServos, uint8_t numMotorsNeeded)
+static void timerHardwareOverride(timerHardware_t * timer) {
+    if (mixerConfig()->outputMode == OUTPUT_MODE_SERVOS) {
+        
+        //Motors are rewritten as servos
+        if (timer->usageFlags & TIM_USE_MC_MOTOR) {
+            timer->usageFlags = timer->usageFlags & ~TIM_USE_MC_MOTOR;
+            timer->usageFlags = timer->usageFlags | TIM_USE_MC_SERVO;
+        }
+        if (timer->usageFlags & TIM_USE_FW_MOTOR) {
+            timer->usageFlags = timer->usageFlags & ~TIM_USE_FW_MOTOR;
+            timer->usageFlags = timer->usageFlags | TIM_USE_FW_SERVO;
+        }
+        
+    } else if (mixerConfig()->outputMode == OUTPUT_MODE_MOTORS) {
+        
+        // Servos are rewritten as motors
+        if (timer->usageFlags & TIM_USE_MC_SERVO) {
+            timer->usageFlags = timer->usageFlags & ~TIM_USE_MC_SERVO;
+            timer->usageFlags = timer->usageFlags | TIM_USE_MC_MOTOR;
+        }
+        if (timer->usageFlags & TIM_USE_FW_SERVO) {
+            timer->usageFlags = timer->usageFlags & ~TIM_USE_FW_SERVO;
+            timer->usageFlags = timer->usageFlags | TIM_USE_FW_MOTOR;
+        }
+    }
+}
+
+void pwmBuildTimerOutputList(timMotorServoHardware_t * timOutputs, bool isMixerUsingServos)
 {
     timOutputs->maxTimMotorCount = 0;
     timOutputs->maxTimServoCount = 0;
 
     for (int idx = 0; idx < timerHardwareCount; idx++) {
-        const timerHardware_t *timHw = &timerHardware[idx];
+
+        timerHardware_t *timHw = &timerHardware[idx];
+
+        timerHardwareOverride(timHw);
+
         int type = MAP_TO_NONE;
 
         // Check for known conflicts (i.e. UART, LEDSTRIP, Rangefinder and ADC)
@@ -215,13 +246,13 @@ void pwmBuildTimerOutputList(timMotorServoHardware_t * timOutputs, bool isMixerU
 
         // Determine if timer belongs to motor/servo
         if (mixerConfig()->platformType == PLATFORM_MULTIROTOR || mixerConfig()->platformType == PLATFORM_TRICOPTER) {
-            // Multicopter: assign as many motor outputs as we need first
-            if (timHw->usageFlags & TIM_USE_MC_MOTOR && timOutputs->maxTimMotorCount < numMotorsNeeded) {
-                type = MAP_TO_MOTOR_OUTPUT;
-            }
-            else if (isMixerUsingServos && timHw->usageFlags & TIM_USE_MC_SERVO) {
-                // We enable mapping to servos if mixer is actually using them
+            // Multicopter
+            // We enable mapping to servos if mixer is actually using them
+            if (isMixerUsingServos && timHw->usageFlags & TIM_USE_MC_SERVO) {
                 type = MAP_TO_SERVO_OUTPUT;
+            }
+            else if (timHw->usageFlags & TIM_USE_MC_MOTOR) {
+                type = MAP_TO_MOTOR_OUTPUT;
             }
         } else {
             // Fixed wing or HELI (one/two motors and a lot of servos
@@ -346,7 +377,7 @@ bool pwmMotorAndServoInit(void)
     timMotorServoHardware_t timOutputs;
 
     // Build temporary timer mappings for motor and servo
-    pwmBuildTimerOutputList(&timOutputs, isMixerUsingServos(), getMotorCount());
+    pwmBuildTimerOutputList(&timOutputs, isMixerUsingServos());
 
     // At this point we have built tables of timers suitable for motor and servo mappings
     // Now we can actually initialize them according to motor/servo count from mixer

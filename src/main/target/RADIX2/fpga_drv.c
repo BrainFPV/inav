@@ -298,7 +298,7 @@ int32_t BRAINFPVFPGA_SetLEDs(uint8_t * led_data, uint16_t n_leds)
     n_leds = MIN(n_leds, 1024);
 
     spiTransferByte(BRAINFPVFPGA_SPI_INSTANCE, 0x7f & BRAINFPVFPGA_REG_LED);
-    spiTransfer(BRAINFPVFPGA_SPI_INSTANCE, led_data, NULL, 3 * n_leds);
+    spiTransfer(BRAINFPVFPGA_SPI_INSTANCE, NULL, led_data, 3 * n_leds);
 
     BRAINFPVFPGA_ReleaseBus();
 
@@ -331,11 +331,11 @@ int32_t BRAINFPVFPGA_SetLEDColor(uint16_t n_leds, uint8_t red, uint8_t green, ui
     spiTransferByte(BRAINFPVFPGA_SPI_INSTANCE, 0x7f & BRAINFPVFPGA_REG_LED);
 
     for (int i=0; i<n_leds/LED_BLOCK_SIZE; i++) {
-        spiTransfer(BRAINFPVFPGA_SPI_INSTANCE, LED_DATA, NULL, 3 * LED_BLOCK_SIZE);
+        spiTransfer(BRAINFPVFPGA_SPI_INSTANCE, NULL, LED_DATA, 3 * LED_BLOCK_SIZE);
     }
 
     if (n_leds % LED_BLOCK_SIZE != 0) {
-        spiTransfer(BRAINFPVFPGA_SPI_INSTANCE, LED_DATA, NULL, 3 * (n_leds % LED_BLOCK_SIZE));
+        spiTransfer(BRAINFPVFPGA_SPI_INSTANCE, NULL, LED_DATA, 3 * (n_leds % LED_BLOCK_SIZE));
     }
 
     BRAINFPVFPGA_ReleaseBus();

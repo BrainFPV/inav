@@ -32,7 +32,7 @@
 #include "brainfpv/brainfpv_system.h"
 #include "brainfpv/auto_sync_threshold.h"
 
-const timerHardware_t timerHardware[] = {
+timerHardware_t timerHardware[] = {
     DEF_TIM(TIM12, CH1, PB14,  TIM_USE_PPM,                         0,  0), // PPM input
 
     DEF_TIM(TIM2,  CH1, PA0,   TIM_USE_MC_MOTOR | TIM_USE_FW_MOTOR, 0,  0), // S1
@@ -40,8 +40,8 @@ const timerHardware_t timerHardware[] = {
 	DEF_TIM(TIM4,  CH1, PD12,  TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO, 0,  2), // S3
     DEF_TIM(TIM4,  CH2, PD13,  TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO, 0,  3), // S4
 
-    DEF_TIM(TIM8,  CH4, PC9,   TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  4), // S5
-    DEF_TIM(TIM8,  CH3, PC8,   TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  5), // S6
+    DEF_TIM(TIM8,  CH4, PC9,   TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO, 0,  4), // S5
+    DEF_TIM(TIM8,  CH3, PC8,   TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO, 0,  5), // S6
     DEF_TIM(TIM1,  CH3, PE13,  TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  6), // S7
     DEF_TIM(TIM1,  CH2, PE11,  TIM_USE_MC_MOTOR | TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  7), // S8
 

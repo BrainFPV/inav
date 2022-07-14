@@ -247,7 +247,7 @@ bool brainfpv_is_radixli(void);
 //#undef USE_TELEMETRY_MAVLINK
 
 
-#define CLI_MINIMAL_VERBOSITY
+//#define CLI_MINIMAL_VERBOSITY
 #define SKIP_CLI_COMMAND_HELP
 #define SKIP_CLI_RESOURCES
 

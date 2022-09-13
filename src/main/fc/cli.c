@@ -3757,7 +3757,7 @@ static void printConfig(const char *cmdline, bool doDiff)
         printMotorMix(dumpMask, primaryMotorMixer_CopyArray, primaryMotorMixer(0));
 
         // print custom servo mixer if exists
-        cliPrintHashLine("servo mix");
+        cliPrintHashLine("servo mixer");
         cliDumpPrintLinef(dumpMask, customServoMixers_CopyArray[0].rate == 0, "smix reset\r\n");
         printServoMix(dumpMask, customServoMixers_CopyArray, customServoMixers(0));
 
@@ -3768,16 +3768,6 @@ static void printConfig(const char *cmdline, bool doDiff)
 #if defined(USE_SAFE_HOME)
         cliPrintHashLine("safehome");
         printSafeHomes(dumpMask, safeHomeConfig_CopyArray, safeHomeConfig(0));
-#endif
-#ifdef USE_PROGRAMMING_FRAMEWORK
-        cliPrintHashLine("logic");
-        printLogic(dumpMask, logicConditions_CopyArray, logicConditions(0));
-
-        cliPrintHashLine("gvar");
-        printGvar(dumpMask, globalVariableConfigs_CopyArray, globalVariableConfigs(0));
-
-        cliPrintHashLine("pid");
-        printPid(dumpMask, programmingPids_CopyArray, programmingPids(0));
 #endif
 
         cliPrintHashLine("feature");
@@ -3834,6 +3824,17 @@ static void printConfig(const char *cmdline, bool doDiff)
         printOsdLayout(dumpMask, &osdLayoutsConfig_Copy, osdLayoutsConfig(), -1, -1);
 #endif
 
+#ifdef USE_PROGRAMMING_FRAMEWORK
+        cliPrintHashLine("logic");
+        printLogic(dumpMask, logicConditions_CopyArray, logicConditions(0));
+
+        cliPrintHashLine("global vars");
+        printGvar(dumpMask, globalVariableConfigs_CopyArray, globalVariableConfigs(0));
+
+        cliPrintHashLine("programmable pid controllers");
+        printPid(dumpMask, programmingPids_CopyArray, programmingPids(0));
+#endif
+
         cliPrintHashLine("master");
         dumpAllValues(MASTER_VALUE, dumpMask);
 
@@ -3854,7 +3855,6 @@ static void printConfig(const char *cmdline, bool doDiff)
             cliPrintLinef("profile %d", currentProfileIndexSave + 1);
             cliPrintLinef("battery_profile %d", currentBatteryProfileIndexSave + 1);
 
-            cliPrintHashLine("save configuration\r\nsave");
 #ifdef USE_CLI_BATCH
             batchModeEnabled = false;
 #endif
@@ -3871,6 +3871,10 @@ static void printConfig(const char *cmdline, bool doDiff)
 
     if (dumpMask & DUMP_BATTERY_PROFILE) {
         cliDumpBatteryProfile(getConfigBatteryProfile(), dumpMask);
+    }
+
+    if ((dumpMask & DUMP_MASTER) || (dumpMask & DUMP_ALL)) {
+        cliPrintHashLine("save configuration\r\nsave");
     }
 
 #ifdef USE_CLI_BATCH

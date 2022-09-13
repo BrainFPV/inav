@@ -51,7 +51,6 @@
 #include "drivers/bus.h"
 #include "drivers/dma.h"
 #include "drivers/exti.h"
-#include "drivers/flash_m25p16.h"
 #include "drivers/io.h"
 #include "drivers/flash.h"
 #include "drivers/light_led.h"
@@ -196,7 +195,7 @@ void flashLedsAndBeep(void)
 
 SLOW_CODE void init(void)
 {
-#if defined(USE_FLASHFS) && defined(USE_FLASH_M25P16)
+#if defined(USE_FLASHFS)
     bool flashDeviceInitialized = false;
 #endif
 
@@ -393,13 +392,10 @@ SLOW_CODE void init(void)
         // it to identify the log files *before* starting the USB device to
         // prevent timeouts of the mass storage device.
         if (blackboxConfig()->device == BLACKBOX_DEVICE_FLASH) {
-#ifdef USE_FLASH_M25P16
             // Must initialise the device to read _anything_
-            /*m25p16_init(0);*/
             if (!flashDeviceInitialized) {
                 flashDeviceInitialized = flashInit();
             }
-#endif
             emfat_init_files();
         }
 #endif
@@ -630,12 +626,13 @@ SLOW_CODE void init(void)
     switch (blackboxConfig()->device) {
 #ifdef USE_FLASHFS
         case BLACKBOX_DEVICE_FLASH:
-#ifdef USE_FLASH_M25P16
             if (!flashDeviceInitialized) {
                 flashDeviceInitialized = flashInit();
             }
-#endif
-            flashfsInit();
+            if (flashDeviceInitialized) {
+                // do not initialize flashfs if no flash was found
+                flashfsInit();
+            }
             break;
 #endif
 

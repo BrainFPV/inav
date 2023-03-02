@@ -3451,8 +3451,6 @@ static void cliStatus(char *cmdline)
     }
 }
 
-#ifndef SKIP_TASK_STATISTICS
-
 #if defined(USE_CHIBIOS)
 #include "ch.h"
 

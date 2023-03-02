@@ -40,9 +40,6 @@
 #define SLOW_CODE
 #endif
 
-#if defined(STM32F3)
-#define DYNAMIC_HEAP_SIZE   1024
-#else
 #define DYNAMIC_HEAP_SIZE   2048
 
 #define I2C1_OVERCLOCK false

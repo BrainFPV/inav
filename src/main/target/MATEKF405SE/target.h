@@ -42,12 +42,7 @@
 #define MPU6000_CS_PIN          PA4
 #define MPU6000_SPI_BUS         BUS_SPI1
 
-#define USE_EXTI
-#define GYRO_INT_EXTI            PC4
-#define USE_MPU_DATA_READY_SIGNAL
-
-
-// *************** I2C/Baro/Mag *********************
+// *************** I2C /Baro/Mag *********************
 #define USE_I2C
 #define USE_I2C_DEVICE_1
 #define I2C1_SCL                PB8
@@ -80,7 +75,6 @@
 #define RANGEFINDER_I2C_BUS     BUS_I2C2
 #define PITOT_I2C_BUS           BUS_I2C2
 #define TEMPERATURE_I2C_BUS     BUS_I2C2
-#define BNO055_I2C_BUS          BUS_I2C2
 
 
 // *************** SPI2 OSD ***************************
@@ -141,7 +135,11 @@
 #define SOFTSERIAL_1_TX_PIN      PA2
 #define SOFTSERIAL_1_RX_PIN      PA2
 
+#ifdef MATEKF405SE_PINIO
+#define SERIAL_PORT_COUNT       7
+#else
 #define SERIAL_PORT_COUNT       8
+#endif
 
 #define DEFAULT_RX_TYPE         RX_TYPE_SERIAL
 #define SERIALRX_PROVIDER       SERIALRX_SBUS
@@ -170,6 +168,7 @@
 #define USE_PINIO
 #define USE_PINIOBOX
 #define PINIO1_PIN                  PC6 // USER 1
+#define PINIO2_PIN                  PC7 // USER 2
 #endif
 
 // ***************  OTHERS *************************

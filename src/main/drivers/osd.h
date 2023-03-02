@@ -45,7 +45,11 @@ typedef struct displayCanvas_s displayCanvas_t;
 typedef enum {
     VIDEO_SYSTEM_AUTO = 0,
     VIDEO_SYSTEM_PAL,
-    VIDEO_SYSTEM_NTSC
+    VIDEO_SYSTEM_NTSC,
+    VIDEO_SYSTEM_HDZERO,
+    VIDEO_SYSTEM_DJIWTF,
+    VIDEO_SYSTEM_AVATAR,
+    VIDEO_SYSTEM_BFCOMPAT
 } videoSystem_e;
 
 typedef enum {

@@ -41,7 +41,8 @@
 
 
 static void usartConfigurePinInversion(uartPort_t *uartPort) {
-#if !defined(USE_UART_INVERTER) && !defined(STM32F303xC) && !defined(STM32F7) && !defined(USE_BRAINFPV_FPGA)
+
+#if !defined(USE_UART_INVERTER) && !defined(STM32F7) && !defined(USE_BRAINFPV_FPGA)
     UNUSED(uartPort);
 #else
     bool inverted = uartPort->port.options & SERIAL_INVERTED;
@@ -55,19 +56,6 @@ static void usartConfigurePinInversion(uartPort_t *uartPort) {
         invertedLines |= UART_INVERTER_LINE_TX;
     }
     uartInverterSet(uartPort->USARTx, invertedLines, inverted);
-#endif
-
-#ifdef STM32F303xC
-    uint32_t inversionPins = 0;
-
-    if (uartPort->port.mode & MODE_TX) {
-        inversionPins |= USART_InvPin_Tx;
-    }
-    if (uartPort->port.mode & MODE_RX) {
-        inversionPins |= USART_InvPin_Rx;
-    }
-
-    USART_InvPinCmd(uartPort->USARTx, inversionPins, inverted ? ENABLE : DISABLE);
 #endif
 
 #ifdef USE_BRAINFPV_FPGA
@@ -94,7 +82,6 @@ static void usartConfigurePinInversion(uartPort_t *uartPort) {
         }
     }
 #endif /* USE_BRAINFPV_FPGA */
-
 #endif
 }
 

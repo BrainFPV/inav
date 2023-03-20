@@ -19,6 +19,7 @@
 
 #include "platform.h"
 #include "common/axis.h"
+#include "drivers/exti.h"
 #include "drivers/sensor.h"
 
 #define GYRO_LPF_256HZ      0
@@ -43,6 +44,7 @@ typedef struct gyroDev_s {
     sensorGyroReadDataFuncPtr temperatureFn;            // read temperature if available
     sensorGyroInterruptStatusFuncPtr intStatusFn;
     sensorGyroUpdateFuncPtr updateFn;
+    extiCallbackRec_t exti;
     float scale;                                        // scalefactor
     int16_t gyroADCRaw[XYZ_AXIS_COUNT];
     int16_t gyroZero[XYZ_AXIS_COUNT];
@@ -65,4 +67,5 @@ typedef struct accDev_s {
 } accDev_t;
 
 const gyroFilterAndRateConfig_t * chooseGyroConfig(uint8_t desiredLpf, uint16_t desiredRateHz, const gyroFilterAndRateConfig_t * configs, int count);
+void gyroIntExtiInit(gyroDev_t *gyro);
 bool gyroCheckDataReady(struct gyroDev_s *gyro);

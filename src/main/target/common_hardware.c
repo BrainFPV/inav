@@ -59,7 +59,7 @@
 
     #if defined(USE_IMU_BMI160)
         #if defined(BMI160_SPI_BUS)
-        BUSDEV_REGISTER_SPI(busdev_bmi160,      DEVHW_BMI160,       BMI160_SPI_BUS,     BMI160_CS_PIN,      NONE,  DEVFLAGS_NONE,  IMU_BMI160_ALIGN);
+        BUSDEV_REGISTER_SPI(busdev_bmi160,      DEVHW_BMI160,       BMI160_SPI_BUS,     BMI160_CS_PIN,      GYRO_INT_EXTI,  DEVFLAGS_NONE,  IMU_BMI160_ALIGN);
         #elif defined(BMI160_I2C_BUS)
         BUSDEV_REGISTER_I2C(busdev_bmi160,      DEVHW_BMI160,       BMI160_I2C_BUS,     0x68,               NONE,  DEVFLAGS_NONE,  IMU_BMI160_ALIGN);
         #endif
@@ -75,7 +75,7 @@
     #endif
 
     #if defined(USE_IMU_BMI270)
-        BUSDEV_REGISTER_SPI(busdev_bmi270,      DEVHW_BMI270,       BMI270_SPI_BUS,     BMI270_CS_PIN,      NONE,  DEVFLAGS_NONE,  IMU_BMI270_ALIGN);
+        BUSDEV_REGISTER_SPI(busdev_bmi270,      DEVHW_BMI270,       BMI270_SPI_BUS,     BMI270_CS_PIN,      GYRO_INT_EXTI,  DEVFLAGS_NONE,  IMU_BMI270_ALIGN);
     #endif
 #endif
 

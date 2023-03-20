@@ -86,9 +86,6 @@
 
 #define USE_BRAINFPV_SPECTROGRAPH
 
-#define USE_EXTI
-#define USE_MPU_DATA_READY_SIGNAL
-
 #define BMI160_SPI_BUS          BUS_SPI3
 #define BMI160_CS_PIN           PB4
 

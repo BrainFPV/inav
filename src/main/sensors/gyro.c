@@ -294,6 +294,11 @@ bool gyroInit(void)
     gyroDev[0].sampleRateIntervalUs = TASK_GYRO_LOOPTIME;
     gyroDev[0].initFn(&gyroDev[0]);
 
+#if defined(BRAINFPV)
+    // Initialize interrupt
+    gyroIntExtiInit(&gyroDev[0]);
+#endif
+
     // initFn will initialize sampleRateIntervalUs to actual gyro sampling rate (if driver supports it). Calculate target looptime using that value
     gyro.targetLooptime = gyroDev[0].sampleRateIntervalUs;
  

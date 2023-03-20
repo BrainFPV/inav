@@ -560,6 +560,7 @@ void processContinuousServoAutotrim(const float dT)
         trimState = AUTOTRIM_IDLE;
     }
 
+#ifdef USE_BLACKBOX
     // Debug
     DEBUG_SET(DEBUG_AUTOTRIM, 0, servoParams(2)->middle);
     DEBUG_SET(DEBUG_AUTOTRIM, 2, servoParams(3)->middle);
@@ -568,7 +569,8 @@ void processContinuousServoAutotrim(const float dT)
     DEBUG_SET(DEBUG_AUTOTRIM, 1, servoMiddleUpdateCount);
     DEBUG_SET(DEBUG_AUTOTRIM, 3, MAX(RADIANS_TO_DEGREES(rotRateMagnitudeFiltered), targetRateMagnitudeFiltered));
     DEBUG_SET(DEBUG_AUTOTRIM, 5, axisPID_I[FD_ROLL]);
-    DEBUG_SET(DEBUG_AUTOTRIM, 7, axisPID_I[FD_PITCH]);    
+    DEBUG_SET(DEBUG_AUTOTRIM, 7, axisPID_I[FD_PITCH]);
+#endif
 }
 
 void processServoAutotrim(const float dT) {

@@ -107,7 +107,9 @@ static const CMS_Menu menuInfo = {
 static const OSD_Entry menuFeaturesEntries[] =
 {
     OSD_LABEL_ENTRY("--- FEATURES ---"),
+#if defined(USE_BLACKBOX)
     OSD_SUBMENU_ENTRY("BLACKBOX", &cmsx_menuBlackbox),
+#endif // USE_BLACKBOX
     OSD_SUBMENU_ENTRY("MIXER & SERVOS", &cmsx_menuMixerServo),
     OSD_SUBMENU_ENTRY("NAVIGATION", &cmsx_menuNavigation),
 #if defined(USE_VTX_CONTROL)

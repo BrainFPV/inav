@@ -24,7 +24,7 @@
 
 #include "platform.h"
 
-#ifdef USE_CMS
+#if defined(USE_CMS) && defined(USE_BLACKBOX)
 
 #include "blackbox/blackbox.h"
 

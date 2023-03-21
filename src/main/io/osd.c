@@ -3368,9 +3368,13 @@ static bool osdDrawSingleElement(uint8_t item)
         return false;
     }
 
+#if defined(USE_BRAINFPV_OSD)
     if (!brainfpv_item) {
         displayWriteWithAttr(osdDisplayPort, elemPosX, elemPosY, buff, elemAttr);
     }
+#else
+    displayWriteWithAttr(osdDisplayPort, elemPosX, elemPosY, buff, elemAttr);
+#endif
 
     return true;
 }
@@ -4354,7 +4358,7 @@ static void osdShowArmed(void)
 #endif /* defined(USE_BRAINFPV_OSD) */
     // We need 12 visible rows, start row never < first fully visible row 1
     {
-        uint8_t y = osdDisplayPort->rows > 13 ? (osdDisplayPort->rows - 12) / 2 : 1;
+        y = osdDisplayPort->rows > 13 ? (osdDisplayPort->rows - 12) / 2 : 1;
 
         displayClearScreen(osdDisplayPort);
         strcpy(buf, "ARMED");

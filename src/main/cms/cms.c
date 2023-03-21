@@ -42,10 +42,12 @@
 #include "cms/cms_menu_osd.h"
 #include "cms/cms_types.h"
 
-
-#ifdef BRAINFPV
+#ifdef USE_BRAINFPV_OSD
 #include "brainfpv/video.h"
 #include "brainfpv/osd_utils.h"
+#endif
+
+#ifdef BRAINFPV
 #include "cms/cms_menu_brainfpv.h"
 #include "brainfpv/brainfpv_system.h"
 #endif

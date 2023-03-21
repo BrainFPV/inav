@@ -40,13 +40,14 @@
 
 #include "platform.h"
 
+#if defined(USE_BRAINFPV_OSD)
+
 #include "video.h"
 #include "fonts.h"
 #include "osd_utils.h"
 #include "common/printf.h"
 #include "build/build_config.h"
 
-#if defined(USE_BRAINFPV_OSD)
 
 extern struct FontEntry* fonts[NUM_FONTS];
 

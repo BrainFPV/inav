@@ -36,6 +36,10 @@
 #include <string.h>
 #include <math.h>
 
+#include "platform.h"
+
+#if defined(USE_BRAINFPV_OSD)
+
 #include "ch.h"
 #include "brainfpv_osd.h"
 #include "video.h"
@@ -103,8 +107,6 @@
 #include "rx/crsf.h"
 #include "fc/runtime_config.h"
 #include "fc/rc_modes.h"
-
-#if defined(USE_BRAINFPV_OSD)
 
 //#define OSD_SHOW_DRAW_TIME
 

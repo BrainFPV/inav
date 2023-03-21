@@ -38,16 +38,17 @@
 #include "cms/cms_types.h"
 #include "cms/cms_menu_imu.h"
 
-#include "brainfpv/video.h"
-#include "brainfpv/osd_utils.h"
-#include "brainfpv/brainfpv_osd.h"
 #include "brainfpv/brainfpv_system.h"
 
 brainFpvSystemConfig_t brainFpvSystemConfigCms;
 
 #if defined(USE_BRAINFPV_OSD)
+#include "brainfpv/video.h"
+#include "brainfpv/osd_utils.h"
+#include "brainfpv/brainfpv_osd.h"
 bfOsdConfig_t bfOsdConfigCms;
 #endif
+
 
 static long menuBrainFPVOnEnter(const OSD_Entry *from)
 {

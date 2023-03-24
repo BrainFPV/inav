@@ -486,7 +486,7 @@ typedef struct afatfs_t {
 } afatfs_t;
 
 #ifdef STM32H7
-static uint8_t afatfs_cache[AFATFS_SECTOR_SIZE * AFATFS_NUM_CACHE_SECTORS] __attribute__((aligned(32)));
+static uint8_t afatfs_cache[AFATFS_SECTOR_SIZE * AFATFS_NUM_CACHE_SECTORS] __attribute__((section(".DMA_RW_AXI"), aligned(32)));
 #endif
 
 static afatfs_t afatfs;

@@ -172,6 +172,9 @@ function(target_brainfpv_stm32f446 name)
         COMPILE_DEFINITIONS ${STM32F446_BRAINFPV_COMPILE_DEFINITIONS}
         LINKER_SCRIPT stm32_flash_f446_brainfpv
         SVD STM32F446
+        
+        #OPTIMIZATION -Os
+        
         ${ARGN}
     )
 endfunction()
@@ -216,7 +219,7 @@ function(target_brainfpv_stm32h750 name)
         VCP_SOURCES ${STM32H7_USB_SRC} ${STM32H7_VCP_SRC}
         VCP_INCLUDE_DIRECTORIES ${STM32H7_USB_INCLUDE_DIRS} ${STM32H7_VCP_DIR}
 
-        OPTIMIZATION -O2
+        OPTIMIZATION -Os
 
         OPENOCD_TARGET stm32h7x
 

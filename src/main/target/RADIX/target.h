@@ -166,14 +166,13 @@
 #define VBAT_SCALE_DEFAULT            1200
 #define CURRENT_METER_SCALE           200
 
-//#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
-//#define USE_SDCARD
-//#define USE_SDCARD_SPI
-//#define SDCARD_DETECT_INVERTED
-//#define SDCARD_DETECT_PIN               PB13
-//#define SDCARD_SPI_BUS                  BUS_SPI1
-//#define SDCARD_CS_PIN                   PB15
-#undef USE_BLACKBOX
+#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
+#define USE_SDCARD
+#define USE_SDCARD_SPI
+#define SDCARD_DETECT_INVERTED
+#define SDCARD_DETECT_PIN               PB13
+#define SDCARD_SPI_BUS                  BUS_SPI1
+#define SDCARD_CS_PIN                   PB15
 
 #define SENSORS_SET (SENSOR_ACC|SENSOR_BARO)
 

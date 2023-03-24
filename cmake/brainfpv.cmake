@@ -173,7 +173,7 @@ function(target_brainfpv_stm32f446 name)
         LINKER_SCRIPT stm32_flash_f446_brainfpv
         SVD STM32F446
         
-        #OPTIMIZATION -Os
+        OPTIMIZATION -Os
         
         ${ARGN}
     )

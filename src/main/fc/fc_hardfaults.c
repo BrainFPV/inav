@@ -29,6 +29,8 @@
 
 #ifdef DEBUG_HARDFAULTS
 
+void hard_fault_handler_c(unsigned long *hardfault_args) __attribute__((used));
+
 //from: https://mcuoneclipse.com/2012/11/24/debugging-hard-faults-on-arm-cortex-m/
 /**
  * hard_fault_handler_c:
@@ -86,6 +88,24 @@ void hard_fault_handler_c(unsigned long *hardfault_args)
   _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
 
   __asm("BKPT #0\n") ; // Break into the debugger
+}
+
+__attribute__((naked)) void HardFault_Handler(void)
+{
+  __asm volatile (
+    " movs r0,#4       \n"
+    " movs r1, lr      \n"
+    " tst r0, r1       \n"
+    " beq _MSP         \n"
+    " mrs r0, psp      \n"
+    " b _HALT          \n"
+  "_MSP:               \n"
+    " mrs r0, msp      \n"
+  "_HALT:              \n"
+    " ldr r1,[r0,#20]  \n"
+    " b hard_fault_handler_c \n"
+    " bkpt #0          \n"
+  );
 }
 
 #else

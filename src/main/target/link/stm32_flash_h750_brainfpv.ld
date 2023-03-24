@@ -34,7 +34,9 @@ MEMORY
     DTCM_RAM_INIT (rwx) : ORIGIN = 0x20000000, LENGTH = 16K  /* DTCM RAM loaded by bootloader. 32K max */
     DTCM_RAM (rwx)      : ORIGIN = 0x20004000, LENGTH = 112K /* Not loaded by bootloader */
     
-    CODE_RAM (rwx)    : ORIGIN = 0x24000000, LENGTH = 512K /* AXI SRAM */
+    CODE_RAM (rwx)    : ORIGIN = 0x24000000, LENGTH = 508K
+    AXI_DMA_RAM (rwx) : ORIGIN = 0x2407F000, LENGTH = 4K
+    
     D2_RAM (rwx)      : ORIGIN = 0x30000000, LENGTH = 240K /* SRAM1 + SRAM2*/
     
     D2_DMA_RAM (rwx)  : ORIGIN = 0x3003C000, LENGTH = 16K  /* Needs to be at address that aligns to size for MPU to work */
@@ -173,8 +175,7 @@ SECTIONS
     _efastram_bss = .;
     __fastram_bss_end__ = _efastram_bss;
   } >DTCM_RAM
-    
-    
+    	
   /* Special section for process stack.*/
   .pstack :
   {
@@ -199,6 +200,19 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(4);
   } >DTCM_RAM = 0xa5
+    
+  /* DMA RAM in AXI SRAM, needed for SDMMC1 */
+  .DMA_RW_AXI (NOLOAD) :
+  {
+    . = ALIGN(32);
+    PROVIDE(dmarwaxi_start = .);
+    _sdmarwaxi = .;
+    _dmarwaxi_start__ = _sdmarwaxi;
+    KEEP(*(.DMA_RW_AXI))
+    PROVIDE(dmarwaxi_end = .);
+    _edmarwaxi = .;
+    _dmarwaxi_end__ = _edmarwaxi;
+  } >AXI_DMA_RAM
     
   .busdev_registry :
   {

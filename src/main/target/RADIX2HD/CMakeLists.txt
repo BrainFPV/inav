@@ -1,0 +1,1 @@
+target_brainfpv_stm32h750(RADIX2HD)

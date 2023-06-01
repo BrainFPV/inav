@@ -22,8 +22,6 @@
 #include "drivers/osd_symbols.h"
 #include "io/displayport_msp_bf_compat.h"
 
-FILE_COMPILE_FOR_SPEED
-
 #if defined(USE_OSD) || defined(OSD_UNIT_TEST)
 
 int digitCount(int32_t value)
@@ -95,10 +93,15 @@ bool osdFormatCentiNumber(char *buff, int32_t centivalue, uint32_t scale, int ma
 
     // Keep number right aligned and correct length
     if(explicitDecimal && decimals == 0) {
-        if ((digits + 1) == length) {
+        uint8_t blank_spaces = ptr - buff;
+        int8_t rem_spaces = length - (digits + blank_spaces);
+        // Add any needed remaining leading spaces
+        while(rem_spaces > 0)
+        {
             *ptr = SYM_BLANK;
             ptr++;
             remaining--;
+            rem_spaces--;
         }
     }
 

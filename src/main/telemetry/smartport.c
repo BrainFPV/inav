@@ -9,7 +9,6 @@
 #include <math.h>
 
 #include "platform.h"
-FILE_COMPILE_FOR_SPEED
 
 #if defined(USE_TELEMETRY) && defined(USE_TELEMETRY_SMARTPORT)
 
@@ -550,7 +549,7 @@ void processSmartPortTelemetry(smartPortPayload_t *payload, volatile bool *clear
                 break;
             case FSSP_DATAID_ASPD       :
 #ifdef USE_PITOT
-                if (sensors(SENSOR_PITOT)) {
+                if (sensors(SENSOR_PITOT) && pitotIsHealthy()) {
                     smartPortSendPackage(id, getAirspeedEstimate() * 0.194384449f); // cm/s to knots*1
                     *clearToSend = false;
                 }

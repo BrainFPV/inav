@@ -21,8 +21,6 @@
 
 #include <platform.h>
 
-FILE_COMPILE_FOR_SPEED
-
 #include "build/build_config.h"
 #include "build/debug.h"
 
@@ -311,7 +309,6 @@ PG_RESET_TEMPLATE(pidProfile_t, pidProfile,
 #endif
 );
 
-FUNCTION_COMPILE_FOR_SIZE
 bool pidInitFilters(void)
 {
     const uint32_t refreshRate = getLooptime();
@@ -979,7 +976,7 @@ static void NOINLINE pidTurnAssistant(pidState_t *pidState, float bankAngleTarge
             //      yaw_rate = tan(roll_angle) * Gravity / forward_vel
 
 #if defined(USE_PITOT)
-            float airspeedForCoordinatedTurn = sensors(SENSOR_PITOT) ? getAirspeedEstimate() : pidProfile()->fixedWingReferenceAirspeed;
+            float airspeedForCoordinatedTurn = sensors(SENSOR_PITOT) && pitotIsHealthy()? getAirspeedEstimate() : pidProfile()->fixedWingReferenceAirspeed;
 #else
             float airspeedForCoordinatedTurn = pidProfile()->fixedWingReferenceAirspeed;
 #endif

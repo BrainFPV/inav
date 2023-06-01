@@ -207,7 +207,9 @@ SLOW_CODE void init(void)
     // Initialize system and CPU clocks to their initial values
     systemInit();
 
+#if !defined(SITL_BUILD)
     __enable_irq();
+#endif
 
     // initialize IO (needed for all IO operations)
     IOInitGlobal();
@@ -229,7 +231,9 @@ SLOW_CODE void init(void)
 
     initEEPROM();
     ensureEEPROMContainsValidData();
+    suspendRxSignal();
     readEEPROM();
+    resumeRxSignal();
 
 #ifdef USE_UNDERCLOCK
     // Re-initialize system clock to their final values (if necessary)
@@ -254,8 +258,9 @@ SLOW_CODE void init(void)
     latchActiveFeatures();
 
     ledInit(false);
-
+#if !defined(SITL_BUILD)
     EXTIInit();
+#endif
 
 #ifdef USE_SPEKTRUM_BIND
     if (rxConfig()->receiverType == RX_TYPE_SERIAL) {
@@ -317,7 +322,7 @@ SLOW_CODE void init(void)
     if (!STATE(ALTITUDE_CONTROL)) {
         featureClear(FEATURE_AIRMODE);
     }
-
+#if !defined(SITL_BUILD)
     // Initialize motor and servo outpus
     if (pwmMotorAndServoInit()) {
         DISABLE_ARMING_FLAG(ARMING_DISABLED_PWM_OUTPUT_ERROR);
@@ -325,7 +330,9 @@ SLOW_CODE void init(void)
     else {
         ENABLE_ARMING_FLAG(ARMING_DISABLED_PWM_OUTPUT_ERROR);
     }
-
+#else
+    DISABLE_ARMING_FLAG(ARMING_DISABLED_PWM_OUTPUT_ERROR);
+#endif
     systemState |= SYSTEM_STATE_MOTORS_READY;
 
 #ifdef USE_ESC_SENSOR
@@ -722,8 +729,10 @@ SLOW_CODE void init(void)
     powerLimiterInit();
 #endif
 
+#if !defined(SITL_BUILD)
     // Considering that the persistent reset reason is only used during init
     persistentObjectWrite(PERSISTENT_OBJECT_RESET_REASON, RESET_NONE);
+#endif
 
     systemState |= SYSTEM_STATE_READY;
 }

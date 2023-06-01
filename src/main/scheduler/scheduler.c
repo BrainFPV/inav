@@ -37,8 +37,6 @@ extern uint32_t cpu_idle_counts_no_load;
 
 #include "platform.h"
 
-FILE_COMPILE_FOR_SPEED
-
 #include "scheduler.h"
 
 #include "build/build_config.h"

@@ -24,7 +24,6 @@
 #include "platform.h"
 
 #if defined(USE_MAX7456) && !defined(USE_BRAINFPV_OSD)
-FILE_COMPILE_FOR_SPEED
 
 #if defined(MAX7456_USE_BOUNDS_CHECKS)
 #define BOUNDS_CHECK_FAILED() __asm("BKPT #0")

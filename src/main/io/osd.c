@@ -4664,7 +4664,9 @@ void osdRefreshBrainFpv(timeUs_t currentTimeUs)
     static uint32_t counter = 0;
     static uint32_t armTime = 0;
     static uint32_t disarmTime = 0;
-    static uint8_t stats_page = 0;
+    static bool statsDisplayed = false;
+    static uint8_t statsPage = 0;
+    static bool statsAutoPagingEnabled = false;
 
     osdFilterData(currentTimeUs);
 
@@ -4675,27 +4677,26 @@ void osdRefreshBrainFpv(timeUs_t currentTimeUs)
     }
 
     // detect arm/disarm
-    static uint8_t statsPageAutoSwapCntl = 2;
     if (armState != ARMING_FLAG(ARMED)) {
         if (ARMING_FLAG(ARMED)) {
             osdResetStats();
-            statsPageAutoSwapCntl = 2;
+            statsDisplayed = false;
             osdShowArmed(); // reset statistic etc
             armTime = millis();
 
             uint32_t delay = ARMED_SCREEN_DISPLAY_TIME;
-            statsPagesCheck = 0;
 #if defined(USE_SAFE_HOME)
             if (safehome_distance)
                 delay *= 3;
 #endif
             osdSetNextRefreshIn(delay);
         } else {
-            osdShowStatsPage1(); // show first page of statistics
+            statsDisplayed = true;
+            statsPage = 0;
+            osdShowStats(false, statsPage); // show first page of statistics
             osdSetNextRefreshIn(STATS_SCREEN_DISPLAY_TIME);
             disarmTime = millis();
-            (void)statsPageAutoSwapCntl;
-            statsPageAutoSwapCntl = osdConfig()->stats_page_auto_swap_time > 0 ? 0 : 2; // disable swapping pages when time = 0
+            statsAutoPagingEnabled = osdConfig()->stats_page_auto_swap_time > 0;
         }
 
         armState = ARMING_FLAG(ARMED);
@@ -4740,23 +4741,34 @@ void osdRefreshBrainFpv(timeUs_t currentTimeUs)
     }
     else {
         bool enter_menu = (IS_MID(THROTTLE) && IS_LO(YAW) && IS_HI(PITCH));
-        if ((disarmTime > 0) && (now - disarmTime < 10000) && !enter_menu && !cmsInMenu) {
 
-            if (STATS_PAGE1) {
-                stats_page = 0;
-            } else if (STATS_PAGE2) {
-                stats_page = 1;
-            }
+        if (enter_menu || cmsInMenu) {
+            statsDisplayed = false;
+        }
 
-            if (stats_page == 0) {
-                osdShowStatsPage1();
+        if (((disarmTime > 0) && (now - disarmTime > STATS_SCREEN_DISPLAY_TIME)) || OSD_RESUME_UPDATES_STICK_COMMAND) {
+            statsDisplayed = false;
+        }
+
+        if (statsDisplayed) {
+            if (statsAutoPagingEnabled) {
+                statsPage = OSD_ALTERNATING_CHOICES((osdConfig()->stats_page_auto_swap_time * 1000), 2);
             }
             else {
-                osdShowStatsPage2();
+                if (STATS_PAGE1) {
+                    statsPage = 0;
+                } else if (STATS_PAGE2) {
+                    statsPage = 1;
+                }
             }
+
+            osdShowStats(false, statsPage);
 
             osd_arming_or_stats = true;
             return;
+        }
+        else {
+            osd_arming_or_stats = false;
         }
     }
 

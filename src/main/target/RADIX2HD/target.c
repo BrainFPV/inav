@@ -45,7 +45,7 @@ timerHardware_t timerHardware[] = {
     DEF_TIM(TIM8,  CH2, PC7,   TIM_USE_FW_SERVO | TIM_USE_MC_SERVO, 0,  0), // RX6 / S10
 
     // RGB LED output (has inverter)
-    DEF_TIM(TIM5,  CH4, PA3,   TIM_USE_LED, TIMER_OUTPUT_INVERTED,  8),
+    DEF_TIM(TIM5,  CH4, PA3,   TIM_USE_LED, TIMER_OUTPUT_INVERTED,  15),
 };
 
 const int timerHardwareCount = sizeof(timerHardware) / sizeof(timerHardware[0]);

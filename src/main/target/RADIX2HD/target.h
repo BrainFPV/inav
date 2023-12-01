@@ -151,6 +151,7 @@
 #define USE_BARO
 #define BARO_I2C_BUS BUS_I2C1
 #define USE_BARO_DPS310
+#define USE_BARO_MS5611
 
 #define USE_FLASHFS
 #define USE_FLASH_M25P16

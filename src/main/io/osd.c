@@ -4982,11 +4982,16 @@ void osdRefreshBrainFpv(timeUs_t currentTimeUs)
             osdShowArmed(); // reset statistic etc
             armTime = millis();
 
-            uint32_t delay = ARMED_SCREEN_DISPLAY_TIME;
+            uint32_t delay = osdConfig()->arm_screen_display_time;
+            if (STATE(IN_FLIGHT_EMERG_REARM)) {
+                delay = 500;
+            }
 #if defined(USE_SAFE_HOME)
-            if (safehome_distance)
-                delay *= 3;
+            else if (posControl.safehomeState.distance) {
+                delay += 3000;
+            }
 #endif
+
             osdSetNextRefreshIn(delay);
         } else {
             statsDisplayed = true;

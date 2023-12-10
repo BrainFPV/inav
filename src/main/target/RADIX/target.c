@@ -34,7 +34,7 @@ timerHardware_t timerHardware[] = {
     DEF_TIM(TIM2,  CH1, PA15, TIM_USE_OUTPUT_AUTO, 0, 0), // S4
     DEF_TIM(TIM8,  CH3, PC8,  TIM_USE_OUTPUT_AUTO, 0, 0), // S5
     DEF_TIM(TIM3,  CH3, PB0,  TIM_USE_OUTPUT_AUTO, 0, 0), // S6
-    DEF_TIM(TIM11, CH1, PB9,  TIM_USE_CAMERA_CONTROL, 0, 0), // Camera Control
+//    DEF_TIM(TIM11, CH1, PB9,  TIM_USE_CAMERA_CONTROL, 0, 0), // Camera Control
 };
 
 const int timerHardwareCount = sizeof(timerHardware) / sizeof(timerHardware[0]);

@@ -52,19 +52,16 @@
 #define IMU_MPU6000_ALIGN       CW0_DEG
 #define MPU6000_SPI_BUS         BUS_SPI1
 #define MPU6000_CS_PIN          SPI1_NSS_PIN
-#define MPU6000_EXTI_PIN        GYRO_INT_EXTI
 
 #define USE_IMU_ICM42605
 #define IMU_ICM42605_ALIGN      CW0_DEG
 #define ICM42605_SPI_BUS        BUS_SPI1
 #define ICM42605_CS_PIN         SPI1_NSS_PIN
-#define ICM42605_EXTI_PIN       GYRO_INT_EXTI
 
 #define USE_IMU_BMI270
 #define IMU_BMI270_ALIGN        CW0_DEG
 #define BMI270_SPI_BUS          BUS_SPI1
 #define BMI270_CS_PIN           SPI1_NSS_PIN
-#define BMI270_EXTI_PIN         GYRO_INT_EXTI
 
 // *************** SPI2 OSD ***************//
 #define USE_MAX7456
@@ -137,11 +134,7 @@
 
 #define USE_MAG
 #define MAG_I2C_BUS             BUS_I2C1
-#define USE_MAG_HMC5883
-#define USE_MAG_QMC5883
-#define USE_MAG_IST8310
-#define USE_MAG_MAG3110
-#define USE_MAG_LIS3MDL
+#define USE_MAG_ALL
 
 #define PITOT_I2C_BUS           BUS_I2C1
 
@@ -173,6 +166,6 @@
 #define TARGET_IO_PORTC         0xffff
 #define TARGET_IO_PORTD         (BIT(2))
 
-#define MAX_PWM_OUTPUT_PORTS    4
+#define MAX_PWM_OUTPUT_PORTS    8
 #define USE_DSHOT
 #define USE_ESC_SENSOR

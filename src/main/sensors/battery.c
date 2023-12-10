@@ -86,7 +86,7 @@ static bool batteryUseCapacityThresholds = false;
 static bool batteryFullWhenPluggedIn = false;
 static bool profileAutoswitchDisable = false;
 
-static uint16_t vbat = 0;                       // battery voltage in 0.1V steps (filtered)
+static uint16_t vbat = 0;                       // battery voltage in 0.01V steps (filtered)
 static uint16_t powerSupplyImpedance = 0;       // calculated impedance in milliohm
 static uint16_t sagCompensatedVBat = 0;         // calculated no load vbat
 static bool powerSupplyImpedanceIsValid = false;
@@ -201,7 +201,7 @@ PG_RESET_TEMPLATE(batteryMetersConfig_t, batteryMetersConfig,
 void batteryInit(void)
 {
     batteryState = BATTERY_NOT_PRESENT;
-    batteryCellCount = 1;
+    batteryCellCount = 0;
     batteryFullVoltage = 0;
     batteryWarningVoltage = 0;
     batteryCriticalVoltage = 0;
@@ -299,6 +299,14 @@ static void updateBatteryVoltage(timeUs_t timeDelta, bool justConnected)
             vbat = 0;
             break;
     }
+
+#ifdef USE_SIMULATOR
+    if (ARMING_FLAG(SIMULATOR_MODE_HITL) && SIMULATOR_HAS_OPTION(HITL_SIMULATE_BATTERY)) {
+        vbat = ((uint16_t)simulatorData.vbat)*10;
+        return;
+    }
+#endif
+
     if (justConnected) {
         pt1FilterReset(&vbatFilterState, vbat);
     } else {
@@ -566,7 +574,7 @@ void currentMeterUpdate(timeUs_t timeDelta)
                 if (allNav || autoNav) {    // account for motors running in Nav modes with throttle low + motor stop
                     throttleOffset = (int32_t)rcCommand[THROTTLE] - 1000;
                 } else {
-                    throttleOffset = (throttleStickIsLow() && feature(FEATURE_MOTOR_STOP)) ? 0 : (int32_t)rcCommand[THROTTLE] - 1000;
+                    throttleOffset = (throttleStickIsLow() && ifMotorstopFeatureEnabled()) ? 0 : (int32_t)rcCommand[THROTTLE] - 1000;
                 }
                 int32_t throttleFactor = throttleOffset + (throttleOffset * throttleOffset / 50);
                 amperage += throttleFactor * batteryMetersConfig()->current.scale / 1000;
@@ -718,11 +726,11 @@ uint16_t getPowerSupplyImpedance(void) {
 }
 
 // returns cW (0.01W)
-int32_t calculateAveragePower() {
+int32_t calculateAveragePower(void) {
     return (int64_t)mWhDrawn * 360 / getFlightTime();
 }
 
 // returns mWh / meter
-int32_t calculateAverageEfficiency() {
+int32_t calculateAverageEfficiency(void) {
     return getFlyingEnergy() * 100 / getTotalTravelDistance();
 }

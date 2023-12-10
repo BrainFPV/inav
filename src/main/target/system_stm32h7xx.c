@@ -290,6 +290,7 @@ static void SystemClockHSE_Config(void)
         cpu_idle_counts_no_load = IDLE_COUNTS_PER_SEC_AT_NO_LOAD_400;
     }
 #endif /* defined(BRAINFPV) */
+    pll1Config->m = HSE_VALUE / 1000000 / 2;  // correction for different HSE_VALUE
 
     // Configure voltage scale.
     // It has been pre-configured at PWR_REGULATOR_VOLTAGE_SCALE1,

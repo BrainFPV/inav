@@ -66,8 +66,10 @@
 #include "io/osd.h"
 #include "io/serial.h"
 #include "io/rcdevice_cam.h"
+#include "io/osd_joystick.h"
 #include "io/smartport_master.h"
 #include "io/vtx.h"
+#include "io/vtx_msp.h"
 #include "io/osd_dji_hd.h"
 #include "io/displayport_msp_osd.h"
 #include "io/servo_sbus.h"
@@ -117,6 +119,9 @@ void taskHandleSerial(timeUs_t currentTimeUs)
 #ifdef USE_MSP_OSD
 	// Capture MSP Displayport messages to determine if VTX is connected
     mspOsdSerialProcess(mspFcProcessCommand);
+#ifdef USE_VTX_MSP
+    mspVtxSerialProcess(mspFcProcessCommand);
+#endif
 #endif
 
 }
@@ -409,7 +414,11 @@ SLOW_CODE void fcTasksInit(void)
 #endif
 #endif
 #ifdef USE_RCDEVICE
+#ifdef USE_LED_STRIP
+    setTaskEnabled(TASK_RCDEVICE, rcdeviceIsEnabled() || osdJoystickEnabled());
+#else
     setTaskEnabled(TASK_RCDEVICE, rcdeviceIsEnabled());
+#endif
 #endif
 #ifdef USE_PROGRAMMING_FRAMEWORK
     setTaskEnabled(TASK_PROGRAMMING_FRAMEWORK, true);
@@ -519,7 +528,7 @@ cfTask_t cfTasks[TASK_COUNT] = {
     [TASK_PITOT] = {
         .taskName = "PITOT",
         .taskFunc = taskUpdatePitot,
-        .desiredPeriod = TASK_PERIOD_HZ(100),
+        .desiredPeriod = TASK_PERIOD_MS(20),
         .staticPriority = TASK_PRIORITY_MEDIUM,
     },
 #endif

@@ -277,7 +277,7 @@ static void imuResetOrientationQuaternion(const fpVector3_t * accBF)
 
 static bool imuValidateQuaternion(const fpQuaternion_t * quat)
 {
-    const float check = fabs(quat->q0) + fabs(quat->q1) + fabs(quat->q2) + fabs(quat->q3);
+    const float check = fabsf(quat->q0) + fabsf(quat->q1) + fabsf(quat->q2) + fabsf(quat->q3);
 
     if (!isnan(check) && !isinf(check)) {
         return true;
@@ -480,7 +480,7 @@ static void imuMahonyAHRSupdate(float dt, const fpVector3_t * gyroBF, const fpVe
     const float thetaMagnitudeSq = vectorNormSquared(&vTheta);
 
     // If calculated rotation is zero - don't update quaternion
-    if (thetaMagnitudeSq >= 1e-20) {
+    if (thetaMagnitudeSq >= 1e-20f) {
         // Calculate quaternion delta:
         // Theta is a axis/angle rotation. Direction of a vector is axis, magnitude is angle/2.
         // Proper quaternion from axis/angle involves computing sin/cos, but the formula becomes numerically unstable as Theta approaches zero.
@@ -719,28 +719,25 @@ static void imuCalculateEstimatedAttitude(float dT)
     }
     if (imuConfig()->inertia_comp_method == COMPMETHOD_ADAPTIVE && isGPSTrustworthy() && STATE(AIRPLANE))
     {
+        //pick the best centrifugal acceleration between velned and turnrate
         fpVector3_t compansatedGravityBF_velned;
         vectorAdd(&compansatedGravityBF_velned, &imuMeasuredAccelBF, &vEstcentrifugalAccelBF_velned);
-        float velned_magnitude = fabsf(fast_fsqrtf(vectorNormSquared(&compansatedGravityBF_velned)) - GRAVITY_CMSS);
+        float velned_error = fabsf(fast_fsqrtf(vectorNormSquared(&compansatedGravityBF_velned)) - GRAVITY_CMSS);
 
         fpVector3_t compansatedGravityBF_turnrate;
         vectorAdd(&compansatedGravityBF_turnrate, &imuMeasuredAccelBF, &vEstcentrifugalAccelBF_turnrate);
-        float turnrate_magnitude = fabsf(fast_fsqrtf(vectorNormSquared(&compansatedGravityBF_turnrate)) - GRAVITY_CMSS);
-        if (velned_magnitude > turnrate_magnitude)
-        {
-            compansatedGravityBF = compansatedGravityBF_turnrate;
-        }
-        else
-        {
-            compansatedGravityBF = compansatedGravityBF_velned;
-        }
+        float turnrate_error = fabsf(fast_fsqrtf(vectorNormSquared(&compansatedGravityBF_turnrate)) - GRAVITY_CMSS);
+
+        compansatedGravityBF = velned_error > turnrate_error? compansatedGravityBF_turnrate:compansatedGravityBF_velned;
     }
-    else if (imuConfig()->inertia_comp_method == COMPMETHOD_VELNED && isGPSTrustworthy())
+    else if (((imuConfig()->inertia_comp_method == COMPMETHOD_VELNED) || (imuConfig()->inertia_comp_method == COMPMETHOD_ADAPTIVE)) && isGPSTrustworthy())
     {
+        //velned centrifugal force compensation, quad will use this method
         vectorAdd(&compansatedGravityBF, &imuMeasuredAccelBF, &vEstcentrifugalAccelBF_velned);
     }
     else if (STATE(AIRPLANE))
     {
+        //turnrate centrifugal force compensation
         vectorAdd(&compansatedGravityBF, &imuMeasuredAccelBF, &vEstcentrifugalAccelBF_turnrate);
     }
     else

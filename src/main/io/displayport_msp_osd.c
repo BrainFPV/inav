@@ -42,6 +42,7 @@
 #include "drivers/osd_symbols.h"
 
 #include "fc/rc_modes.h"
+#include "fc/runtime_config.h"
 
 #include "io/osd.h"
 #include "io/displayport_msp.h"
@@ -112,6 +113,10 @@ static void checkVtxPresent(void)
 {
     if (vtxActive && (millis()-vtxHeartbeat) > VTX_TIMEOUT) {
         vtxActive = false;
+    }
+
+    if (ARMING_FLAG(SIMULATOR_MODE_HITL)) { 
+        vtxActive = true;
     }
 }
 
@@ -513,6 +518,15 @@ void mspOsdSerialProcess(mspProcessCommandFnPtr mspProcessCommandFn)
         mspProcessCommand = mspProcessCommandFn;
         mspSerialProcessOnePort(&mspPort, MSP_SKIP_NON_MSP_DATA, processMspCommand);
     }
+}
+
+mspPort_t *getMspOsdPort()
+{
+    if (mspPort.port) {
+        return &mspPort;
+    }
+
+    return NULL;
 }
 
 #endif // USE_MSP_OSD

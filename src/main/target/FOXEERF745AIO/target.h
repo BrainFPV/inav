@@ -26,11 +26,6 @@
 #define BEEPER_INVERTED
 
 /*** IMU sensors ***/
-#define USE_EXTI
-
-
-#define USE_MPU_DATA_READY_SIGNAL
-
 #ifdef FOXEERF745AIO_V3
 
 #define USE_IMU_ICM42605
@@ -117,8 +112,7 @@
 
 #define USE_MAG
 #define MAG_I2C_BUS             BUS_I2C1
-#define USE_MAG_HMC5883
-#define USE_MAG_QMC5883
+#define USE_MAG_ALL
 
 /*** ADC ***/
 #define USE_ADC

@@ -78,11 +78,13 @@
 #define ICM42605_INT_TPULSE_DURATION_100            (0 << ICM42605_INT_TPULSE_DURATION_BIT)
 #define ICM42605_INT_TPULSE_DURATION_8              (1 << ICM42605_INT_TPULSE_DURATION_BIT)
 
-
 #define ICM42605_RA_INT_SOURCE0                     0x65
 #define ICM42605_UI_DRDY_INT1_EN_DISABLED           (0 << 3)
 #define ICM42605_UI_DRDY_INT1_EN_ENABLED            (1 << 3)
 
+#define ICM42605_INTF_CONFIG1                       0x4D
+#define ICM42605_INTF_CONFIG1_AFSR_MASK             0xC0
+#define ICM42605_INTF_CONFIG1_AFSR_DISABLE          0x40
 
 static void icm42605AccInit(accDev_t *acc)
 {
@@ -98,9 +100,9 @@ static bool icm42605AccRead(accDev_t *acc)
         return false;
     }
 
-    acc->ADCRaw[X] = (int16_t)((data[0] << 8) | data[1]);
-    acc->ADCRaw[Y] = (int16_t)((data[2] << 8) | data[3]);
-    acc->ADCRaw[Z] = (int16_t)((data[4] << 8) | data[5]);
+    acc->ADCRaw[X] = (float) int16_val_big_endian(data, 0);
+    acc->ADCRaw[Y] = (float) int16_val_big_endian(data, 1);
+    acc->ADCRaw[Z] = (float) int16_val_big_endian(data, 2);
 
     return true;
 }
@@ -190,6 +192,15 @@ static void icm42605AccAndGyroInit(gyroDev_t *gyro)
     busWrite(dev, ICM42605_RA_INT_CONFIG1, intConfig1Value);
     delay(15);
 
+    //Disable AFSR as in BF and Ardupilot
+    uint8_t intfConfig1Value;
+    busRead(dev, ICM42605_INTF_CONFIG1, &intfConfig1Value);
+    intfConfig1Value &= ~ICM42605_INTF_CONFIG1_AFSR_MASK;
+    intfConfig1Value |= ICM42605_INTF_CONFIG1_AFSR_DISABLE;
+    busWrite(dev, ICM42605_INTF_CONFIG1, intfConfig1Value);
+
+    delay(15);
+
     busSetSpeed(dev, BUS_SPEED_FAST);
 }
 
@@ -231,9 +242,9 @@ static bool icm42605GyroRead(gyroDev_t *gyro)
         return false;
     }
 
-    gyro->gyroADCRaw[X] = (int16_t)((data[0] << 8) | data[1]);
-    gyro->gyroADCRaw[Y] = (int16_t)((data[2] << 8) | data[3]);
-    gyro->gyroADCRaw[Z] = (int16_t)((data[4] << 8) | data[5]);
+    gyro->gyroADCRaw[X] = (float) int16_val_big_endian(data, 0);
+    gyro->gyroADCRaw[Y] = (float) int16_val_big_endian(data, 1);
+    gyro->gyroADCRaw[Z] = (float) int16_val_big_endian(data, 2);
 
     return true;
 }

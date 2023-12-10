@@ -214,7 +214,7 @@ static void bmi270AccAndGyroInit(gyroDev_t *gyro)
     delay(1);
 
     // Configure the accelerometer full-scale range
-    busWrite(busDev, BMI270_REG_ACC_RANGE, BMI270_ACC_RANGE_8G);
+    busWrite(busDev, BMI270_REG_ACC_RANGE, BMI270_ACC_RANGE_16G);
     delay(1);
 
     // Configure the gyro
@@ -254,9 +254,9 @@ static bool bmi270yroReadScratchpad(gyroDev_t *gyro)
     ctx->lastReadStatus = busReadBuf(gyro->busDev, BMI270_REG_ACC_DATA_X_LSB, &ctx->__padding_dummy, 6 + 6 + 1);
 
     if (ctx->lastReadStatus) {
-        gyro->gyroADCRaw[X] = (int16_t)((ctx->gyroRaw[1] << 8) | ctx->gyroRaw[0]);
-        gyro->gyroADCRaw[Y] = (int16_t)((ctx->gyroRaw[3] << 8) | ctx->gyroRaw[2]);
-        gyro->gyroADCRaw[Z] = (int16_t)((ctx->gyroRaw[5] << 8) | ctx->gyroRaw[4]);
+        gyro->gyroADCRaw[X] = (float) int16_val_little_endian(ctx->gyroRaw, 0);
+        gyro->gyroADCRaw[Y] = (float) int16_val_little_endian(ctx->gyroRaw, 1);
+        gyro->gyroADCRaw[Z] = (float) int16_val_little_endian(ctx->gyroRaw, 2);
 
         return true;
     }
@@ -269,9 +269,9 @@ static bool bmi270AccReadScratchpad(accDev_t *acc)
     bmi270ContextData_t * ctx = busDeviceGetScratchpadMemory(acc->busDev);
 
     if (ctx->lastReadStatus) {
-        acc->ADCRaw[X] = (int16_t)((ctx->accRaw[1] << 8) | ctx->accRaw[0]);
-        acc->ADCRaw[Y] = (int16_t)((ctx->accRaw[3] << 8) | ctx->accRaw[2]);
-        acc->ADCRaw[Z] = (int16_t)((ctx->accRaw[5] << 8) | ctx->accRaw[4]);
+        acc->ADCRaw[X] = (float) int16_val_little_endian(ctx->accRaw, 0);
+        acc->ADCRaw[Y] = (float) int16_val_little_endian(ctx->accRaw, 1);
+        acc->ADCRaw[Z] = (float) int16_val_little_endian(ctx->accRaw, 2);
         return true;
     }
 
@@ -301,7 +301,7 @@ static void bmi270GyroInit(gyroDev_t *gyro)
 static void bmi270AccInit(accDev_t *acc)
 {
     // sensor is configured during gyro init
-    acc->acc_1G = 4096;   // 8G sensor scale
+    acc->acc_1G = 2048;   // 16G sensor scale
 }
 
 bool bmi270AccDetect(accDev_t *acc)

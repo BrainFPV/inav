@@ -54,10 +54,6 @@
 #define SPI1_MOSI_PIN           PA7
 #define SPI1_NSS_PIN            PA15
 
-// #define USE_EXTI 
-// #define GYRO_INT_EXTI           PA8
-// #define USE_MPU_DATA_READY_SIGNAL
-
 // MPU6500
 #define USE_IMU_MPU6500
 #define IMU_MPU6500_ALIGN       CW180_DEG 
@@ -69,7 +65,6 @@
 #define IMU_ICM42605_ALIGN      CW180_DEG
 #define ICM42605_SPI_BUS        BUS_SPI1
 #define ICM42605_CS_PIN         SPI1_NSS_PIN
-// #define ICM42605_EXTI_PIN       GYRO_INT_EXTI
 
 // BMI270
 #define USE_IMU_BMI270
@@ -98,8 +93,7 @@
 
 #define USE_MAG
 #define MAG_I2C_BUS             BUS_I2C2
-#define USE_MAG_HMC5883
-#define USE_MAG_QMC5883
+#define USE_MAG_ALL
 #define DEFAULT_I2C_BUS         BUS_I2C2
 
 // temperature sensors

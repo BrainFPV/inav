@@ -106,6 +106,7 @@ void setStripColors(const hsvColor_t *colors)
     }
 }
 
+#ifndef USE_BRAINFPV_FPGA
 bool ledConfigureDMA(void) {
     /* Compute the prescaler value */
     uint8_t period = WS2811_TIMER_HZ / WS2811_CARRIER_HZ;
@@ -123,6 +124,7 @@ void ledConfigurePWM(void) {
         timerEnable(ws2811TCH);
         pwmMode = true;
 }
+#endif /* USE_BRAINFPV_FPGA */
 
 void ws2811LedStripInit(void)
 {
@@ -220,7 +222,44 @@ void ws2811UpdateStrip(void)
     timerPWMPrepareDMA(ws2811TCH, WS2811_DMA_BUFFER_SIZE);
     timerPWMStartDMA(ws2811TCH);
 }
+
+//value
+void ledPinStartPWM(uint16_t value) {
+    if (ws2811TCH == NULL) {
+        return;
+    }
+
+    if ( !pwmMode ) {
+        timerPWMStopDMA(ws2811TCH);
+        //FIXME: implement method to release DMA
+        ws2811TCH->dma->owner = OWNER_FREE;
+
+        ledConfigurePWM();
+    }
+    *timerCCR(ws2811TCH) = value;
+}
+
+void ledPinStopPWM(void) {
+    if (ws2811TCH == NULL || !pwmMode ) {
+        return;
+    }
+
+    if ( ledPinConfig()->led_pin_pwm_mode == LED_PIN_PWM_MODE_HIGH ) {
+        *timerCCR(ws2811TCH) = 100;
+        return;
+    } else if ( ledPinConfig()->led_pin_pwm_mode == LED_PIN_PWM_MODE_LOW ) {
+        *timerCCR(ws2811TCH) = 0;
+        return;
+    }
+    pwmMode = false;
+
+    if (!ledConfigureDMA()) {
+        ws2811Initialised = false;
+    }
+}
+
 #else
+
 static uint8_t last_active_led = 0;
 static uint8_t led_data[WS2811_LED_STRIP_LENGTH * 3];
 bool isWS2811LedStripReady(void)
@@ -247,42 +286,13 @@ void ws2811UpdateStrip(void)
     BRAINFPVFPGA_SetLEDs(led_data, last_active_led + 1);
 }
 
-#endif /* USE_BRAINFPV_FPGA */
-
-//value
 void ledPinStartPWM(uint16_t value) {
-    if (ws2811TCH == NULL) {
-        return;
-    }
-
-	if ( !pwmMode ) {
-	    timerPWMStopDMA(ws2811TCH);
-        //FIXME: implement method to release DMA
-        ws2811TCH->dma->owner = OWNER_FREE;
-
-        ledConfigurePWM();
-    }
-	*timerCCR(ws2811TCH) = value;
+    (void)value;
 }
 
 void ledPinStopPWM(void) {
-    if (ws2811TCH == NULL || !pwmMode ) {
-        return;
-    }
-
-    if ( ledPinConfig()->led_pin_pwm_mode == LED_PIN_PWM_MODE_HIGH ) {
-		*timerCCR(ws2811TCH) = 100;
-        return;
-    } else if ( ledPinConfig()->led_pin_pwm_mode == LED_PIN_PWM_MODE_LOW ) {
-		*timerCCR(ws2811TCH) = 0;
-        return;
-    } 
-    pwmMode = false;
-
-    if (!ledConfigureDMA()) {
-        ws2811Initialised = false;
-    }
 }
 
+#endif /* USE_BRAINFPV_FPGA */
 
 #endif

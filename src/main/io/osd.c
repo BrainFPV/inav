@@ -4835,13 +4835,12 @@ static void osdShowSDArmScreen(void)
     uint8_t     armScreenRow = osdDisplayPort->rows > 13 ? (osdDisplayPort->rows - 12) / 2 : 1;
     uint8_t     safehomeRow = 0;
 
-#if defined(BRAINFPV_OSD)
+#if defined(USE_BRAINFPV_OSD)
     if (brainFpvOsdMode) {
         brainFpvOsdMainLogo(GRAPHICS_X_MIDDLE, 80);
         armScreenRow = 9;       
     }
 #endif /* defined(BRAINFPV_OSD) */
-
 
     strcpy(buf, "ARMED!");
     displayWrite(osdDisplayPort, (osdDisplayPort->cols - strlen(buf)) / 2, armScreenRow++, buf);

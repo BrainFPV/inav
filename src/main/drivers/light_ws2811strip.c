@@ -43,7 +43,6 @@
 #include "drivers/timer.h"
 #include "drivers/light_ws2811strip.h"
 
-#ifndef USE_BRAINFPV_FPGA
 #include "config/parameter_group_ids.h"
 #include "fc/settings.h"
 #include "fc/runtime_config.h"
@@ -58,6 +57,7 @@ PG_RESET_TEMPLATE(ledPinConfig_t, ledPinConfig,
     .led_pin_pwm_mode = SETTING_LED_PIN_PWM_MODE_DEFAULT
 );
 
+#ifndef USE_BRAINFPV_FPGA
 static DMA_RAM timerDMASafeType_t ledStripDMABuffer[WS2811_DMA_BUFFER_SIZE];
 
 static IO_t ws2811IO = IO_NONE;

@@ -30,6 +30,8 @@ extern "C" {
 #include  "usbd_msc_scsi.h"
 #include  "usbd_ioreq.h"
 
+#include "target.h"
+
 /** @addtogroup USBD_MSC_BOT
   * @{
   */
@@ -79,11 +81,19 @@ typedef struct _USBD_STORAGE
 
 } USBD_StorageTypeDef;
 
+#if defined(BRAINFPV) && defined(USE_SDCARD_SDIO)
+#define USE_BOT_DATA_AFATFS_CACHE
+#endif
+
 
 typedef struct
 {
   // bot_data at start of structure to ensure cache alignment
+#if defined(USE_BOT_DATA_AFATFS_CACHE)
+  uint8_t                  * bot_data;
+#else
   uint8_t                  bot_data[MSC_MEDIA_PACKET];
+#endif
   uint32_t                 max_lun;
   uint32_t                 interface;
   uint8_t                  bot_state;

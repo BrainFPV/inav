@@ -267,6 +267,9 @@ __ALIGN_BEGIN  uint8_t USBD_MSC_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_DESC] 
 
 static USBD_MSC_BOT_HandleTypeDef ClassData __attribute__((aligned(32)));
 
+#if defined(USE_BOT_DATA_AFATFS_CACHE)
+extern uint8_t afatfs_cache[];
+#endif
 
 /** @defgroup MSC_CORE_Private_Functions
   * @{
@@ -282,6 +285,10 @@ static USBD_MSC_BOT_HandleTypeDef ClassData __attribute__((aligned(32)));
 uint8_t USBD_MSC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 {
   UNUSED(cfgidx);
+
+#if defined(USE_BOT_DATA_AFATFS_CACHE)
+  ClassData.bot_data = &afatfs_cache[0];
+#endif
 
   if (pdev->dev_speed == USBD_SPEED_HIGH)
   {

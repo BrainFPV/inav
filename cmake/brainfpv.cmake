@@ -222,8 +222,6 @@ function(target_brainfpv_stm32h750 name)
         OPTIMIZATION -Os
 
         OPENOCD_TARGET stm32h7x
-
-        DISABLE_MSC # This should be temporary
         
         LINKER_SCRIPT stm32_flash_h750_brainfpv
         ${ARGN}

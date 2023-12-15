@@ -138,9 +138,9 @@ static uint32_t timeoutAt = 0;
 
 // Option to skip some sectors
 #ifdef M25P16_FIRST_SECTOR
-#define TRANSLATE_ADDR(fdevice, addr) (addr + M25P16_FIRST_SECTOR * geometry.sectorSize)
+#define TRANSLATE_ADDR(addr) (addr + M25P16_FIRST_SECTOR * geometry.sectorSize)
 #else
-#define TRANSLATE_ADDR(fdevice, addr) (addr)
+#define TRANSLATE_ADDR(addr) (addr)
 #endif
 
 /*
@@ -336,7 +336,7 @@ bool m25p16_init(int flashNumToUse)
 
 void m25p16_setCommandAddress(uint8_t *buf, uint32_t address, bool useLongAddress)
 {
-    address = TRANSLATE_ADDR(fdevice, address);
+    address = TRANSLATE_ADDR(address);
 
     if (useLongAddress) {
         *buf++ = (address >> 24) & 0xff;
@@ -364,7 +364,7 @@ void m25p16_eraseSector(uint32_t address)
 
     busTransfer(busDev, NULL, out, isLargeFlash ? 5 : 4);
 #else
-    address = TRANSLATE_ADDR(fdevice, address);
+    address = TRANSLATE_ADDR(address);
 
     quadSpiInstructionWithAddress1LINE(qspi, M25P16_INSTRUCTION_SECTOR_ERASE, 0, address, isLargeFlash ? 32 : 24);
 #endif /* !defined(M25P16_QUADSPI_DEVICE) */
@@ -421,9 +421,10 @@ uint32_t m25p16_pageProgram(uint32_t address, const uint8_t *data, int length)
 
     busTransferMultiple(busDev, txn, 2);
 #else
-    address = TRANSLATE_ADDR(fdevice, address);
+    uint32_t write_address = TRANSLATE_ADDR(address);
 
-    quadSpiTransmitWithAddress4LINES(qspi, M25P16_INSTRUCTION_QPAGE_PROGRAM, 0, address, isLargeFlash ? 32 : 24, data, length);
+    quadSpiTransmitWithAddress4LINES(qspi, M25P16_INSTRUCTION_QPAGE_PROGRAM, 0, write_address, isLargeFlash ? 32 : 24, data, length);
+
 #endif /* !defined(M25P16_QUADSPI_DEVICE) */
 
     m25p16_setTimeout(DEFAULT_TIMEOUT_MILLIS);
@@ -457,7 +458,7 @@ int m25p16_readBytes(uint32_t address, uint8_t *buffer, int length)
 
     busTransferMultiple(busDev, txn, 2);
 #else
-    address = TRANSLATE_ADDR(fdevice, address);
+    address = TRANSLATE_ADDR(address);
 
     quadSpiReceiveWithAddress4LINES(qspi, M25P16_INSTRUCTION_QUAD_READ, M25P16_FAST_READ_DUMMY_CYCLES,
                                     address, isLargeFlash ? 32 : 24, buffer, length);

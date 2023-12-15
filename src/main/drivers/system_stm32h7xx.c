@@ -68,7 +68,9 @@ void systemClockSetup(uint8_t cpuUnderclock)
 
 void systemInit(void)
 {
+#if !defined(USE_BRAINFPV_BOOTLOADER)
     checkForBootLoaderRequest();
+#endif
 
     // Configure NVIC preempt/priority groups
     HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITY_GROUPING);

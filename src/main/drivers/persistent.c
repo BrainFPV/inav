@@ -65,6 +65,12 @@ uint32_t persistentObjectRead(persistentObjectId_e id)
 {
     RTC_HandleTypeDef rtcHandle = { .Instance = RTC };
 
+#if defined(USE_BRAINFPV_BOOTLOADER)
+    if (id == PERSISTENT_OBJECT_RESET_REASON) {
+        id = PERSISTENT_OBJECT_RESET_REASON_BACKUP;
+    }
+#endif
+
     uint32_t value = HAL_RTCEx_BKUPRead(&rtcHandle, id);
 
     return value;
@@ -75,6 +81,12 @@ void persistentObjectWrite(persistentObjectId_e id, uint32_t value)
     RTC_HandleTypeDef rtcHandle = { .Instance = RTC };
 
     HAL_RTCEx_BKUPWrite(&rtcHandle, id, value);
+
+#if defined(USE_BRAINFPV_BOOTLOADER)
+    if (id == PERSISTENT_OBJECT_RESET_REASON) {
+        HAL_RTCEx_BKUPWrite(&rtcHandle, PERSISTENT_OBJECT_RESET_REASON_BACKUP, value);
+    }
+#endif
 }
 
 void persistentObjectRTCEnable(void)

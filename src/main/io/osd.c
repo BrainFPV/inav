@@ -72,6 +72,8 @@
 #include "io/vtx.h"
 #include "io/vtx_string.h"
 
+#include "io/osd/custom_elements.h"
+
 #include "fc/config.h"
 #include "fc/controlrate_profile.h"
 #include "fc/fc_core.h"
@@ -993,21 +995,27 @@ static const char * osdFailsafePhaseMessage(void)
 
 static const char * osdFailsafeInfoMessage(void)
 {
-    if (failsafeIsReceivingRxData()) {
+    if (failsafeIsReceivingRxData() && !FLIGHT_MODE(NAV_FW_AUTOLAND)) {
         // User must move sticks to exit FS mode
         return OSD_MESSAGE_STR(OSD_MSG_MOVE_EXIT_FS);
     }
     return OSD_MESSAGE_STR(OSD_MSG_RC_RX_LINK_LOST);
 }
+
 #if defined(USE_SAFE_HOME)
 static const char * divertingToSafehomeMessage(void)
 {
+#ifdef USE_FW_AUTOLAND
+	if (!posControl.fwLandState.landWp && (NAV_Status.state != MW_NAV_STATE_HOVER_ABOVE_HOME && posControl.safehomeState.isApplied)) {
+#else
     if (NAV_Status.state != MW_NAV_STATE_HOVER_ABOVE_HOME && posControl.safehomeState.isApplied) {
-        return OSD_MESSAGE_STR(OSD_MSG_DIVERT_SAFEHOME);
-    }
-    return NULL;
-}
 #endif
+	    return OSD_MESSAGE_STR(OSD_MSG_DIVERT_SAFEHOME);
+	}
+#endif
+	return NULL;   
+}
+
 
 static const char * navigationStateMessage(void)
 {
@@ -1067,7 +1075,13 @@ static const char * navigationStateMessage(void)
         case MW_NAV_STATE_LANDED:
             return OSD_MESSAGE_STR(OSD_MSG_LANDED);
         case MW_NAV_STATE_LAND_SETTLE:
+        {
+            // If there is a FS landing delay occurring. That is handled by the calling function.
+            if (posControl.landingDelay > 0)
+                break;
+            
             return OSD_MESSAGE_STR(OSD_MSG_PREPARING_LAND);
+        }
         case MW_NAV_STATE_LAND_START_DESCENT:
             // Not used
             break;
@@ -1154,7 +1168,7 @@ static void osdFormatThrottlePosition(char *buff, bool useScaled, textAttributes
 #endif
     int8_t throttlePercent = getThrottlePercent(useScaled);
     if ((useScaled && throttlePercent <= 0) || !ARMING_FLAG(ARMED)) {
-        const char* message = ARMING_FLAG(ARMED) ? throttlePercent == 0 ? "IDLE" : "STOP" : "DARM";
+        const char* message = ARMING_FLAG(ARMED) ? (throttlePercent == 0 && !ifMotorstopFeatureEnabled()) ? "IDLE" : "STOP" : "DARM";
         buff[0] = SYM_THR;
         strcpy(buff + 1, message);
         return;
@@ -1700,6 +1714,21 @@ static bool osdDrawSingleElement(uint8_t item)
     char buff[32] = {0};
 
     switch (item) {
+    case OSD_CUSTOM_ELEMENT_1:
+    {
+        customElementDrawElement(buff, 0);
+        break;
+    }
+    case OSD_CUSTOM_ELEMENT_2:
+    {
+        customElementDrawElement(buff, 1);
+        break;
+    }
+    case OSD_CUSTOM_ELEMENT_3:
+    {
+        customElementDrawElement(buff, 2);
+        break;
+    }
     case OSD_RSSI_VALUE:
         {
 			uint16_t osdRssi = osdConvertRSSI();
@@ -1754,7 +1783,7 @@ static bool osdDrawSingleElement(uint8_t item)
             tfp_sprintf(buff, "%5d", (int)getMAhDrawn());   // Use 5 digits to allow packs below 100Ah
             buff[5] = SYM_MAH;
             buff[6] = '\0';
-        } else 
+        } else
 #endif
         {
             if (osdFormatCentiNumber(buff, getMAhDrawn() * 100, 1000, 0, (mah_digits - 2), mah_digits, false)) {
@@ -1788,7 +1817,7 @@ static bool osdDrawSingleElement(uint8_t item)
             tfp_sprintf(buff, "  NF");
         else if (currentBatteryProfile->capacity.unit == BAT_CAPACITY_UNIT_MAH) {
             uint8_t mah_digits = osdConfig()->mAh_precision; // Initialize to config value
-            
+
 #ifndef DISABLE_MSP_BF_COMPAT // IF BFCOMPAT is not supported, there's no need to check for it
             if (isBfCompatibleVideoSystem(osdConfig())) {
                 //BFcompat is unable to work with scaled values and it only has mAh symbol to work with
@@ -1796,7 +1825,7 @@ static bool osdDrawSingleElement(uint8_t item)
                 buff[5] = SYM_MAH;
                 buff[6] = '\0';
                 unitsDrawn = true;
-            } else 
+            } else
 #endif
             {
                 if (osdFormatCentiNumber(buff, getBatteryRemainingCapacity() * 100, 1000, 0, (mah_digits - 2), mah_digits, false)) {
@@ -1971,28 +2000,27 @@ static bool osdDrawSingleElement(uint8_t item)
     case OSD_ODOMETER:
         {
             displayWriteChar(osdDisplayPort, elemPosX, elemPosY, SYM_ODOMETER);
-            uint32_t odometerDist = (uint32_t)(getTotalTravelDistance() / 100);
+            float_t odometerDist = CENTIMETERS_TO_METERS(getTotalTravelDistance());
 #ifdef USE_STATS
             odometerDist+= statsConfig()->stats_total_dist;
 #endif
-            odometerDist = odometerDist / 10;
 
             switch (osdConfig()->units) {
                 case OSD_UNIT_UK:
                     FALLTHROUGH;
                 case OSD_UNIT_IMPERIAL:
-                    osdFormatCentiNumber(buff, CENTIMETERS_TO_CENTIFEET(odometerDist), FEET_PER_MILE, 1, 0, 6, true);
+                    osdFormatCentiNumber(buff, METERS_TO_MILES(odometerDist) * 100, 1, 1, 1, 6, true);
                     buff[6] = SYM_MI;
                     break;
                 default:
                 case OSD_UNIT_GA:
-                    osdFormatCentiNumber(buff, CENTIMETERS_TO_CENTIFEET(odometerDist), (uint32_t)FEET_PER_NAUTICALMILE, 1, 0, 6, true);
+                    osdFormatCentiNumber(buff, METERS_TO_NAUTICALMILES(odometerDist) * 100, 1, 1, 1, 6, true);
                     buff[6] = SYM_NM;
                     break;
                 case OSD_UNIT_METRIC_MPH:
                     FALLTHROUGH;
                 case OSD_UNIT_METRIC:
-                    osdFormatCentiNumber(buff, odometerDist, METERS_PER_KILOMETER, 1, 0, 6, true);
+                    osdFormatCentiNumber(buff, METERS_TO_KILOMETERS(odometerDist) * 100, 1, 1, 1, 6, true);
                     buff[6] = SYM_KM;
                     break;
             }
@@ -2290,7 +2318,11 @@ static bool osdDrawSingleElement(uint8_t item)
     case OSD_FLYMODE:
         {
             char *p = "ACRO";
-
+#ifdef USE_FW_AUTOLAND
+            if (FLIGHT_MODE(NAV_FW_AUTOLAND)) 
+                p = "LAND";
+            else
+#endif
             if (FLIGHT_MODE(FAILSAFE_MODE))
                 p = "!FS!";
             else if (FLIGHT_MODE(MANUAL_MODE))
@@ -2311,7 +2343,7 @@ static bool osdDrawSingleElement(uint8_t item)
                 p = " WP ";
             else if (FLIGHT_MODE(NAV_ALTHOLD_MODE) && navigationRequiresAngleMode()) {
                 // If navigationRequiresAngleMode() returns false when ALTHOLD is active,
-                // it means it can be combined with ANGLE, HORIZON, ACRO, etc...
+                // it means it can be combined with ANGLE, HORIZON, ANGLEHOLD, ACRO, etc...
                 // and its display is handled by OSD_MESSAGES rather than OSD_FLYMODE.
                 p = " AH ";
             }
@@ -2319,6 +2351,8 @@ static bool osdDrawSingleElement(uint8_t item)
                 p = "ANGL";
             else if (FLIGHT_MODE(HORIZON_MODE))
                 p = "HOR ";
+            else if (FLIGHT_MODE(ANGLEHOLD_MODE))
+                p = "ANGH";
 
             displayWrite(osdDisplayPort, elemPosX, elemPosY, p);
             return true;
@@ -5435,8 +5469,13 @@ SLOW_CODE textAttributes_t osdGetSystemMessage(char *buff, size_t buff_size, boo
         const char *invertedInfoMessage = NULL;
 
         if (ARMING_FLAG(ARMED)) {
+#ifdef USE_FW_AUTOLAND
+            if (FLIGHT_MODE(FAILSAFE_MODE) || FLIGHT_MODE(NAV_RTH_MODE) || FLIGHT_MODE(NAV_WP_MODE) || navigationIsExecutingAnEmergencyLanding() || FLIGHT_MODE(NAV_FW_AUTOLAND)) {
+                if (isWaypointMissionRTHActive() && !posControl.fwLandState.landWp) {
+#else
             if (FLIGHT_MODE(FAILSAFE_MODE) || FLIGHT_MODE(NAV_RTH_MODE) || FLIGHT_MODE(NAV_WP_MODE) || navigationIsExecutingAnEmergencyLanding()) {
                 if (isWaypointMissionRTHActive()) {
+#endif
                     // if RTH activated whilst WP mode selected, remind pilot to cancel WP mode to exit RTH
                     messages[messageCount++] = OSD_MESSAGE_STR(OSD_MSG_WP_RTH_CANCEL);
                 }
@@ -5461,12 +5500,28 @@ SLOW_CODE textAttributes_t osdGetSystemMessage(char *buff, size_t buff_size, boo
 
                         messages[messageCount++] = messageBuf;
                     }
-                } else {
-                    const char *navStateMessage = navigationStateMessage();
-                    if (navStateMessage) {
-                        messages[messageCount++] = navStateMessage;
+                } else if (NAV_Status.state == MW_NAV_STATE_LAND_SETTLE && posControl.landingDelay > 0) {
+                    uint16_t remainingHoldSec = MS2S(posControl.landingDelay - millis());
+                    tfp_sprintf(messageBuf, "LANDING DELAY: %3u SECONDS", remainingHoldSec);
+
+                    messages[messageCount++] = messageBuf;
+                } 
+
+                else {
+#ifdef USE_FW_AUTOLAND
+                    if (canFwLandCanceld()) {
+                         messages[messageCount++] = OSD_MESSAGE_STR(OSD_MSG_MOVE_STICKS);
+                    } else if (!FLIGHT_MODE(NAV_FW_AUTOLAND)) {
+#endif
+                        const char *navStateMessage = navigationStateMessage();
+                        if (navStateMessage) {
+                            messages[messageCount++] = navStateMessage;
+                        }
+#ifdef USE_FW_AUTOLAND
                     }
+#endif
                 }
+
 #if defined(USE_SAFE_HOME)
                 const char *safehomeMessage = divertingToSafehomeMessage();
                 if (safehomeMessage) {
@@ -5495,10 +5550,9 @@ SLOW_CODE textAttributes_t osdGetSystemMessage(char *buff, size_t buff_size, boo
                     }
                 } else {
                     if (FLIGHT_MODE(NAV_ALTHOLD_MODE) && !navigationRequiresAngleMode()) {
-                        // ALTHOLD might be enabled alongside ANGLE/HORIZON/ACRO
+                        // ALTHOLD might be enabled alongside ANGLE/HORIZON/ANGLEHOLD/ACRO
                         // when it doesn't require ANGLE mode (required only in FW
-                        // right now). If if requires ANGLE, its display is handled
-                        // by OSD_FLYMODE.
+                        // right now). If it requires ANGLE, its display is handled by OSD_FLYMODE.
                         messages[messageCount++] = OSD_MESSAGE_STR(OSD_MSG_ALTITUDE_HOLD);
                     }
                     if (STATE(MULTIROTOR) && FLIGHT_MODE(NAV_COURSE_HOLD_MODE)) {
@@ -5534,6 +5588,16 @@ SLOW_CODE textAttributes_t osdGetSystemMessage(char *buff, size_t buff_size, boo
                     }
                     if (STATE(LANDING_DETECTED)) {
                         messages[messageCount++] = OSD_MESSAGE_STR(OSD_MSG_LANDED);
+                    }
+                    if (IS_RC_MODE_ACTIVE(BOXANGLEHOLD)) {
+                        int8_t navAngleHoldAxis = navCheckActiveAngleHoldAxis();
+                        if (isAngleHoldLevel()) {
+                            messages[messageCount++] = OSD_MESSAGE_STR(OSD_MSG_ANGLEHOLD_LEVEL);
+                        } else if (navAngleHoldAxis == FD_ROLL) {
+                            messages[messageCount++] = OSD_MESSAGE_STR(OSD_MSG_ANGLEHOLD_ROLL);
+                        } else if (navAngleHoldAxis == FD_PITCH) {
+                            messages[messageCount++] = OSD_MESSAGE_STR(OSD_MSG_ANGLEHOLD_PITCH);
+                        }
                     }
                 }
             }

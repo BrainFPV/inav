@@ -391,9 +391,10 @@ static void configureGNSS10(void)
             {UBLOX_CFG_SIGNAL_GAL_E1_ENA, gpsState.gpsConfig->ubloxUseGalileo},
 
             // Beidou
+            // M10 can't use BDS_B1I and Glonass together. Instead, use BDS_B1C
             {UBLOX_CFG_SIGNAL_BDS_ENA, gpsState.gpsConfig->ubloxUseBeidou},
-            {UBLOX_CFG_SIGNAL_BDS_B1_ENA, gpsState.gpsConfig->ubloxUseBeidou},
-            {UBLOX_CFG_SIGNAL_BDS_B1C_ENA, 0},
+            {UBLOX_CFG_SIGNAL_BDS_B1_ENA, gpsState.gpsConfig->ubloxUseBeidou && ! gpsState.gpsConfig->ubloxUseGlonass},
+            {UBLOX_CFG_SIGNAL_BDS_B1C_ENA, gpsState.gpsConfig->ubloxUseBeidou && gpsState.gpsConfig->ubloxUseGlonass},
 
             // Should be enabled with GPS
             {UBLOX_CFG_QZSS_ENA, 1},
@@ -800,9 +801,15 @@ STATIC_PROTOTHREAD(gpsConfigure)
         case GPS_DYNMODEL_PEDESTRIAN:
             configureNAV5(UBX_DYNMODEL_PEDESTRIAN, UBX_FIXMODE_AUTO);
             break;
-        case GPS_DYNMODEL_AIR_1G:   // Default to this
-        default:
+        case GPS_DYNMODEL_AUTOMOTIVE:
+            configureNAV5(UBX_DYNMODEL_AUTOMOVITE, UBX_FIXMODE_AUTO);
+            break;
+        case GPS_DYNMODEL_AIR_1G:
             configureNAV5(UBX_DYNMODEL_AIR_1G, UBX_FIXMODE_AUTO);
+            break;
+        case GPS_DYNMODEL_AIR_2G:   // Default to this
+        default:
+            configureNAV5(UBX_DYNMODEL_AIR_2G, UBX_FIXMODE_AUTO);
             break;
         case GPS_DYNMODEL_AIR_4G:
             configureNAV5(UBX_DYNMODEL_AIR_4G, UBX_FIXMODE_AUTO);
@@ -948,12 +955,18 @@ STATIC_PROTOTHREAD(gpsConfigure)
 
     // Configure GNSS for M8N and later
     if (gpsState.hwVersion >= UBX_HW_VERSION_UBLOX8) {
-         gpsSetProtocolTimeout(GPS_SHORT_TIMEOUT);
-         if(gpsState.hwVersion >= UBX_HW_VERSION_UBLOX10 || (gpsState.swVersionMajor>=23 && gpsState.swVersionMinor >= 1)) {
+        gpsSetProtocolTimeout(GPS_SHORT_TIMEOUT);
+        bool use_VALSET = 0;
+        if ( (gpsState.swVersionMajor > 23) || (gpsState.swVersionMajor == 23 && gpsState.swVersionMinor > 1) ) {
+            use_VALSET = 1;
+        }
+
+        if ( use_VALSET && (gpsState.hwVersion >= UBX_HW_VERSION_UBLOX10) ) {
             configureGNSS10();
-         } else {
+        } else {
             configureGNSS();
-         }
+        }
+
          ptWaitTimeout((_ack_state == UBX_ACK_GOT_ACK || _ack_state == UBX_ACK_GOT_NAK), GPS_CFG_CMD_TIMEOUT_MS);
 
          if(_ack_state == UBX_ACK_GOT_NAK) {

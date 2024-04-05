@@ -104,12 +104,14 @@ typedef enum {
     TURN_ASSISTANT        = (1 << 14),
     TURTLE_MODE           = (1 << 15),
     SOARING_MODE          = (1 << 16),
+    ANGLEHOLD_MODE        = (1 << 17),
+    NAV_FW_AUTOLAND       = (1 << 18),
 } flightModeFlags_e;
 
 extern uint32_t flightModeFlags;
 
-#define DISABLE_FLIGHT_MODE(mask) disableFlightMode(mask)
-#define ENABLE_FLIGHT_MODE(mask) enableFlightMode(mask)
+#define DISABLE_FLIGHT_MODE(mask) (flightModeFlags &= ~(mask))
+#define ENABLE_FLIGHT_MODE(mask) (flightModeFlags |= (mask))
 #define FLIGHT_MODE(mask) (flightModeFlags & (mask))
 
 typedef enum {
@@ -140,6 +142,7 @@ typedef enum {
     ANTI_WINDUP_DEACTIVATED             = (1 << 25),
     LANDING_DETECTED                    = (1 << 26),
     IN_FLIGHT_EMERG_REARM               = (1 << 27),
+    TAILSITTER                          = (1 << 28), //offset the pitch angle by 90 degrees
 } stateFlags_t;
 
 #define DISABLE_STATE(mask) (stateFlags &= ~(mask))
@@ -162,6 +165,7 @@ typedef enum {
     FLM_CRUISE,
     FLM_LAUNCH,
     FLM_FAILSAFE,
+    FLM_ANGLEHOLD,
     FLM_COUNT
 } flightModeForTelemetry_e;
 
@@ -200,8 +204,7 @@ extern simulatorData_t simulatorData;
 
 #endif
 
-uint32_t enableFlightMode(flightModeFlags_e mask);
-uint32_t disableFlightMode(flightModeFlags_e mask);
+void updateFlightModeChangeBeeper(void);
 
 bool sensors(uint32_t mask);
 void sensorsSet(uint32_t mask);

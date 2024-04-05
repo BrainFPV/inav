@@ -269,7 +269,7 @@ bool isWS2811LedStripReady(void)
 void ws2811UpdateStrip(void)
 {
     static rgbColor24bpp_t *rgb24;
-    uint8_t pos = 0;
+    int pos = 0;
 
     for (int i=0; i<WS2811_LED_STRIP_LENGTH; i++) {
         rgb24 = hsvToRgb24(&ledColorBuffer[i]);

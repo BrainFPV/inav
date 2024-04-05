@@ -28,12 +28,15 @@ uint32_t last_check = 0;
 extern binary_semaphore_t gyroSem;
 extern bool idleCounterClear;
 extern uint32_t idleCounter;
+
+#define NUM_REALTIME_CALLBACK_PER_LOOP 4
+static uint32_t num_realtime_callbacks = 0;
 #include "platform.h"
 
 #if defined(USE_MULT_CPU_IDLE_COUNTS)
 extern uint32_t cpu_idle_counts_no_load;
 #endif /* defined(USE_MULT_CPU_IDLE_COUNTS) */
-#endif
+#endif /* defined(USE_CHIBIOS) */
 
 #include "platform.h"
 
@@ -315,7 +318,9 @@ void FAST_CODE NOINLINE scheduler(void)
         selectedTask->maxExecutionTime = MAX(selectedTask->maxExecutionTime, taskExecutionTime);
 
 #if defined(USE_CHIBIOS)
-        if (!forcedRealTimeTask) {
+        num_realtime_callbacks += 1;
+
+        if (!forcedRealTimeTask && (num_realtime_callbacks >= NUM_REALTIME_CALLBACK_PER_LOOP)) {
             extern bool brainfpv_settings_updated;
             if (brainfpv_settings_updated) {
                 brainFPVUpdateSettings();
@@ -323,6 +328,7 @@ void FAST_CODE NOINLINE scheduler(void)
             }
             // wait for gyro if no tasks are ready
             chBSemWaitTimeout(&gyroSem, TIME_MS2I(2));
+            num_realtime_callbacks = 0;
         }
 #endif
     }

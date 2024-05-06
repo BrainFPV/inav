@@ -1844,11 +1844,11 @@ Allows to chose when the home position is reset. Can help prevent resetting home
 
 ### inav_use_gps_no_baro
 
-_// TODO_
+Defines if INAV should use only use GPS data for altitude estimation when barometer is not available. If set to ON, INAV will allow GPS assisted modes and RTH even when there is no barometer installed.
 
 | Default | Min | Max |
 | --- | --- | --- |
-| OFF | OFF | ON |
+| ON | OFF | ON |
 
 ---
 
@@ -3764,7 +3764,7 @@ When ON, NAV engine will slow down when switching to the next waypoint. This pri
 
 ### nav_min_ground_speed
 
-Minimum ground speed for navigation flight modes [m/s]. Default 7 m/s.
+Minimum ground speed for navigation flight modes [m/s]. Currently, this only affects fixed wing. Default 7 m/s.
 
 | Default | Min | Max |
 | --- | --- | --- |

@@ -2288,9 +2288,10 @@ groups:
         field: use_gps_velned
         type: bool
       - name: inav_use_gps_no_baro
+        description: "Defines if INAV should use only use GPS data for altitude estimation when barometer is not available. If set to ON, INAV will allow GPS assisted modes and RTH even when there is no barometer installed."
         field: use_gps_no_baro
         type: bool
-        default_value: OFF
+        default_value: ON
       - name: inav_allow_dead_reckoning
         description: "Defines if INAV will dead-reckon over short GPS outages. May also be useful for indoors OPFLOW navigation"
         default_value: OFF
@@ -2493,7 +2494,7 @@ groups:
         min: 10
         max: 2000
       - name: nav_min_ground_speed
-        description: "Minimum ground speed for navigation flight modes [m/s]. Default 7 m/s."
+        description: "Minimum ground speed for navigation flight modes [m/s]. Currently, this only affects fixed wing. Default 7 m/s."
         default_value: 7
         field: general.min_ground_speed
         min: 6

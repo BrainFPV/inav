@@ -110,7 +110,7 @@
 
 //#define OSD_SHOW_DRAW_TIME
 
-#define SW_BLINK_CYCLE_MS 200 // 200ms on / 200ms off
+#define SW_BLINK_CYCLE_ANALOG_MS 200 // 200ms on / 200ms off
 
 PG_REGISTER_WITH_RESET_TEMPLATE(bfOsdConfig_t, bfOsdConfig, PG_BRAINFPV_OSD_CONFIG, 0);
 
@@ -494,7 +494,7 @@ void brainFpvOsdMain(void) {
         }
 
         osd_draw_time_ms = millis();
-        hide_blinking_items = (((osd_draw_time_ms / SW_BLINK_CYCLE_MS) % 2) == 0);
+        hide_blinking_items = (((osd_draw_time_ms / SW_BLINK_CYCLE_ANALOG_MS) % 2) == 0);
         clearGraphics();
 
         /* Hide OSD when OSDSW mode is active */

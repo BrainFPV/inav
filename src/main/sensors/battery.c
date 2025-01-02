@@ -68,7 +68,7 @@
 #endif
 
 #define VBATT_CELL_FULL_MAX_DIFF 10             // Max difference with cell max voltage for the battery to be considered full (10mV steps)
-#define VBATT_PRESENT_THRESHOLD 100             // Minimum voltage to consider battery present
+#define VBATT_PRESENT_THRESHOLD 220             // Minimum voltage to consider battery present
 #define VBATT_STABLE_DELAY 40                   // Delay after connecting battery to begin monitoring
 #define VBATT_HYSTERESIS 10                     // Batt Hysteresis of +/-100mV for changing battery state
 #define VBATT_LPF_FREQ  1                       // Battery voltage filtering cutoff
@@ -99,7 +99,7 @@ static int32_t mWhDrawn = 0;                    // energy (milliWatt hours) draw
 batteryState_e batteryState;
 const batteryProfile_t *currentBatteryProfile;
 
-PG_REGISTER_ARRAY_WITH_RESET_FN(batteryProfile_t, MAX_BATTERY_PROFILE_COUNT, batteryProfiles, PG_BATTERY_PROFILES, 2);
+PG_REGISTER_ARRAY_WITH_RESET_FN(batteryProfile_t, MAX_BATTERY_PROFILE_COUNT, batteryProfiles, PG_BATTERY_PROFILES, 3);
 
 void pgResetFn_batteryProfiles(batteryProfile_t *instance)
 {
@@ -120,7 +120,6 @@ void pgResetFn_batteryProfiles(batteryProfile_t *instance)
                 .value = SETTING_BATTERY_CAPACITY_DEFAULT,
                 .warning = SETTING_BATTERY_CAPACITY_WARNING_DEFAULT,
                 .critical = SETTING_BATTERY_CAPACITY_CRITICAL_DEFAULT,
-                .unit = SETTING_BATTERY_CAPACITY_UNIT_DEFAULT,
             },
 
             .controlRateProfile = 0,
@@ -169,7 +168,7 @@ void pgResetFn_batteryProfiles(batteryProfile_t *instance)
     }
 }
 
-PG_REGISTER_WITH_RESET_TEMPLATE(batteryMetersConfig_t, batteryMetersConfig, PG_BATTERY_METERS_CONFIG, 1);
+PG_REGISTER_WITH_RESET_TEMPLATE(batteryMetersConfig_t, batteryMetersConfig, PG_BATTERY_METERS_CONFIG, 2);
 
 PG_RESET_TEMPLATE(batteryMetersConfig_t, batteryMetersConfig,
 
@@ -187,6 +186,8 @@ PG_RESET_TEMPLATE(batteryMetersConfig_t, batteryMetersConfig,
     },
 
     .voltageSource = SETTING_BAT_VOLTAGE_SRC_DEFAULT,
+
+    .capacity_unit = SETTING_BATTERY_CAPACITY_UNIT_DEFAULT,
 
     .cruise_power = SETTING_CRUISE_POWER_DEFAULT,
     .idle_power = SETTING_IDLE_POWER_DEFAULT,
@@ -407,7 +408,7 @@ void batteryUpdate(timeUs_t timeDelta)
 
         if ((currentBatteryProfile->capacity.value > 0) && batteryFullWhenPluggedIn) {
             uint32_t capacityDiffBetweenFullAndEmpty = currentBatteryProfile->capacity.value - currentBatteryProfile->capacity.critical;
-            int32_t drawn = (currentBatteryProfile->capacity.unit == BAT_CAPACITY_UNIT_MWH ? mWhDrawn : mAhDrawn);
+            int32_t drawn = (batteryMetersConfig()->capacity_unit == BAT_CAPACITY_UNIT_MWH ? mWhDrawn : mAhDrawn);
             batteryRemainingCapacity = (drawn > (int32_t)capacityDiffBetweenFullAndEmpty ? 0 : capacityDiffBetweenFullAndEmpty - drawn);
         }
 

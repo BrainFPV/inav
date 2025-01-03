@@ -124,7 +124,7 @@ static IO_t re1FPGACresetPin = IO_NONE;
 static IO_t re1FPGAResetPin = IO_NONE;
 
 
-static int32_t BRAINFPVFPGA_WriteReg(uint8_t reg, uint8_t data, uint8_t mask);
+static int32_t BRAINFPVFPGA_WriteReg(enum re1fpga_register reg, uint8_t data, uint8_t mask);
 static int32_t BRAINFPVFPGA_WriteRegDirect(enum re1fpga_register reg, uint8_t data);
 int32_t BRAINFPVFPGA_SetLEDs(const uint8_t * led_data, uint16_t n_leds);
 int32_t BRAINFPVFPGA_SetIRData(const uint8_t * ir_data, uint8_t n_bytes);

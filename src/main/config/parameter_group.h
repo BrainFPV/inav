@@ -132,7 +132,7 @@ extern const uint8_t __pg_resetdata_end[];
 // Register system config
 #define PG_REGISTER_I(_type, _name, _pgn, _version, _reset)             \
     _type _name ## _System;                                             \
-    _type _name ## _Copy;                                               \
+    SLOW_RAM _type _name ## _Copy;                                               \
     /* Force external linkage for g++. Catch multi registration */      \
     extern const pgRegistry_t _name ## _Registry;                       \
     const pgRegistry_t _name ##_Registry PG_REGISTER_ATTRIBUTES = {     \
@@ -162,7 +162,7 @@ extern const uint8_t __pg_resetdata_end[];
 // Register system config array
 #define PG_REGISTER_ARRAY_I(_type, _size, _name, _pgn, _version, _reset)  \
     _type _name ## _SystemArray[_size];                                 \
-    _type _name ## _CopyArray[_size];                                   \
+    SLOW_RAM _type _name ## _CopyArray[_size];                                   \
     extern const pgRegistry_t _name ##_Registry;                        \
     const pgRegistry_t _name ## _Registry PG_REGISTER_ATTRIBUTES = {    \
         .pgn = _pgn | (_version << 12),                                 \

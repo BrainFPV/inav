@@ -23,6 +23,7 @@
 #include "platform.h"
 
 #include "build/debug.h"
+#include "build/build_config.h"
 
 #include "common/axis.h"
 #include "common/filter.h"
@@ -249,7 +250,7 @@ PG_RESET_TEMPLATE(navConfig_t, navConfig,
 
 /* NAV variables */
 static navWapointHeading_t wpHeadingControl;
-navigationPosControl_t posControl;
+SLOW_RAM navigationPosControl_t posControl;
 navSystemStatus_t NAV_Status;
 static bool landingDetectorIsActive;
 

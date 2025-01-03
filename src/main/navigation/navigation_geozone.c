@@ -25,6 +25,7 @@
 #include <math.h>
 
 #include "platform.h"
+#include "build/build_config.h"
 
 #include "common/utils.h"
 #include "common/vector.h"
@@ -98,12 +99,12 @@ struct pathPoint_s {
 };
 
 static bool isInitalised = false;
-static geoZoneRuntimeConfig_t *currentZones[MAX_GEOZONES];
-static fpVector2_t verticesLocal[MAX_VERTICES];
+SLOW_RAM static geoZoneRuntimeConfig_t *currentZones[MAX_GEOZONES];
+SLOW_RAM static fpVector2_t verticesLocal[MAX_VERTICES];
 static uint8_t currentZoneCount = 0;
 
 static bool isAtLeastOneInclusiveZoneActive = false;
-static geoZoneRuntimeConfig_t activeGeoZones[MAX_GEOZONES]; 
+SLOW_RAM static geoZoneRuntimeConfig_t activeGeoZones[MAX_GEOZONES];
 static uint8_t activeGeoZonesCount = 0;
 static geoZoneConfig_t safeHomeGeozoneConfig;
 static geozoneActionState_e actionState = GEOZONE_ACTION_STATE_NONE;
@@ -113,7 +114,7 @@ static geoZoneRuntimeConfig_t *nearestHorZone = NULL;
 static geoZoneRuntimeConfig_t *nearestInclusiveZone = NULL;
 static fpVector3_t avoidingPoint;
 static bool geozoneIsEnabled = false;
-static fpVector3_t rthWaypoints[MAX_RTH_WAYPOINTS];
+SLOW_RAM static fpVector3_t rthWaypoints[MAX_RTH_WAYPOINTS];
 static uint8_t rthWaypointIndex = 0;
 static int8_t rthWaypointCount = 0;
 static bool aboveOrUnderZone = false;

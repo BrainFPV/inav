@@ -293,7 +293,9 @@ SECTIONS
   
   .SLOW_RAM (NOLOAD) :
   {
+    __slowram_start__ = .;
   	KEEP(*(.SLOW_RAM))
+    __slowram_end__ = .;
   } > SLOW_RAM
   
   video_ram (NOLOAD) :

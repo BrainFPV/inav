@@ -121,6 +121,19 @@ LoopFillZeroFASTRAM:
   cmp  r2, r3
   bcc  FillZeroFASTRAM
 
+/* Zero fill SLOWRAM */
+  ldr  r2, =__slowram_start__
+  b  LoopFillZeroSLOWRAM
+
+FillZeroSLOWRAM:
+  movs  r3, #0
+  str  r3, [r2], #4
+
+LoopFillZeroSLOWRAM:
+  ldr  r3, = __slowram_end__
+  cmp  r2, r3
+  bcc  FillZeroSLOWRAM
+
 /* Mark the heap and stack */
     ldr r2, =_heap_stack_begin
     b LoopMarkHeapStack

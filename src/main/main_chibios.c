@@ -28,7 +28,6 @@
 #include "drivers/serial.h"
 #include "drivers/serial_softserial.h"
 #include "drivers/persistent.h"
-#include "drivers/time.h"
 
 #include "fc/fc_init.h"
 
@@ -38,7 +37,6 @@
 extern uint32_t __process_stack_end__;
 extern uint32_t __process_stack_base__;
 
-void taskUpdateBattery(timeUs_t currentTimeUs);
 
 volatile bool idleCounterClear = 0;
 volatile uint32_t idleCounter = 0;
@@ -101,9 +99,6 @@ static THD_FUNCTION(InavThread, arg)
         chThdCreateStatic(waOSDThread, sizeof(waOSDThread), NORMALPRIO, OSDThread, NULL);
     }
 #endif /* USE_BRAINFPV_OSD */
-
-    // run battery task once
-    taskUpdateBattery(micros());
 
     // run INAV scheduler forever
     while (true) {

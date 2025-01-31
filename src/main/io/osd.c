@@ -234,7 +234,7 @@ static bool osdDisplayHasCanvas;
 
 #define AH_MAX_PITCH_DEFAULT 20 // Specify default maximum AHI pitch value displayed (degrees)
 
-PG_REGISTER_WITH_RESET_TEMPLATE(osdConfig_t, osdConfig, PG_OSD_CONFIG, 14);
+PG_REGISTER_WITH_RESET_TEMPLATE(osdConfig_t, osdConfig, PG_OSD_CONFIG, 15);
 PG_REGISTER_WITH_RESET_FN(osdLayoutsConfig_t, osdLayoutsConfig, PG_OSD_LAYOUTS_CONFIG, 3);
 
 void osdStartedSaveProcess(void) {
@@ -496,12 +496,13 @@ static void osdFormatWindSpeedStr(char *buff, int32_t ws, bool isValid)
 */
 void osdFormatAltitudeSymbol(char *buff, int32_t alt)
 {
-    uint8_t digits = osdConfig()->decimals_altitude;
-    uint8_t totalDigits = digits + 1;
-    uint8_t symbolIndex = digits + 1;
+    uint8_t digits = osdConfig()->decimals_altitude + 1;
+    uint8_t totalDigits = digits;
+    uint8_t symbolIndex = digits;
     uint8_t symbolKFt = SYM_ALT_KFT;
 
     if (alt >= 0) {
+        digits--;
         buff[0] = ' ';
     }
 
@@ -4577,18 +4578,11 @@ uint8_t drawLogos(bool singular, uint8_t row) {
     bool usePilotLogo = (osdConfig()->use_pilot_logo && osdDisplayIsHD());
     bool useINAVLogo = (singular && !usePilotLogo) || !singular;
 
-#ifndef DISABLE_MSP_DJI_COMPAT   // IF DJICOMPAT is in use, the pilot logo cannot be used, due to font issues.
-    if (isDJICompatibleVideoSystem(osdConfig())) {
-        usePilotLogo = false;
-        useINAVLogo = false;
-    }
-#endif
-
     uint8_t logoSpacing = osdConfig()->inav_to_pilot_logo_spacing;
 
     if (logoSpacing > 0 && ((osdDisplayPort->cols % 2) != (logoSpacing % 2))) {
         logoSpacing++; // Add extra 1 character space between logos, if the odd/even of the OSD cols doesn't match the odd/even of the logo spacing
-}
+    }
 
     // Draw Logo(s)
     if (usePilotLogo && !singular) {
